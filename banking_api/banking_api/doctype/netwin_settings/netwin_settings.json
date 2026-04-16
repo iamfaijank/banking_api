@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "api_base_url",
   "host",
   "username",
   "password",
@@ -12,6 +13,11 @@
   "sid"
  ],
  "fields": [
+  {
+   "fieldname": "api_base_url",
+   "fieldtype": "Data",
+   "label": "API Base URL"
+  },
   {
    "fieldname": "host",
    "fieldtype": "Data",
