@@ -1,5 +1,3 @@
-import json
-
 import frappe
 
 
@@ -129,5 +127,6 @@ ACCOUNT_CODES = [
 
 def get_context(context):
 	context.no_cache = 1
+	context.no_header = 1
+	context.full_width = 1
 	context.api_base_url = frappe.db.get_single_value("Netwin Settings", "api_base_url") or ""
-	context.account_codes = json.dumps(ACCOUNT_CODES)

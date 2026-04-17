@@ -3,6 +3,12 @@ import base64
 import frappe
 from frappe import _
 
+HELPER_QUERY = """
+SELECT cif_id
+FROM tbaadm.gam
+WHERE foracid = %s
+"""
+
 
 QUERY = """
 SELECT
@@ -30,11 +36,78 @@ WHERE
     OR
     (
         :ac_no IS NOT NULL
-        AND :acmastcode IS NOT NULL
         AND s.ac_no = :ac_no
-        AND s.acmastcode = :acmastcode
     )
 """
+
+
+def _fetch_cif_id_from_helper_db(ac_no):
+	try:
+		import psycopg2
+	except ImportError:
+		return None, _("`psycopg2` is not installed on this server.")
+
+	settings = frappe.get_single("Finacle DB Credentials")
+	host = (settings.db_host or "").strip()
+	port = settings.db_port
+	user = (settings.db_user or "").strip()
+	password = settings.get_password("db_password")
+	db_name = (settings.db_name or "").strip()
+
+	if not all([host, port, user, password, db_name]):
+		return None, _("Finacle DB Credentials is incomplete.")
+
+	connection = None
+	cursor = None
+
+	try:
+		connection = psycopg2.connect(
+			host=host,
+			port=port,
+			user=user,
+			password=password,
+			dbname=db_name,
+		)
+		cursor = connection.cursor()
+		cursor.execute(HELPER_QUERY, (ac_no,))
+		row = cursor.fetchone()
+
+		if not row or not row[0]:
+			return None, _("No CIF Id found for the provided Ac-no.")
+
+		return str(row[0]).strip(), None
+	except psycopg2.Error as exc:
+		return None, _("PostgreSQL helper query failed: {0}").format(str(exc))
+	finally:
+		if cursor:
+			cursor.close()
+		if connection:
+			connection.close()
+
+
+@frappe.whitelist()
+def fetch_cif_id(ac_no=None):
+	ac_no = (ac_no or "").strip()
+
+	if not ac_no:
+		return {
+			"status": "error",
+			"message": _("Provide ac_no."),
+		}
+
+	cif_id, helper_error = _fetch_cif_id_from_helper_db(ac_no)
+	if helper_error:
+		return {
+			"status": "error",
+			"message": helper_error,
+		}
+
+	return {
+		"status": "success",
+		"data": {
+			"gmst_code": cif_id,
+		},
+	}
 
 
 def _encode_blob(value):
@@ -54,13 +127,21 @@ def _encode_blob(value):
 def fetch_photo_and_signature(gmst_code=None, ac_no=None, acmastcode=None):
 	gmst_code = (gmst_code or "").strip()
 	ac_no = (ac_no or "").strip()
-	acmastcode = (acmastcode or "").strip()
 
-	if not gmst_code and not (ac_no and acmastcode):
+	if not gmst_code and not ac_no:
 		return {
 			"status": "error",
-			"message": _("Provide either gmst_code or both ac_no and acmastcode."),
+			"message": _("Provide either gmst_code or ac_no."),
 		}
+
+	if ac_no and not gmst_code:
+		gmst_code, helper_error = _fetch_cif_id_from_helper_db(ac_no)
+		if helper_error:
+			return {
+				"status": "error",
+				"message": helper_error,
+			}
+		ac_no = ""
 
 	try:
 		import cx_Oracle
@@ -95,7 +176,6 @@ def fetch_photo_and_signature(gmst_code=None, ac_no=None, acmastcode=None):
 			{
 				"gmst_code": gmst_code or None,
 				"ac_no": ac_no or None,
-				"acmastcode": acmastcode or None,
 			},
 		)
 		row = cursor.fetchone()

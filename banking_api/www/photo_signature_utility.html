@@ -1,8 +1,33 @@
 {% extends "templates/web.html" %}
+{% set no_header = True %}
+{% set no_footer = True %}
+{% set hide_navbar = True %}
+{% set full_width = True %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block header %}{% endblock %}
+{% block breadcrumbs %}{% endblock %}
 
 {% block style %}
 {{ super() }}
 <style>
+	[data-path="/photo_signature_utility"] .navbar,
+	[data-path="/photo_signature_utility"] .page-breadcrumbs,
+	[data-path="/photo_signature_utility"] .page-header-wrapper,
+	[data-path="/photo_signature_utility"] .page-footer,
+	[data-path="/photo_signature_utility"] header,
+	[data-path="/photo_signature_utility"] .web-footer {
+		display: none !important;
+	}
+
+	[data-path="/photo_signature_utility"] .page-content-wrapper,
+	[data-path="/photo_signature_utility"] .page_content,
+	[data-path="/photo_signature_utility"] main {
+		padding-top: 0 !important;
+		margin-top: 0 !important;
+	}
+
 	footer {
 		display: none !important;
 	}
@@ -95,8 +120,14 @@
 		gap: 20px;
 	}
 
-	.utility-result-meta {
+	.utility-result-meta-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 16px;
 		margin-bottom: 18px;
+	}
+
+	.utility-result-meta {
 		padding: 14px 16px;
 		border: 1px solid #d9dee7;
 		border-radius: 14px;
@@ -167,45 +198,49 @@
 		}
 	}
 </style>
-{% endblock %}
-
-{% block page_content %}
+{% endblock %} {% block page_content %}
 <div class="container photo-signature-utility">
-	<h1 style="margin-bottom: 24px;">Netwin - Photo & Sign Verification</h1>
+	<h1 style="margin-bottom: 24px">Netwin - Photo & Sign Verification</h1>
 
 	<div class="utility-layout">
 		<aside class="utility-sidebar">
 			<h3>Search</h3>
-			<p class="utility-muted">Choose one search mode and fetch the mapped photo and signature.</p>
+			<p class="utility-muted">
+				Choose one search mode. Only one input will be shown to the user.
+			</p>
 
 			<div class="utility-mode-group">
 				<label class="utility-mode-option">
-							<input type="radio" name="search-mode" value="cif" checked />
-							<span>CIF Id</span>
+					<input type="radio" name="search-mode" value="account" checked />
+					<span>Ac-no</span>
 				</label>
 				<label class="utility-mode-option">
-							<input type="radio" name="search-mode" value="account" />
-							<span>AC No + GL Code</span>
+					<input type="radio" name="search-mode" value="cif" />
+					<span>CIF Id</span>
 				</label>
+			</div>
+
+			<div class="utility-field" id="account-search-group">
+				<label for="ac-no">Ac-no</label>
+				<input
+					id="ac-no"
+					type="text"
+					inputmode="numeric"
+					pattern="[0-9]*"
+					class="form-control"
+				/>
 			</div>
 
 			<div class="utility-field" id="cif-search-group">
-						<label for="gmst-code">CIF Id</label>
-						<input id="gmst-code" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" />
+				<label for="gmst-code">CIF Id</label>
+				<input
+					id="gmst-code"
+					type="text"
+					inputmode="numeric"
+					pattern="[0-9]*"
+					class="form-control"
+				/>
 			</div>
-
-			<div id="account-search-group">
-					<div class="utility-field">
-						<label for="ac-no">AC No</label>
-						<input id="ac-no" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" />
-					</div>
-					<div class="utility-field">
-						<label for="ac-code-search">GL Code</label>
-						<input id="ac-code-search" type="text" class="form-control" autocomplete="off" placeholder="Search GL Code or name" />
-						<div id="ac-code-results" style="display: none; max-height: 220px; overflow-y: auto; border: 1px solid #ddd; border-top: 0; background: #fff;"></div>
-						<div id="ac-code-selected" style="margin-top: 8px; color: #666;"></div>
-					</div>
-				</div>
 
 			<div class="utility-actions">
 				<button id="fetch-records" class="btn btn-primary">Fetch Records</button>
@@ -216,9 +251,15 @@
 		<section class="utility-panel">
 			<h3>Result Panel</h3>
 			<p class="utility-muted">Fetched images will appear here after a successful lookup.</p>
-			<div class="utility-result-meta">
-				<span class="utility-result-meta-label">Customer Name</span>
-				<div id="customer-name" class="utility-result-meta-value">Not loaded</div>
+			<div class="utility-result-meta-grid">
+				<div class="utility-result-meta">
+					<span class="utility-result-meta-label">Customer CIF</span>
+					<div id="customer-cif" class="utility-result-meta-value">Not loaded</div>
+				</div>
+				<div class="utility-result-meta">
+					<span class="utility-result-meta-label">Customer Name</span>
+					<div id="customer-name" class="utility-result-meta-value">Not loaded</div>
+				</div>
 			</div>
 			<div class="utility-preview-grid">
 				<div class="utility-preview-card">
@@ -239,23 +280,19 @@
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
 		const apiBaseUrl = "{{ api_base_url }}".trim().replace(/\/$/, "");
-		const accountCodes = {{ account_codes | safe }};
 		const button = document.getElementById("fetch-records");
 		const resetButton = document.getElementById("reset-form");
 		const photoEl = document.getElementById("photo-preview");
 		const signEl = document.getElementById("sign-preview");
 		const photoEmptyEl = document.getElementById("photo-empty");
 		const signEmptyEl = document.getElementById("sign-empty");
+		const customerCifEl = document.getElementById("customer-cif");
 		const customerNameEl = document.getElementById("customer-name");
-		const acCodeSearchEl = document.getElementById("ac-code-search");
-		const acCodeResultsEl = document.getElementById("ac-code-results");
-		const acCodeSelectedEl = document.getElementById("ac-code-selected");
 		const gmstCodeEl = document.getElementById("gmst-code");
 		const acNoEl = document.getElementById("ac-no");
 		const cifSearchGroupEl = document.getElementById("cif-search-group");
 		const accountSearchGroupEl = document.getElementById("account-search-group");
 		const searchModeEls = document.querySelectorAll('input[name="search-mode"]');
-		let selectedAccount = null;
 
 		function allowOnlyDigits(el) {
 			el.addEventListener("input", function () {
@@ -278,133 +315,61 @@
 			emptyEl.style.display = "none";
 		}
 
-		function getSearchMode() {
-			const selected = Array.from(searchModeEls).find(function (el) {
-				return el.checked;
-			});
-
-			return selected ? selected.value : "cif";
+		function setCustomerCif(value) {
+			customerCifEl.textContent = value || "Not loaded";
 		}
 
 		function setCustomerName(value) {
 			customerNameEl.textContent = value || "Not loaded";
 		}
 
-		function resetAccountSelection() {
-			selectedAccount = null;
-			acCodeSearchEl.value = "";
-			acCodeSelectedEl.textContent = "";
-			acCodeResultsEl.innerHTML = "";
-			acCodeResultsEl.style.display = "none";
+		function getSearchMode() {
+			const selected = Array.from(searchModeEls).find(function (el) {
+				return el.checked;
+			});
+
+			return selected ? selected.value : "account";
+		}
+
+		function updateSearchModeUI() {
+			const isAccountMode = getSearchMode() === "account";
+
+			accountSearchGroupEl.style.display = isAccountMode ? "block" : "none";
+			cifSearchGroupEl.style.display = isAccountMode ? "none" : "block";
+
+			if (isAccountMode) {
+				gmstCodeEl.value = "";
+			} else {
+				acNoEl.value = "";
+			}
 		}
 
 		function resetForm() {
-			gmstCodeEl.value = "";
 			acNoEl.value = "";
+			gmstCodeEl.value = "";
 			searchModeEls.forEach(function (el) {
-				el.checked = el.value === "cif";
+				el.checked = el.value === "account";
 			});
-			resetAccountSelection();
 			updateSearchModeUI();
+			setCustomerCif("");
 			setCustomerName("");
 			setImage(photoEl, null);
 			setImage(signEl, null);
 		}
 
-		function updateSearchModeUI() {
-			const isCifMode = getSearchMode() === "cif";
-
-			cifSearchGroupEl.style.display = isCifMode ? "block" : "none";
-			accountSearchGroupEl.style.display = isCifMode ? "none" : "block";
-
-			if (isCifMode) {
-				acNoEl.value = "";
-				resetAccountSelection();
-			} else {
-				gmstCodeEl.value = "";
-			}
-		}
-
-		function renderResults(items) {
-			acCodeResultsEl.innerHTML = "";
-
-			if (!items.length) {
-				acCodeResultsEl.style.display = "none";
-				return;
-			}
-
-			items.forEach(function (item) {
-				const option = document.createElement("button");
-				option.type = "button";
-				option.textContent = item.ac_code + " - " + item.ac_name;
-				option.style.display = "block";
-				option.style.width = "100%";
-				option.style.padding = "10px 12px";
-				option.style.textAlign = "left";
-				option.style.border = "0";
-				option.style.borderBottom = "1px solid #eee";
-				option.style.background = "#fff";
-				option.addEventListener("mousedown", function (event) {
-					event.preventDefault();
-					selectedAccount = item;
-					acCodeSearchEl.value = item.ac_code;
-					acCodeSelectedEl.textContent = item.ac_name + " (acmastcode: " + item.acmastcode + ")";
-					acCodeResultsEl.style.display = "none";
-				});
-				acCodeResultsEl.appendChild(option);
-			});
-
-			acCodeResultsEl.style.display = "block";
-		}
-
-		function getMatches(query) {
-			if (!query) {
-				return accountCodes.slice(0, 20);
-			}
-
-			return accountCodes.filter(function (item) {
-				return item.ac_code.toLowerCase().includes(query) || item.ac_name.toLowerCase().includes(query);
-			}).slice(0, 20);
-		}
-
-		acCodeSearchEl.addEventListener("input", function () {
-			const query = acCodeSearchEl.value.trim().toLowerCase();
-			selectedAccount = null;
-			acCodeSelectedEl.textContent = "";
-			renderResults(getMatches(query));
-		});
-
-		acCodeSearchEl.addEventListener("focus", function () {
-			renderResults(getMatches(acCodeSearchEl.value.trim().toLowerCase()));
-		});
-
-		acCodeSearchEl.addEventListener("click", function () {
-			renderResults(getMatches(acCodeSearchEl.value.trim().toLowerCase()));
-		});
-
-		acCodeSearchEl.addEventListener("blur", function () {
-			window.setTimeout(function () {
-				if (!selectedAccount) {
-					acCodeSearchEl.value = "";
-					acCodeSelectedEl.textContent = "";
-				}
-				acCodeResultsEl.style.display = "none";
-			}, 150);
-		});
-
+		allowOnlyDigits(gmstCodeEl);
+		allowOnlyDigits(acNoEl);
 		searchModeEls.forEach(function (el) {
 			el.addEventListener("change", updateSearchModeUI);
 		});
-
-		allowOnlyDigits(gmstCodeEl);
-		allowOnlyDigits(acNoEl);
 		updateSearchModeUI();
 
 		button.addEventListener("click", async function () {
 			const searchMode = getSearchMode();
-			const gmstCode = searchMode === "cif" ? gmstCodeEl.value.trim() : "";
 			const acNo = searchMode === "account" ? acNoEl.value.trim() : "";
-			const acmastcode = searchMode === "account" && selectedAccount ? selectedAccount.acmastcode : "";
+			const cifInput = searchMode === "cif" ? gmstCodeEl.value.trim() : "";
+			let gmstCode = cifInput;
+			setCustomerCif("");
 			setCustomerName("");
 			setImage(photoEl, null);
 			setImage(signEl, null);
@@ -413,25 +378,51 @@
 				if (!apiBaseUrl) {
 					throw new Error("API Base URL is not configured in Netwin Settings.");
 				}
+				if (searchMode === "account" && !acNo) {
+					throw new Error("Please enter Ac-no.");
+				}
 				if (searchMode === "cif" && !gmstCode) {
 					throw new Error("Please enter CIF Id.");
 				}
-				if (searchMode === "account" && !acNo) {
-					throw new Error("Please enter AC No.");
-				}
-				if (searchMode === "account" && !selectedAccount) {
-					throw new Error("Please select a valid GL Code from the list.");
+
+				if (searchMode === "account") {
+					const helperUrl = new URL(
+						apiBaseUrl + "/api/method/banking_api.api.fetch_cif_id",
+					);
+					helperUrl.searchParams.set("ac_no", acNo);
+
+					const helperResponse = await fetch(helperUrl.toString(), {
+						method: "GET",
+						headers: {
+							Accept: "application/json",
+						},
+						credentials: "include",
+					});
+					const helperResult = await helperResponse.json();
+					const helperPayload = helperResult.message || helperResult;
+
+					if (
+						helperPayload.status !== "success" ||
+						!helperPayload.data ||
+						!helperPayload.data.gmst_code
+					) {
+						throw new Error(helperPayload.message || "Unable to fetch CIF Id.");
+					}
+
+					gmstCode = helperPayload.data.gmst_code;
+					setCustomerCif(gmstCode);
 				}
 
-				const url = new URL(apiBaseUrl + "/api/method/banking_api.api.fetch_photo_and_signature");
+				const url = new URL(
+					apiBaseUrl + "/api/method/banking_api.api.fetch_photo_and_signature",
+				);
 				url.searchParams.set("gmst_code", gmstCode);
-				url.searchParams.set("ac_no", acNo);
-				url.searchParams.set("acmastcode", acmastcode);
+				url.searchParams.set("ac_no", "");
 
 				const response = await fetch(url.toString(), {
 					method: "GET",
 					headers: {
-						"Accept": "application/json",
+						Accept: "application/json",
 					},
 					credentials: "include",
 				});
@@ -439,6 +430,7 @@
 				const payload = result.message || result;
 
 				if (payload.status === "success" && payload.data) {
+					setCustomerCif(payload.data.gmst_code || gmstCode);
 					setCustomerName(payload.data.name);
 					setImage(photoEl, payload.data.photo_long);
 					setImage(signEl, payload.data.sign_long);
