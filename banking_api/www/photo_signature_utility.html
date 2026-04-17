@@ -12,6 +12,25 @@
 {% block style %}
 {{ super() }}
 <style>
+	:root {
+		--utility-bg-deep: #050816;
+		--utility-bg-mid: #0a1021;
+		--utility-bg-soft: #101832;
+		--utility-glass: rgba(15, 22, 40, 0.56);
+		--utility-glass-soft: rgba(20, 29, 52, 0.42);
+		--utility-glass-strong: rgba(12, 18, 34, 0.82);
+		--utility-border: rgba(164, 184, 255, 0.14);
+		--utility-border-strong: rgba(164, 184, 255, 0.24);
+		--utility-text: #f5f7ff;
+		--utility-text-soft: rgba(225, 232, 255, 0.74);
+		--utility-text-faint: rgba(181, 194, 230, 0.56);
+		--utility-accent: #8ab4ff;
+		--utility-accent-2: #77e4ff;
+		--utility-accent-3: #9d87ff;
+		--utility-focus: rgba(119, 228, 255, 0.18);
+		--utility-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+	}
+
 	[data-path="/photo_signature_utility"] .navbar,
 	[data-path="/photo_signature_utility"] .page-breadcrumbs,
 	[data-path="/photo_signature_utility"] .page-header-wrapper,
@@ -24,8 +43,23 @@
 	[data-path="/photo_signature_utility"] .page-content-wrapper,
 	[data-path="/photo_signature_utility"] .page_content,
 	[data-path="/photo_signature_utility"] main {
+		width: 100% !important;
+		max-width: none !important;
+		min-height: 100vh !important;
 		padding-top: 0 !important;
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+		padding-bottom: 0 !important;
 		margin-top: 0 !important;
+		background: transparent !important;
+	}
+
+	body[data-path="/photo_signature_utility"] {
+		background:
+			radial-gradient(circle at 10% 12%, rgba(138, 180, 255, 0.2), transparent 22%),
+			radial-gradient(circle at 85% 18%, rgba(157, 135, 255, 0.18), transparent 20%),
+			radial-gradient(circle at 72% 86%, rgba(119, 228, 255, 0.14), transparent 24%),
+			linear-gradient(150deg, var(--utility-bg-deep), var(--utility-bg-mid) 52%, var(--utility-bg-soft));
 	}
 
 	footer {
@@ -33,144 +67,271 @@
 	}
 
 	.photo-signature-utility {
-		max-width: 1180px;
-		padding: 32px 15px 48px;
+		position: relative;
+		width: 100%;
+		max-width: none;
+		min-height: 100vh;
+		padding: 0;
+	}
+
+	.utility-shell {
+		min-height: 100vh;
+		padding: 24px;
+		background:
+			radial-gradient(circle at 12% 14%, rgba(138, 180, 255, 0.14), transparent 20%),
+			radial-gradient(circle at 82% 18%, rgba(157, 135, 255, 0.14), transparent 18%),
+			radial-gradient(circle at 72% 84%, rgba(119, 228, 255, 0.1), transparent 22%),
+			linear-gradient(150deg, rgba(5, 8, 22, 0.98), rgba(10, 16, 33, 0.96) 52%, rgba(16, 24, 50, 0.98));
 	}
 
 	.utility-layout {
 		display: grid;
-		grid-template-columns: 320px minmax(0, 1fr);
-		gap: 24px;
-		align-items: stretch;
+		grid-template-rows: auto minmax(0, 1fr) auto;
+		min-height: calc(100vh - 48px);
+		gap: 20px;
+		padding-bottom: 170px;
 	}
 
-	.utility-sidebar,
-	.utility-panel {
-		border: 1px solid #d9dee7;
-		border-radius: 18px;
-		background: #fff;
-		box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+	.utility-header {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 16px;
+		padding: 8px 6px 0;
+		text-align: center;
 	}
 
-	.utility-sidebar {
-		padding: 22px;
-		position: sticky;
-		top: 24px;
-		height: 100%;
-		box-sizing: border-box;
+	.utility-brand {
+		max-width: 860px;
 	}
 
-	.utility-panel {
-		padding: 24px;
-		height: 100%;
-		box-sizing: border-box;
-	}
-
-	.utility-sidebar h3,
-	.utility-panel h3 {
-		margin: 0 0 8px;
-		font-size: 20px;
-	}
-
-	.utility-muted {
-		margin: 0 0 18px;
-		color: #667085;
-		font-size: 13px;
-	}
-
-	.utility-field {
+	.utility-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 12px;
 		margin-bottom: 14px;
+		border: 1px solid var(--utility-border);
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.04);
+		color: var(--utility-text-soft);
+		font-size: 12px;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 	}
 
-	.utility-field label {
-		display: block;
-		margin-bottom: 6px;
+	.utility-badge-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, var(--utility-accent), var(--utility-accent-2));
+		box-shadow: 0 0 14px rgba(119, 228, 255, 0.6);
+	}
+
+	.utility-brand h1 {
+		margin: 0 0 10px;
+		font-size: clamp(32px, 5vw, 56px);
+		line-height: 1.02;
+		color: var(--utility-text);
+		letter-spacing: -0.03em;
+	}
+
+	.utility-status {
+		display: none;
+		align-items: center;
+		gap: 10px;
+		padding: 12px 14px;
+		border: 1px solid var(--utility-border);
+		border-radius: 18px;
+		background: rgba(255, 255, 255, 0.04);
+		color: var(--utility-text-soft);
+		font-size: 13px;
+		white-space: nowrap;
+	}
+
+	.utility-status strong {
+		color: var(--utility-text);
 		font-weight: 600;
 	}
 
-	.utility-mode-group {
-		display: grid;
-		gap: 10px;
-		margin-bottom: 18px;
+	.utility-muted {
+		margin: 0;
+		color: var(--utility-text-soft);
+		font-size: 15px;
+		line-height: 1.65;
 	}
 
-	.utility-mode-option {
+	.utility-panel {
+		min-height: 0;
 		display: flex;
+		justify-content: center;
 		align-items: center;
-		gap: 8px;
-		padding: 10px 12px;
-		border: 1px solid #d9dee7;
-		border-radius: 12px;
-		background: #f8fafc;
 	}
 
-	.utility-actions {
+	.utility-stage {
+		position: relative;
+		width: 100%;
+		max-width: 1080px;
 		display: flex;
-		gap: 10px;
-		margin-top: 20px;
+		flex-direction: column;
+		justify-content: center;
+		padding: 10px 0 4px;
 	}
 
-	.utility-actions .btn {
-		flex: 1;
+	.utility-empty-state {
+		max-width: 820px;
+		margin: 0 auto;
+		text-align: center;
+		transition: opacity 0.28s ease, transform 0.28s ease;
 	}
 
-	.utility-preview-grid {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 20px;
+	.utility-layout.utility-has-results .utility-empty-state,
+	.utility-layout.utility-loading .utility-empty-state {
+		opacity: 0;
+		transform: translateY(-12px);
+		pointer-events: none;
+		position: absolute;
+		inset: 0;
 	}
 
-	.utility-result-meta-grid {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+	.utility-empty-title {
+		margin: 0 0 12px;
+		font-size: clamp(32px, 4.6vw, 56px);
+		line-height: 1.08;
+		color: var(--utility-text);
+		letter-spacing: -0.03em;
+	}
+
+	.utility-empty-copy {
+		max-width: 700px;
+		margin: 0 auto;
+		color: var(--utility-text-soft);
+		font-size: 17px;
+		line-height: 1.75;
+	}
+
+	.utility-starters {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 12px;
+		margin-top: 24px;
+	}
+
+	.utility-starter {
+		padding: 12px 16px;
+		border: 1px solid var(--utility-border);
+		border-radius: 18px;
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+			var(--utility-glass-soft);
+		color: var(--utility-text-soft);
+		font-size: 14px;
+	}
+
+	.utility-chat {
+		width: 100%;
+		max-width: 920px;
+		margin: 0 auto;
+		display: none;
+		flex-direction: column;
 		gap: 16px;
-		margin-bottom: 18px;
+		opacity: 0;
+		transform: translateY(16px);
+		transition: opacity 0.28s ease, transform 0.28s ease;
 	}
 
-	.utility-result-meta {
-		padding: 14px 16px;
-		border: 1px solid #d9dee7;
-		border-radius: 14px;
-		background: #f8fafc;
+	.utility-layout.utility-loading .utility-chat,
+	.utility-layout.utility-has-results .utility-chat {
+		display: flex;
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.utility-message {
+		padding: 18px 20px;
+		border: 1px solid var(--utility-border);
+		border-radius: 24px;
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+			var(--utility-glass);
+		backdrop-filter: blur(18px);
+		-webkit-backdrop-filter: blur(18px);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.08),
+			0 18px 40px rgba(2, 6, 23, 0.22);
+	}
+
+	.utility-message-assistant {
+		align-self: stretch;
+	}
+
+	.utility-message-summary {
+		padding: 22px 22px 20px;
+	}
+
+	.utility-message-content {
+		color: var(--utility-text);
 	}
 
 	.utility-result-meta-label {
 		display: block;
-		margin-bottom: 4px;
-		font-size: 12px;
+		margin-bottom: 8px;
+		font-size: 11px;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: #667085;
+		color: rgba(167, 190, 255, 0.84);
 	}
 
 	.utility-result-meta-value {
 		font-size: 18px;
 		font-weight: 600;
-		color: #101828;
+		color: var(--utility-text);
+		word-break: break-word;
+	}
+
+	.utility-result-line + .utility-result-line {
+		margin-top: 12px;
+	}
+
+	.utility-result-row {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 18px;
+	}
+
+	.utility-preview-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 18px;
 	}
 
 	.utility-preview-card {
-		border: 1px solid #d9dee7;
-		border-radius: 16px;
+		border: 1px solid var(--utility-border);
+		border-radius: 24px;
 		padding: 18px;
-		background: #fcfcfd;
-		min-height: 320px;
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+			var(--utility-glass);
+		min-height: 260px;
 	}
 
 	.utility-preview-card h4 {
 		margin: 0 0 14px;
+		font-size: 18px;
+		color: var(--utility-text);
 	}
 
 	.utility-preview-empty {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 240px;
-		border: 1px dashed #cbd5e1;
-		border-radius: 12px;
-		color: #94a3b8;
-		background: #fff;
+		min-height: 200px;
+		border: 1px dashed rgba(138, 180, 255, 0.24);
+		border-radius: 18px;
+		color: var(--utility-text-faint);
+		background: rgba(10, 17, 32, 0.42);
 		text-align: center;
 		padding: 24px;
 	}
@@ -178,102 +339,417 @@
 	.utility-preview-card img {
 		max-width: 100%;
 		display: none;
-		border: 1px solid #ddd;
-		border-radius: 12px;
+		border: 1px solid var(--utility-border-strong);
+		border-radius: 18px;
 		padding: 8px;
-		background: #fff;
+		background: rgba(244, 248, 255, 0.97);
+	}
+
+	.utility-search-wrap {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 30;
+		padding: 12px 24px 18px;
+	}
+
+	.utility-search-dock {
+		position: relative;
+		max-width: 1080px;
+		width: 100%;
+		margin: 0 auto;
+		padding: 18px 18px 16px;
+		border: 1px solid var(--utility-border-strong);
+		border-radius: 30px;
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+			var(--utility-glass-strong);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.12),
+			var(--utility-shadow);
+		backdrop-filter: blur(24px);
+		-webkit-backdrop-filter: blur(24px);
+	}
+
+	.utility-search-dock::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		pointer-events: none;
+	}
+
+	.utility-search-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		margin-bottom: 14px;
+	}
+
+	.utility-search-meta {
+		color: var(--utility-text-faint);
+		font-size: 13px;
+		text-align: right;
+	}
+
+	.utility-mode-group {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 6px;
+		margin: 0;
+		border: 1px solid var(--utility-border);
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.04);
+	}
+
+	.utility-mode-option {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		min-height: 44px;
+		padding: 10px 18px;
+		border-radius: 999px;
+		color: var(--utility-text-soft);
+		cursor: pointer;
+		transition:
+			background 0.2s ease,
+			color 0.2s ease,
+			box-shadow 0.2s ease;
+	}
+
+	.utility-mode-option input {
+		margin: 0;
+		flex: 0 0 auto;
+		accent-color: var(--utility-accent-2);
+	}
+
+	.utility-mode-option span {
+		display: inline-flex;
+		align-items: center;
+		line-height: 1;
+	}
+
+	.utility-mode-option:has(input:checked) {
+		background: linear-gradient(135deg, rgba(138, 180, 255, 0.18), rgba(126, 231, 255, 0.12));
+		color: var(--utility-text);
+		box-shadow: inset 0 0 0 1px rgba(138, 180, 255, 0.22);
+	}
+
+	.utility-search-bar {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 12px;
+		align-items: end;
+	}
+
+	.utility-field {
+		margin: 0;
+	}
+
+	.utility-field label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.utility-field .form-control {
+		height: 64px;
+		border: 1px solid var(--utility-border);
+		border-radius: 24px;
+		background: rgba(255, 255, 255, 0.07);
+		color: var(--utility-text);
+		padding: 0 22px;
+		font-size: 16px;
+		box-shadow: none;
+	}
+
+	.utility-field .form-control::placeholder {
+		color: var(--utility-text-faint);
+	}
+
+	.utility-field .form-control:focus {
+		border-color: rgba(126, 231, 255, 0.62);
+		background: rgba(255, 255, 255, 0.1);
+		box-shadow: 0 0 0 4px var(--utility-focus);
+	}
+
+	.utility-actions {
+		display: inline-flex;
+		gap: 10px;
+	}
+
+	.utility-actions .btn {
+		height: 64px;
+		padding: 0 20px;
+		border-radius: 22px;
+		border: 1px solid var(--utility-border);
+		font-weight: 600;
+		box-shadow: none;
+	}
+
+	.utility-actions .btn-primary {
+		background: linear-gradient(135deg, var(--utility-accent), var(--utility-accent-2) 58%, var(--utility-accent-3));
+		border-color: transparent;
+		color: #08111f;
+	}
+
+	.utility-actions .btn-default {
+		background: rgba(255, 255, 255, 0.06);
+		color: var(--utility-text);
+	}
+
+	.utility-search-hint {
+		margin-top: 12px;
+		padding-left: 2px;
+		color: var(--utility-text-faint);
+		font-size: 13px;
+	}
+
+	.utility-thinking {
+		display: none;
+		align-items: center;
+		gap: 12px;
+		color: var(--utility-text-soft);
+	}
+
+	.utility-thinking-dots {
+		display: inline-flex;
+		gap: 6px;
+	}
+
+	.utility-thinking-dots span {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--utility-accent-2);
+		animation: utility-thinking 1.1s infinite ease-in-out;
+	}
+
+	.utility-thinking-dots span:nth-child(2) {
+		animation-delay: 0.15s;
+	}
+
+	.utility-thinking-dots span:nth-child(3) {
+		animation-delay: 0.3s;
+	}
+
+	.utility-layout.utility-loading .utility-panel,
+	.utility-layout.utility-loading .utility-thinking {
+		opacity: 1;
+		transform: translateY(0);
+		pointer-events: auto;
+	}
+
+	.utility-layout.utility-loading #result-message,
+	.utility-layout.utility-loading #result-preview-grid {
+		display: none;
+	}
+
+	.utility-layout.utility-has-results #utility-thinking {
+		display: none;
+	}
+
+	.utility-layout.utility-loading .utility-thinking {
+		display: inline-flex;
+	}
+
+	@keyframes utility-thinking {
+		0%, 80%, 100% {
+			transform: scale(0.8);
+			opacity: 0.45;
+		}
+		40% {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 
 	@media (max-width: 991px) {
+		.utility-shell {
+			padding: 20px 14px 16px;
+		}
+
+		.utility-header {
+			padding-top: 2px;
+		}
+
+		.utility-result-row,
+		.utility-preview-grid,
+		.utility-search-bar {
+			grid-template-columns: 1fr;
+		}
+
+		.utility-search-head {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.utility-search-meta {
+			text-align: center;
+		}
+
+		.utility-actions {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
 		.utility-layout {
+			padding-bottom: 196px;
+		}
+
+		.utility-search-wrap {
+			padding: 10px 14px 14px;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.utility-mode-group {
+			display: grid;
+			width: 100%;
+			border-radius: 20px;
+		}
+
+		.utility-actions {
 			grid-template-columns: 1fr;
 		}
 
-		.utility-sidebar {
-			position: static;
-		}
-
-		.utility-preview-grid {
-			grid-template-columns: 1fr;
+		.utility-layout {
+			padding-bottom: 260px;
 		}
 	}
 </style>
 {% endblock %} {% block page_content %}
-<div class="container photo-signature-utility">
-	<h1 style="margin-bottom: 24px">Netwin - Photo & Sign Verification</h1>
-
-	<div class="utility-layout">
-		<aside class="utility-sidebar">
-			<h3>Search</h3>
-			<p class="utility-muted">
-				Choose one search mode. Only one input will be shown to the user.
-			</p>
-
-			<div class="utility-mode-group">
-				<label class="utility-mode-option">
-					<input type="radio" name="search-mode" value="account" checked />
-					<span>Ac-no</span>
-				</label>
-				<label class="utility-mode-option">
-					<input type="radio" name="search-mode" value="cif" />
-					<span>CIF Id</span>
-				</label>
-			</div>
-
-			<div class="utility-field" id="account-search-group">
-				<label for="ac-no">Ac-no</label>
-				<input
-					id="ac-no"
-					type="text"
-					inputmode="numeric"
-					pattern="[0-9]*"
-					class="form-control"
-				/>
-			</div>
-
-			<div class="utility-field" id="cif-search-group">
-				<label for="gmst-code">CIF Id</label>
-				<input
-					id="gmst-code"
-					type="text"
-					inputmode="numeric"
-					pattern="[0-9]*"
-					class="form-control"
-				/>
-			</div>
-
-			<div class="utility-actions">
-				<button id="fetch-records" class="btn btn-primary">Fetch Records</button>
-				<button id="reset-form" type="button" class="btn btn-default">Reset</button>
-			</div>
-		</aside>
-
-		<section class="utility-panel">
-			<h3>Result Panel</h3>
-			<p class="utility-muted">Fetched images will appear here after a successful lookup.</p>
-			<div class="utility-result-meta-grid">
-				<div class="utility-result-meta">
-					<span class="utility-result-meta-label">Customer CIF</span>
-					<div id="customer-cif" class="utility-result-meta-value">Not loaded</div>
+<div class="photo-signature-utility">
+	<div class="utility-shell">
+		<div class="utility-layout" id="utility-layout">
+			<div class="utility-header">
+				<div class="utility-brand">
+					<div class="utility-badge">
+						<span class="utility-badge-dot"></span>
+						<span>Verification AI Workspace</span>
+					</div>
+					<h1>Customer verification</h1>
+					<p class="utility-muted">Search with Ac No or CIF ID.</p>
 				</div>
-				<div class="utility-result-meta">
-					<span class="utility-result-meta-label">Customer Name</span>
-					<div id="customer-name" class="utility-result-meta-value">Not loaded</div>
+				<div class="utility-status">
+					<span class="utility-badge-dot"></span>
+					<span>Status <strong>Ready</strong></span>
 				</div>
 			</div>
-			<div class="utility-preview-grid">
-				<div class="utility-preview-card">
-					<h4>Photo</h4>
-					<div id="photo-empty" class="utility-preview-empty">No photo loaded</div>
-					<img id="photo-preview" />
+
+			<section class="utility-panel">
+				<div class="utility-stage">
+					<div class="utility-empty-state">
+						<h2 class="utility-empty-title">Ready to verify</h2>
+					</div>
+
+					<div class="utility-chat">
+						<div class="utility-message utility-message-assistant" id="utility-thinking">
+							<div class="utility-message-content utility-thinking">
+								<div class="utility-thinking-dots" aria-hidden="true">
+									<span></span>
+									<span></span>
+									<span></span>
+								</div>
+								<span>Thinking...</span>
+							</div>
+						</div>
+
+						<div class="utility-message utility-message-assistant utility-message-summary" id="result-message">
+							<div class="utility-message-content">
+								<div class="utility-result-row">
+									<div class="utility-result-line">
+										<span class="utility-result-meta-label">Customer CIF</span>
+										<div id="customer-cif" class="utility-result-meta-value">Not loaded</div>
+									</div>
+									<div class="utility-result-line">
+										<span class="utility-result-meta-label">Customer Name</span>
+										<div id="customer-name" class="utility-result-meta-value">Not loaded</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="utility-preview-grid" id="result-preview-grid">
+							<div class="utility-preview-card">
+								<h4>Photo</h4>
+								<div id="photo-empty" class="utility-preview-empty">No photo loaded</div>
+								<img id="photo-preview" />
+							</div>
+							<div class="utility-preview-card">
+								<h4>Signature</h4>
+								<div id="sign-empty" class="utility-preview-empty">No signature loaded</div>
+								<img id="sign-preview" />
+							</div>
+						</div>
+					</div>
 				</div>
-				<div class="utility-preview-card">
-					<h4>Signature</h4>
-					<div id="sign-empty" class="utility-preview-empty">No signature loaded</div>
-					<img id="sign-preview" />
+			</section>
+
+			<div class="utility-search-wrap">
+				<div class="utility-search-dock">
+					<div class="utility-search-head">
+						<div class="utility-mode-group" role="radiogroup" aria-label="Search mode">
+							<label class="utility-mode-option">
+								<input type="radio" name="search-mode" value="account" checked />
+								<span>Ac No</span>
+							</label>
+							<label class="utility-mode-option">
+								<input type="radio" name="search-mode" value="cif" />
+								<span>CIF ID</span>
+							</label>
+						</div>
+						<div class="utility-search-meta">Single input, single response, operator-first flow.</div>
+					</div>
+
+					<div class="utility-search-bar">
+						<div class="utility-field" id="account-search-group">
+							<label for="ac-no">Ac-no</label>
+							<input
+								id="ac-no"
+								type="text"
+								inputmode="numeric"
+								pattern="[0-9]*"
+								class="form-control"
+								placeholder="Enter account number"
+							/>
+						</div>
+
+						<div class="utility-field" id="cif-search-group">
+							<label for="gmst-code">CIF Id</label>
+							<input
+								id="gmst-code"
+								type="text"
+								inputmode="numeric"
+								pattern="[0-9]*"
+								class="form-control"
+								placeholder="Enter CIF ID"
+							/>
+						</div>
+
+						<div class="utility-actions">
+							<button id="fetch-records" class="btn btn-primary">Search</button>
+							<button id="reset-form" type="button" class="btn btn-default">Reset</button>
+						</div>
+					</div>
+
+					<p class="utility-search-hint">
+						Enter a value and submit. The system will resolve the request and generate a response above.
+					</p>
 				</div>
 			</div>
-		</section>
+		</div>
 	</div>
 </div>
 
@@ -288,11 +764,15 @@
 		const signEmptyEl = document.getElementById("sign-empty");
 		const customerCifEl = document.getElementById("customer-cif");
 		const customerNameEl = document.getElementById("customer-name");
+		const utilityLayoutEl = document.getElementById("utility-layout");
+		const resultMessageEl = document.getElementById("result-message");
+		const resultPreviewGridEl = document.getElementById("result-preview-grid");
 		const gmstCodeEl = document.getElementById("gmst-code");
 		const acNoEl = document.getElementById("ac-no");
 		const cifSearchGroupEl = document.getElementById("cif-search-group");
 		const accountSearchGroupEl = document.getElementById("account-search-group");
 		const searchModeEls = document.querySelectorAll('input[name="search-mode"]');
+		const searchMetaEl = document.querySelector(".utility-search-meta");
 
 		function allowOnlyDigits(el) {
 			el.addEventListener("input", function () {
@@ -323,6 +803,11 @@
 			customerNameEl.textContent = value || "Not loaded";
 		}
 
+		function setResultVisibility(visible) {
+			resultMessageEl.style.display = visible ? "block" : "none";
+			resultPreviewGridEl.style.display = visible ? "grid" : "none";
+		}
+
 		function getSearchMode() {
 			const selected = Array.from(searchModeEls).find(function (el) {
 				return el.checked;
@@ -339,8 +824,12 @@
 
 			if (isAccountMode) {
 				gmstCodeEl.value = "";
+				acNoEl.placeholder = "Ask with account number";
+				searchMetaEl.textContent = "Ac No mode resolves CIF first, then fetches verification.";
 			} else {
 				acNoEl.value = "";
+				gmstCodeEl.placeholder = "Ask with CIF ID";
+				searchMetaEl.textContent = "CIF ID mode sends a direct verification request.";
 			}
 		}
 
@@ -355,14 +844,26 @@
 			setCustomerName("");
 			setImage(photoEl, null);
 			setImage(signEl, null);
+			setResultVisibility(false);
+			utilityLayoutEl.classList.remove("utility-loading");
+			utilityLayoutEl.classList.remove("utility-has-results");
 		}
 
 		allowOnlyDigits(gmstCodeEl);
 		allowOnlyDigits(acNoEl);
+		[gmstCodeEl, acNoEl].forEach(function (el) {
+			el.addEventListener("keydown", function (event) {
+				if (event.key === "Enter") {
+					event.preventDefault();
+					button.click();
+				}
+			});
+		});
 		searchModeEls.forEach(function (el) {
 			el.addEventListener("change", updateSearchModeUI);
 		});
 		updateSearchModeUI();
+		setResultVisibility(false);
 
 		button.addEventListener("click", async function () {
 			const searchMode = getSearchMode();
@@ -373,6 +874,9 @@
 			setCustomerName("");
 			setImage(photoEl, null);
 			setImage(signEl, null);
+			setResultVisibility(false);
+			utilityLayoutEl.classList.remove("utility-has-results");
+			utilityLayoutEl.classList.add("utility-loading");
 
 			try {
 				if (!apiBaseUrl) {
@@ -434,11 +938,15 @@
 					setCustomerName(payload.data.name);
 					setImage(photoEl, payload.data.photo_long);
 					setImage(signEl, payload.data.sign_long);
+					setResultVisibility(true);
+					utilityLayoutEl.classList.remove("utility-loading");
+					utilityLayoutEl.classList.add("utility-has-results");
 					return;
 				}
 
 				throw new Error(payload.message || "Unable to fetch records.");
 			} catch (error) {
+				utilityLayoutEl.classList.remove("utility-loading");
 				frappe.msgprint({
 					title: "Error",
 					message: error.message,
