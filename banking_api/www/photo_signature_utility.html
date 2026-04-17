@@ -95,6 +95,30 @@
 		gap: 20px;
 	}
 
+	.utility-result-meta {
+		margin-bottom: 18px;
+		padding: 14px 16px;
+		border: 1px solid #d9dee7;
+		border-radius: 14px;
+		background: #f8fafc;
+	}
+
+	.utility-result-meta-label {
+		display: block;
+		margin-bottom: 4px;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: #667085;
+	}
+
+	.utility-result-meta-value {
+		font-size: 18px;
+		font-weight: 600;
+		color: #101828;
+	}
+
 	.utility-preview-card {
 		border: 1px solid #d9dee7;
 		border-radius: 16px;
@@ -192,6 +216,10 @@
 		<section class="utility-panel">
 			<h3>Result Panel</h3>
 			<p class="utility-muted">Fetched images will appear here after a successful lookup.</p>
+			<div class="utility-result-meta">
+				<span class="utility-result-meta-label">Customer Name</span>
+				<div id="customer-name" class="utility-result-meta-value">Not loaded</div>
+			</div>
 			<div class="utility-preview-grid">
 				<div class="utility-preview-card">
 					<h4>Photo</h4>
@@ -218,6 +246,7 @@
 		const signEl = document.getElementById("sign-preview");
 		const photoEmptyEl = document.getElementById("photo-empty");
 		const signEmptyEl = document.getElementById("sign-empty");
+		const customerNameEl = document.getElementById("customer-name");
 		const acCodeSearchEl = document.getElementById("ac-code-search");
 		const acCodeResultsEl = document.getElementById("ac-code-results");
 		const acCodeSelectedEl = document.getElementById("ac-code-selected");
@@ -257,6 +286,10 @@
 			return selected ? selected.value : "cif";
 		}
 
+		function setCustomerName(value) {
+			customerNameEl.textContent = value || "Not loaded";
+		}
+
 		function resetAccountSelection() {
 			selectedAccount = null;
 			acCodeSearchEl.value = "";
@@ -273,6 +306,7 @@
 			});
 			resetAccountSelection();
 			updateSearchModeUI();
+			setCustomerName("");
 			setImage(photoEl, null);
 			setImage(signEl, null);
 		}
@@ -371,6 +405,7 @@
 			const gmstCode = searchMode === "cif" ? gmstCodeEl.value.trim() : "";
 			const acNo = searchMode === "account" ? acNoEl.value.trim() : "";
 			const acmastcode = searchMode === "account" && selectedAccount ? selectedAccount.acmastcode : "";
+			setCustomerName("");
 			setImage(photoEl, null);
 			setImage(signEl, null);
 
@@ -404,6 +439,7 @@
 				const payload = result.message || result;
 
 				if (payload.status === "success" && payload.data) {
+					setCustomerName(payload.data.name);
 					setImage(photoEl, payload.data.photo_long);
 					setImage(signEl, payload.data.sign_long);
 					return;
