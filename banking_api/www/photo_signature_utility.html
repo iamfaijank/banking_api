@@ -137,7 +137,7 @@
 	}
 
 	.utility-status {
-		display: none;
+		display: inline-flex;
 		align-items: center;
 		gap: 10px;
 		padding: 12px 14px;
@@ -152,6 +152,26 @@
 	.utility-status strong {
 		color: var(--utility-text);
 		font-weight: 600;
+	}
+
+	.utility-status .utility-badge-dot {
+		box-shadow: none;
+		background: rgba(181, 194, 230, 0.56);
+	}
+
+	.utility-status.is-checking .utility-badge-dot {
+		background: linear-gradient(135deg, #ffd36a, #ff9b6a);
+		box-shadow: 0 0 14px rgba(255, 184, 107, 0.5);
+	}
+
+	.utility-status.is-available .utility-badge-dot {
+		background: linear-gradient(135deg, #47d88a, #87f0ae);
+		box-shadow: 0 0 14px rgba(71, 216, 138, 0.45);
+	}
+
+	.utility-status.is-unavailable .utility-badge-dot {
+		background: linear-gradient(135deg, #ff7373, #ff9b9b);
+		box-shadow: 0 0 14px rgba(255, 115, 115, 0.42);
 	}
 
 	.utility-muted {
@@ -793,9 +813,9 @@
 					<h1>Customer verification</h1>
 					<p class="utility-muted">Search with Ac No or CIF ID.</p>
 				</div>
-				<div class="utility-status">
+				<div class="utility-status is-checking" id="base-url-status">
 					<span class="utility-badge-dot"></span>
-					<span>Status <strong>Ready</strong></span>
+					<span>Base URL <strong id="base-url-status-text">Checking...</strong></span>
 				</div>
 			</div>
 
@@ -907,6 +927,7 @@
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
 		const apiBaseUrl = "{{ api_base_url }}".trim().replace(/\/$/, "");
+		const localApiBaseUrl = window.location.origin.replace(/\/$/, "");
 		const button = document.getElementById("fetch-records");
 		const resetButton = document.getElementById("reset-form");
 		const photoEl = document.getElementById("photo-preview");
@@ -924,6 +945,8 @@
 		const accountSearchGroupEl = document.getElementById("account-search-group");
 		const searchModeEls = document.querySelectorAll('input[name="search-mode"]');
 		const searchMetaEl = document.querySelector(".utility-search-meta");
+		const baseUrlStatusEl = document.getElementById("base-url-status");
+		const baseUrlStatusTextEl = document.getElementById("base-url-status-text");
 
 		function allowOnlyDigits(el) {
 			el.addEventListener("input", function () {
@@ -957,6 +980,57 @@
 		function setResultVisibility(visible) {
 			resultMessageEl.style.display = visible ? "block" : "none";
 			resultPreviewGridEl.style.display = visible ? "grid" : "none";
+		}
+
+		function buildApiUrl(path, options) {
+			const useConfiguredBase = options && options.useConfiguredBase;
+			const baseUrl = useConfiguredBase ? apiBaseUrl : localApiBaseUrl;
+			return new URL(baseUrl + path);
+		}
+
+		function setBaseUrlStatus(status) {
+			baseUrlStatusEl.classList.remove("is-checking", "is-available", "is-unavailable");
+
+			if (status === "available") {
+				baseUrlStatusEl.classList.add("is-available");
+				baseUrlStatusTextEl.textContent = "Available";
+				return;
+			}
+
+			if (status === "unavailable") {
+				baseUrlStatusEl.classList.add("is-unavailable");
+				baseUrlStatusTextEl.textContent = "Not Available";
+				return;
+			}
+
+			baseUrlStatusEl.classList.add("is-checking");
+			baseUrlStatusTextEl.textContent = "Checking...";
+		}
+
+		async function checkBaseUrlAvailability() {
+			if (!apiBaseUrl) {
+				setBaseUrlStatus("unavailable");
+				return false;
+			}
+
+			setBaseUrlStatus("checking");
+
+			try {
+				const probeUrl = new URL(apiBaseUrl + "/");
+				probeUrl.searchParams.set("_base_url_probe", Date.now().toString());
+
+				await fetch(probeUrl.toString(), {
+					method: "GET",
+					mode: "no-cors",
+					cache: "no-store",
+				});
+
+				setBaseUrlStatus("available");
+				return true;
+			} catch (error) {
+				setBaseUrlStatus("unavailable");
+				return false;
+			}
 		}
 
 		function getSearchMode() {
@@ -1015,6 +1089,7 @@
 		});
 		updateSearchModeUI();
 		setResultVisibility(false);
+		checkBaseUrlAvailability();
 
 		button.addEventListener("click", async function () {
 			const searchMode = getSearchMode();
@@ -1041,8 +1116,8 @@
 				}
 
 				if (searchMode === "account") {
-					const helperUrl = new URL(
-						apiBaseUrl + "/api/method/banking_api.api.fetch_cif_id",
+					const helperUrl = buildApiUrl(
+						"/api/method/banking_api.api.fetch_cif_id",
 					);
 					helperUrl.searchParams.set("ac_no", acNo);
 
@@ -1068,8 +1143,8 @@
 					setCustomerCif(gmstCode);
 				}
 
-				const url = new URL(
-					apiBaseUrl + "/api/method/banking_api.api.fetch_photo_and_signature",
+				const url = buildApiUrl(
+					"/api/method/banking_api.api.fetch_photo_and_signature",
 				);
 				url.searchParams.set("gmst_code", gmstCode);
 				url.searchParams.set("ac_no", "");
