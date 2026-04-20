@@ -1,4 +1,5 @@
 import base64
+import hmac
 
 import frappe
 from frappe import _
@@ -39,6 +40,50 @@ WHERE
         AND s.ac_no = :ac_no
     )
 """
+
+
+def _unauthorized_response():
+	frappe.local.response["http_status_code"] = 401
+	return {
+		"status": "error",
+		"message": _("Unauthorized API request."),
+	}
+
+
+def _validate_api_request():
+	if frappe.session.user != "Guest":
+		return None
+
+	auth_header = (frappe.get_request_header("Authorization") or "").strip()
+	if not auth_header.startswith("token "):
+		return _unauthorized_response()
+
+	token_value = auth_header[6:].strip()
+	if ":" not in token_value:
+		return _unauthorized_response()
+
+	provided_key, provided_secret = token_value.split(":", 1)
+	provided_key = provided_key.strip()
+	provided_secret = provided_secret.strip()
+
+	settings = frappe.get_single("Netwin Settings")
+	expected_key = (settings.api_key or "").strip()
+	expected_secret = (settings.get_password("api_secret") or "").strip()
+
+	if not expected_key or not expected_secret:
+		frappe.local.response["http_status_code"] = 500
+		return {
+			"status": "error",
+			"message": _("API credentials are not configured in Netwin Settings."),
+		}
+
+	if not (
+		hmac.compare_digest(provided_key, expected_key)
+		and hmac.compare_digest(provided_secret, expected_secret)
+	):
+		return _unauthorized_response()
+
+	return None
 
 
 def _fetch_cif_id_from_helper_db(ac_no):
@@ -85,8 +130,12 @@ def _fetch_cif_id_from_helper_db(ac_no):
 			connection.close()
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def fetch_cif_id(ac_no=None):
+	auth_error = _validate_api_request()
+	if auth_error:
+		return auth_error
+
 	ac_no = (ac_no or "").strip()
 
 	if not ac_no:
@@ -123,8 +172,12 @@ def _encode_blob(value):
 	return base64.b64encode(value).decode("utf-8")
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def fetch_photo_and_signature(gmst_code=None, ac_no=None, acmastcode=None):
+	auth_error = _validate_api_request()
+	if auth_error:
+		return auth_error
+
 	gmst_code = (gmst_code or "").strip()
 	ac_no = (ac_no or "").strip()
 

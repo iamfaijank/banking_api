@@ -6,6 +6,8 @@
  "engine": "InnoDB",
  "field_order": [
   "api_base_url",
+  "api_key",
+  "api_secret",
   "host",
   "username",
   "password",
@@ -17,6 +19,16 @@
    "fieldname": "api_base_url",
    "fieldtype": "Data",
    "label": "API Base URL"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Data",
+   "label": "API Key"
+  },
+  {
+   "fieldname": "api_secret",
+   "fieldtype": "Password",
+   "label": "API Secret"
   },
   {
    "fieldname": "host",
