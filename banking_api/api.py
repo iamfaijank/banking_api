@@ -1,7 +1,12 @@
 import base64
+import json
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode, urlsplit
+from urllib.request import Request, urlopen
 
 import frappe
 from frappe import _
+from frappe.utils import get_url
 
 HELPER_QUERY = """
 SELECT cif_id
@@ -122,6 +127,63 @@ def _encode_blob(value):
 	return base64.b64encode(value).decode("utf-8")
 
 
+def _normalize_base_url(value):
+	return (value or "").strip().rstrip("/")
+
+
+def _should_proxy_to_remote(base_url):
+	base_url = _normalize_base_url(base_url)
+	local_base_url = _normalize_base_url(get_url())
+
+	if not base_url:
+		return False
+
+	return urlsplit(base_url) != urlsplit(local_base_url)
+
+
+def _proxy_photo_and_signature_request(base_url, gmst_code=None, ac_no=None):
+	url = "{0}/api/method/banking_api.api.fetch_photo_and_signature?{1}".format(
+		_normalize_base_url(base_url),
+		urlencode(
+			{
+				"gmst_code": gmst_code or "",
+				"ac_no": ac_no or "",
+			}
+		),
+	)
+	request = Request(
+		url,
+		headers={
+			"Accept": "application/json",
+			"User-Agent": "banking_api_proxy/1.0",
+		},
+	)
+
+	try:
+		with urlopen(request, timeout=30) as response:
+			payload = json.loads(response.read().decode("utf-8"))
+	except HTTPError as exc:
+		try:
+			payload = json.loads(exc.read().decode("utf-8"))
+		except Exception:
+			return {
+				"status": "error",
+				"message": _("Remote API request failed with HTTP {0}.").format(exc.code),
+			}
+	except URLError as exc:
+		return {
+			"status": "error",
+			"message": _("Remote API request failed: {0}").format(str(exc.reason)),
+		}
+	except Exception as exc:
+		return {
+			"status": "error",
+			"message": _("Remote API request failed: {0}").format(str(exc)),
+		}
+
+	return payload.get("message", payload)
+
+
 @frappe.whitelist(allow_guest=True)
 def fetch_photo_and_signature(gmst_code=None, ac_no=None, acmastcode=None):
 	gmst_code = (gmst_code or "").strip()
@@ -142,6 +204,15 @@ def fetch_photo_and_signature(gmst_code=None, ac_no=None, acmastcode=None):
 			}
 		ac_no = ""
 
+	settings = frappe.get_single("Netwin Settings")
+
+	if _should_proxy_to_remote(settings.api_base_url):
+		return _proxy_photo_and_signature_request(
+			settings.api_base_url,
+			gmst_code=gmst_code,
+			ac_no=ac_no,
+		)
+
 	try:
 		import cx_Oracle
 	except ImportError:
@@ -150,7 +221,6 @@ def fetch_photo_and_signature(gmst_code=None, ac_no=None, acmastcode=None):
 			"message": _("`cx_Oracle` is not installed on this server."),
 		}
 
-	settings = frappe.get_single("Netwin Settings")
 	username = settings.username
 	password = settings.get_password("password")
 	host = settings.host
