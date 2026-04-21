@@ -1,594 +1,481 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html>
+	<head>
+		<title>Transaction Statement</title>
 
+		<link rel="stylesheet" href="/assets/frappe/css/bootstrap.css" />
 
+		<style>
+			body {
+				font-family: "Segoe UI", Arial, sans-serif;
 
-<head>
+				margin: 0;
 
-    <title>Transaction Statement</title>
+				background-color: #f5f7f9;
+			}
 
+			header {
+				background: #006768;
 
-    <link rel="stylesheet" href="/assets/frappe/css/bootstrap.css" />
+				padding: 20px 0;
 
-    <style>
-        body {
+				text-align: center;
 
-            font-family: "Segoe UI", Arial, sans-serif;
+				color: white;
 
-            margin: 0;
+				font-size: 22px;
 
-            background-color: #f5f7f9;
+				font-weight: 600;
+			}
 
-        }
+			.container {
+				max-width: 620px;
 
-        header {
+				margin: 34px auto;
 
-            background: #006768;
+				background: white;
 
-            padding: 20px 0;
+				border-radius: 14px;
 
-            text-align: center;
+				padding: 36px 30px 26px 30px;
 
-            color: white;
+				box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
+			}
 
-            font-size: 22px;
+			.logo {
+				text-align: center;
 
-            font-weight: 600;
+				margin-bottom: 10px;
+			}
 
-        }
+			.logo img {
+				height: 44px;
+			}
 
-        .container {
+			h1 {
+				text-align: center;
 
-            max-width: 620px;
+				margin-bottom: 18px;
 
-            margin: 34px auto;
+				color: #006768;
 
-            background: white;
+				font-size: 26px;
 
-            border-radius: 14px;
+				font-weight: bold;
+			}
 
-            padding: 36px 30px 26px 30px;
+			.form-row {
+				display: flex;
 
-            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
+				flex-wrap: wrap;
 
-        }
+				gap: 16px;
 
-        .logo {
+				margin-bottom: 15px;
+			}
 
-            text-align: center;
+			.form-group {
+				flex: 1;
 
-            margin-bottom: 10px;
+				min-width: 45%;
 
-        }
+				margin-bottom: 0;
 
-        .logo img {
+				position: relative;
+			}
 
-            height: 44px;
+			.form-label {
+				display: block;
 
-        }
+				margin-bottom: 5px;
 
-        h1 {
+				font-weight: 600;
 
-            text-align: center;
+				color: #006768;
+			}
 
-            margin-bottom: 18px;
+			.form-control {
+				width: 100%;
 
-            color: #006768;
+				padding: 10px;
 
-            font-size: 26px;
+				border-radius: 7px;
 
-            font-weight: bold;
+				border: 1px solid #bbb;
 
-        }
+				box-sizing: border-box;
 
-        .form-row {
+				font-size: 15px;
 
-            display: flex;
+				transition: border 0.22s;
 
-            flex-wrap: wrap;
+				background: #fafcfc;
+			}
 
-            gap: 16px;
+			.form-control:focus {
+				border-color: #006768;
 
-            margin-bottom: 15px;
+				box-shadow: 0 0 5px rgba(0, 103, 104, 0.26);
 
-        }
+				outline: none;
+			}
 
-        .form-group {
+			.form-control.error {
+				border-color: #dc3545;
+			}
 
-            flex: 1;
+			.error-hint {
+				color: #dc3545;
 
-            min-width: 45%;
+				font-size: 13px;
 
-            margin-bottom: 0;
+				position: absolute;
 
-            position: relative;
+				bottom: -19px;
 
-        }
+				left: 0;
 
-        .form-label {
+				display: none;
+			}
 
-            display: block;
+			.error-hint.active {
+				display: block;
+			}
 
-            margin-bottom: 5px;
+			.btn-primary {
+				width: 100%;
 
-            font-weight: 600;
+				padding: 13px;
 
-            color: #006768;
+				background-color: #006768;
 
-        }
+				color: white;
 
-        .form-control {
+				border: none;
 
-            width: 100%;
+				cursor: pointer;
 
-            padding: 10px;
+				border-radius: 7px;
 
-            border-radius: 7px;
+				font-size: 17px;
 
-            border: 1px solid #bbb;
+				font-weight: 600;
 
-            box-sizing: border-box;
+				transition: background 0.18s;
+			}
 
-            font-size: 15px;
+			.btn-primary:hover {
+				background-color: #028079;
+			}
 
-            transition: border 0.22s;
+			.alert {
+				margin-top: 20px;
 
-            background: #fafcfc;
+				display: none;
 
-        }
+				padding: 16px;
 
-        .form-control:focus {
+				border-radius: 7px;
 
-            border-color: #006768;
+				font-weight: 500;
 
-            box-shadow: 0 0 5px rgba(0, 103, 104, 0.26);
+				font-size: 15px;
 
-            outline: none;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+			}
 
-        }
+			.alert.success {
+				background-color: #28a745;
 
-        .form-control.error {
+				color: white;
+			}
 
-            border-color: #dc3545;
+			.alert.error {
+				background-color: #dc3545;
 
-        }
+				color: white;
+			}
 
-        .error-hint {
+			.loader {
+				display: none;
 
-            color: #dc3545;
+				margin: 18px 0;
 
-            font-size: 13px;
+				text-align: center;
+			}
 
-            position: absolute;
+			.loader span {
+				width: 11px;
 
-            bottom: -19px;
+				height: 11px;
 
-            left: 0;
+				margin: 0 4px;
 
-            display: none;
+				background: #006768;
 
-        }
+				display: inline-block;
 
-        .error-hint.active {
+				border-radius: 50%;
 
-            display: block;
+				animation: bounce 0.7s infinite alternate;
+			}
 
-        }
+			.loader span:nth-child(2) {
+				animation-delay: 0.16s;
+			}
 
-        .btn-primary {
+			.loader span:nth-child(3) {
+				animation-delay: 0.32s;
+			}
 
-            width: 100%;
+			@keyframes bounce {
+				from {
+					transform: translateY(0);
+				}
 
-            padding: 13px;
+				to {
+					transform: translateY(-9px);
+				}
+			}
 
-            background-color: #006768;
+			/* Modal Styles */
 
-            color: white;
+			.modal-overlay {
+				position: fixed;
 
-            border: none;
+				top: 0;
 
-            cursor: pointer;
+				left: 0;
 
-            border-radius: 7px;
+				width: 100%;
 
-            font-size: 17px;
+				height: 100%;
 
-            font-weight: 600;
+				background: rgba(0, 0, 0, 0.4);
 
-            transition: background 0.18s;
+				backdrop-filter: blur(4px);
 
-        }
+				display: none;
 
-        .btn-primary:hover {
+				align-items: center;
 
-            background-color: #028079;
+				justify-content: center;
 
-        }
+				z-index: 1000;
+			}
 
-        .alert {
+			.modal-content {
+				background: white;
 
-            margin-top: 20px;
+				padding: 30px;
 
-            display: none;
+				border-radius: 12px;
 
-            padding: 16px;
+				max-width: 400px;
 
-            border-radius: 7px;
+				width: 90%;
 
-            font-weight: 500;
+				text-align: center;
 
-            font-size: 15px;
+				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+			}
 
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+			.modal-title {
+				font-size: 20px;
 
-        }
+				font-weight: bold;
 
-        .alert.success {
+				color: #006768;
 
-            background-color: #28a745;
+				margin-bottom: 20px;
+			}
 
-            color: white;
+			.modal-buttons {
+				display: flex;
 
-        }
+				flex-direction: column;
 
-        .alert.error {
+				gap: 12px;
+			}
 
-            background-color: #dc3545;
+			.btn-option {
+				padding: 12px;
 
-            color: white;
+				border: 2px solid #006768;
 
-        }
+				background: white;
 
-        .loader {
+				color: #006768;
 
-            display: none;
+				border-radius: 7px;
 
-            margin: 18px 0;
+				font-weight: 600;
 
-            text-align: center;
+				cursor: pointer;
 
-        }
+				transition: all 0.2s;
 
-        .loader span {
+				font-size: 16px;
+			}
 
-            width: 11px;
+			.btn-option:hover {
+				background: #006768;
 
-            height: 11px;
+				color: white;
+			}
 
-            margin: 0 4px;
+			.btn-cancel {
+				margin-top: 15px;
 
-            background: #006768;
+				background: none;
 
-            display: inline-block;
+				border: none;
 
-            border-radius: 50%;
+				color: #666;
 
-            animation: bounce 0.7s infinite alternate;
+				cursor: pointer;
 
-        }
+				text-decoration: underline;
 
-        .loader span:nth-child(2) {
+				font-size: 14px;
+			}
 
-            animation-delay: 0.16s;
+			@media (max-width: 700px) {
+				.container {
+					max-width: 98vw;
 
-        }
+					padding: 18px;
+				}
 
-        .loader span:nth-child(3) {
+				.form-row {
+					flex-direction: column;
 
-            animation-delay: 0.32s;
+					gap: 10px;
+				}
+			}
+		</style>
+	</head>
 
-        }
+	<body>
+		{% if frappe.session.user != "Guest" %}
 
+		<header>
+			<div>Netwin Banking Statement Portal</div>
+		</header>
 
+		<div class="container">
+			<div
+				style="
+					color: #d35400;
 
-        @keyframes bounce {
+					text-align: center;
 
-            from {
+					font-weight: 500;
 
-                transform: translateY(0);
+					font-size: 14px;
+				"
+			>
+				<!-- Portal valid till December 6, 2024 only. -->
+			</div>
 
-            }
+			<h1>Transaction Statement</h1>
 
-            to {
+			<form id="statement-form" novalidate>
+				<div class="form-row">
+					<div class="form-group">
+						<label for="ac_no" class="form-label">Account No</label>
 
-                transform: translateY(-9px);
+						<input
+							type="text"
+							class="form-control"
+							id="ac_no"
+							placeholder="Enter Account No"
+							required
+							autofocus
+						/>
 
-            }
+						<span class="error-hint" id="err-ac_no"></span>
+					</div>
 
-        }
+					<div class="form-group">
+						<label for="ac_code" class="form-label">GL Code</label>
 
+						<input
+							type="text"
+							class="form-control"
+							id="ac_code"
+							placeholder="Enter GL Code"
+							required
+						/>
 
+						<span class="error-hint" id="err-ac_code"></span>
+					</div>
+				</div>
 
-        /* Modal Styles */
+				<div class="form-row">
+					<div class="form-group">
+						<label for="branch_code" class="form-label">Branch Code</label>
 
-        .modal-overlay {
+						<input
+							type="text"
+							class="form-control"
+							id="branch_code"
+							placeholder="Enter Branch Code"
+							required
+						/>
 
-            position: fixed;
+						<span class="error-hint" id="err-branch_code"></span>
+					</div>
 
-            top: 0;
+					<div class="form-group">
+						<label for="start_date" class="form-label">Start Date</label>
 
-            left: 0;
+						<input type="date" class="form-control" id="start_date" required />
 
-            width: 100%;
+						<span class="error-hint" id="err-start_date"></span>
+					</div>
 
-            height: 100%;
+					<div class="form-group">
+						<label for="end_date" class="form-label">End Date</label>
 
-            background: rgba(0, 0, 0, 0.4);
+						<input type="date" class="form-control" id="end_date" required />
 
-            backdrop-filter: blur(4px);
+						<span class="error-hint" id="err-end_date"></span>
+					</div>
+				</div>
 
-            display: none;
+				<button type="submit" class="btn-primary">⬇ Download Statement</button>
+			</form>
 
-            align-items: center;
+			<div class="loader" id="loader"><span></span><span></span><span></span></div>
 
-            justify-content: center;
+			<div id="alert-container" class="alert"></div>
+		</div>
 
-            z-index: 1000;
+		<!-- Format Selection Modal -->
 
-        }
+		<div class="modal-overlay" id="format-modal">
+			<div class="modal-content">
+				<div class="modal-title">Select Export Format</div>
 
-        .modal-content {
+				<div class="modal-buttons">
+					<button class="btn-option" onclick="handleDownload('pdf')">
+						📄 Download as PDF
+					</button>
 
-            background: white;
+					<button class="btn-option" onclick="handleDownload('csv')">
+						📊 Download as CSV
+					</button>
+				</div>
 
-            padding: 30px;
+				<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+			</div>
+		</div>
 
-            border-radius: 12px;
+		{% else %} {% include "/templates/not-found.html" %} {% endif %}
 
-            max-width: 400px;
-
-            width: 90%;
-
-            text-align: center;
-
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-
-        }
-
-        .modal-title {
-
-            font-size: 20px;
-
-            font-weight: bold;
-
-            color: #006768;
-
-            margin-bottom: 20px;
-
-        }
-
-        .modal-buttons {
-
-            display: flex;
-
-            flex-direction: column;
-
-            gap: 12px;
-
-        }
-
-        .btn-option {
-
-            padding: 12px;
-
-            border: 2px solid #006768;
-
-            background: white;
-
-            color: #006768;
-
-            border-radius: 7px;
-
-            font-weight: 600;
-
-            cursor: pointer;
-
-            transition: all 0.2s;
-
-            font-size: 16px;
-
-        }
-
-        .btn-option:hover {
-
-            background: #006768;
-
-            color: white;
-
-        }
-
-        .btn-cancel {
-
-            margin-top: 15px;
-
-            background: none;
-
-            border: none;
-
-            color: #666;
-
-            cursor: pointer;
-
-            text-decoration: underline;
-
-            font-size: 14px;
-
-        }
-
-
-
-        @media (max-width: 700px) {
-
-            .container {
-
-                max-width: 98vw;
-
-                padding: 18px;
-
-            }
-
-            .form-row {
-
-                flex-direction: column;
-
-                gap: 10px;
-
-            }
-
-        }
-    </style>
-
-
-</head>
-
-
-
-<body>
-
-    {% if frappe.session.user != "Guest" %}
-
-    <header>
-
-        <div>Netwin Banking Statement Portal</div>
-
-
-    </header>
-
-    <div class="container">
-
-        <div style="
-
- color: #d35400;
-
- text-align: center;
-
- font-weight: 500;
-
- font-size: 14px;
-
- ">
-
-            <!-- Portal valid till December 6, 2024 only. -->
-
-        </div>
-
-        <h1>Transaction Statement</h1>
-
-        <form id="statement-form" novalidate>
-
-            <div class="form-row">
-
-                <div class="form-group">
-
-                    <label for="ac_no" class="form-label">Account No</label>
-
-                    <input type="text" class="form-control" id="ac_no" placeholder="Enter Account No" required
-                        autofocus />
-
-                    <span class="error-hint" id="err-ac_no"></span>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label for="ac_code" class="form-label">GL Code</label>
-
-                    <input type="text" class="form-control" id="ac_code" placeholder="Enter GL Code" required />
-
-                    <span class="error-hint" id="err-ac_code"></span>
-
-                </div>
-
-            </div>
-
-            <div class="form-row">
-
-                <div class="form-group">
-
-                    <label for="branch_code" class="form-label">Branch Code</label>
-
-                    <input type="text" class="form-control" id="branch_code" placeholder="Enter Branch Code" required />
-
-                    <span class="error-hint" id="err-branch_code"></span>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label for="start_date" class="form-label">Start Date</label>
-
-                    <input type="date" class="form-control" id="start_date" required />
-
-                    <span class="error-hint" id="err-start_date"></span>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label for="end_date" class="form-label">End Date</label>
-
-                    <input type="date" class="form-control" id="end_date" required />
-
-                    <span class="error-hint" id="err-end_date"></span>
-
-                </div>
-
-            </div>
-
-            <button type="submit" class="btn-primary">⬇ Download Statement</button>
-
-        </form>
-
-        <div class="loader" id="loader">
-
-            <span></span><span></span><span></span>
-
-        </div>
-
-        <div id="alert-container" class="alert"></div>
-
-    </div>
-
-
-
-    <!-- Format Selection Modal -->
-
-    <div class="modal-overlay" id="format-modal">
-
-        <div class="modal-content">
-
-            <div class="modal-title">Select Export Format</div>
-
-            <div class="modal-buttons">
-
-                <button class="btn-option" onclick="handleDownload('pdf')">
-
-                    📄 Download as PDF
-
-                </button>
-
-                <button class="btn-option" onclick="handleDownload('csv')">
-
-                    📊 Download as CSV
-
-                </button>
-
-            </div>
-
-            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-
-        </div>
-
-    </div>
-
-
-
-    {% else %}
-
-    {% include "/templates/not-found.html" %} {% endif %}
-
-    <!-- 
+		<!-- 
     <script>
 
         // Util for showing/hiding loader
@@ -923,182 +810,151 @@
 
     </script> -->
 
+		<script>
+			// Util for showing/hiding loader
+			function setLoading(isLoading) {
+				document.getElementById("loader").style.display = isLoading ? "block" : "none";
+			}
 
-    <script>
-        // Dynamically fetch the API Base URL from 'Netwin Settings' DocType using Jinja
-        // and remove any trailing slash to avoid double slashes like '//api/method/...'
-        let apiBaseUrl = "{{ frappe.db.get_single_value('Netwin Settings', 'api_base_url') or '' }}";
-        apiBaseUrl = apiBaseUrl.replace(/\/$/, "");
+			// Util for showing feedback alert
+			function showAlert(message, type) {
+				const alertContainer = document.getElementById("alert-container");
+				alertContainer.textContent = message;
+				alertContainer.className = "alert " + type;
+				alertContainer.style.display = "block";
+				setTimeout(() => (alertContainer.style.display = "none"), 6000);
+				alertContainer.scrollIntoView({ behavior: "smooth" });
+			}
 
-        // Util for showing/hiding loader
-        function setLoading(isLoading) {
-            document.getElementById("loader").style.display = isLoading
-                ? "block"
-                : "none";
-        }
+			// Helper: highlight fields if error
+			function showFieldError(fieldName, msg) {
+				const input = document.getElementById(fieldName);
+				const errHint = document.getElementById("err-" + fieldName);
+				if (input && errHint) {
+					input.classList.add("error");
+					errHint.textContent = msg;
+					errHint.classList.add("active");
+				}
+			}
 
-        // Util for showing feedback alert
-        function showAlert(message, type) {
-            const alertContainer = document.getElementById("alert-container");
-            alertContainer.textContent = message;
-            alertContainer.className = "alert " + type;
-            alertContainer.style.display = "block";
-            setTimeout(() => (alertContainer.style.display = "none"), 6000);
-            alertContainer.scrollIntoView({ behavior: "smooth" });
-        }
+			// Remove highlight from all fields
+			function clearFieldErrors() {
+				["ac_no", "ac_code", "branch_code", "start_date", "end_date"].forEach((f) => {
+					document.getElementById(f).classList.remove("error");
+					const eh = document.getElementById("err-" + f);
+					eh.textContent = "";
+					eh.classList.remove("active");
+				});
+			}
 
-        // Helper: highlight fields if error
-        function showFieldError(fieldName, msg) {
-            const input = document.getElementById(fieldName);
-            const errHint = document.getElementById("err-" + fieldName);
-            if (input && errHint) {
-                input.classList.add("error");
-                errHint.textContent = msg;
-                errHint.classList.add("active");
-            }
-        }
+			// Modal Handlers
+			function openModal() {
+				document.getElementById("format-modal").style.display = "flex";
+			}
+			function closeModal() {
+				document.getElementById("format-modal").style.display = "none";
+			}
 
-        // Remove highlight from all fields
-        function clearFieldErrors() {
-            ["ac_no", "ac_code", "branch_code", "start_date", "end_date"].forEach(
-                (f) => {
-                    document.getElementById(f).classList.remove("error");
-                    const eh = document.getElementById("err-" + f);
-                    eh.textContent = "";
-                    eh.classList.remove("active");
-                }
-            );
-        }
+			// Core: Form submission logic with advanced error handling
+			document.getElementById("statement-form").addEventListener("submit", async (event) => {
+				event.preventDefault();
+				clearFieldErrors();
 
-        // Example: Fetch branch code auto-fill on page load
-        async function fetchBranchCode() {
-            try {
-                // Prepend apiBaseUrl here
-                const response = await fetch(
-                    apiBaseUrl + "/api/method/share_holder_management.share_holder_management.netwin.netwin"
-                );
-                if (response.ok) {
-                    const data = await response.json();
-                    const branchCode = data.message;
-                    if (branchCode && branchCode !== "All") {
-                        const branchCodeField = document.getElementById("branch_code");
-                        branchCodeField.value = branchCode;
-                        branchCodeField.readOnly = true;
-                    }
-                }
-            } catch (_) { }
-        }
-        window.addEventListener("load", fetchBranchCode);
+				// Validate first before showing modal
+				const acNo = document.getElementById("ac_no").value.trim();
+				const acCode = document.getElementById("ac_code").value.trim();
+				const branchCode = document.getElementById("branch_code").value.trim();
+				const startDate = document.getElementById("start_date").value;
+				const endDate = document.getElementById("end_date").value;
 
-        // Modal Handlers
-        function openModal() {
-            document.getElementById("format-modal").style.display = "flex";
-        }
-        function closeModal() {
-            document.getElementById("format-modal").style.display = "none";
-        }
+				let clientErrors = {};
+				if (!acNo) clientErrors["ac_no"] = "Account number is required.";
+				if (!acCode) clientErrors["ac_code"] = "GL Code is required.";
+				if (!branchCode) clientErrors["branch_code"] = "Branch Code is required.";
+				if (!startDate) clientErrors["start_date"] = "Start date is required.";
+				if (!endDate) clientErrors["end_date"] = "End date is required.";
 
-        // Core: Form submission logic with advanced error handling
-        document
-            .getElementById("statement-form")
-            .addEventListener("submit", async (event) => {
-                event.preventDefault();
-                clearFieldErrors();
+				if (Object.keys(clientErrors).length) {
+					Object.entries(clientErrors).forEach(([field, msg]) =>
+						showFieldError(field, msg),
+					);
+					showAlert("Please correct the errors and try again.", "error");
+					return;
+				}
 
-                // Validate first before showing modal
-                const acNo = document.getElementById("ac_no").value.trim();
-                const acCode = document.getElementById("ac_code").value.trim();
-                const branchCode = document.getElementById("branch_code").value.trim();
-                const startDate = document.getElementById("start_date").value;
-                const endDate = document.getElementById("end_date").value;
+				openModal();
+			});
 
-                let clientErrors = {};
-                if (!acNo) clientErrors["ac_no"] = "Account number is required.";
-                if (!acCode) clientErrors["ac_code"] = "GL Code is required.";
-                if (!branchCode) clientErrors["branch_code"] = "Branch Code is required.";
-                if (!startDate) clientErrors["start_date"] = "Start date is required.";
-                if (!endDate) clientErrors["end_date"] = "End date is required.";
+			async function handleDownload(format) {
+				closeModal();
+				setLoading(true);
 
-                if (Object.keys(clientErrors).length) {
-                    Object.entries(clientErrors).forEach(([field, msg]) =>
-                        showFieldError(field, msg)
-                    );
-                    showAlert("Please correct the errors and try again.", "error");
-                    return;
-                }
+				const submitButton = document.querySelector(".btn-primary");
+				submitButton.disabled = true;
 
-                openModal();
-            });
+				// Collect form data
+				const acNo = document.getElementById("ac_no").value.trim();
+				const acCode = document.getElementById("ac_code").value.trim().toUpperCase();
+				const branchCode = document
+					.getElementById("branch_code")
+					.value.trim()
+					.toUpperCase();
+				const startDate = document.getElementById("start_date").value;
+				const endDate = document.getElementById("end_date").value;
 
-        async function handleDownload(format) {
-            closeModal();
-            setLoading(true);
+				// API request
+				try {
+					const response = await fetch(
+						"/api/method/banking_api.api.download_netwin_statement",
+						{
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({
+								branch_code: branchCode,
+								ac_code: acCode,
+								ac_no: acNo,
+								start_date: startDate,
+								end_date: endDate,
+								export_format: format,
+							}),
+						},
+					);
 
-            const submitButton = document.querySelector(".btn-primary");
-            submitButton.disabled = true;
-
-            // Collect form data
-            const acNo = document.getElementById("ac_no").value.trim();
-            const acCode = document.getElementById("ac_code").value.trim().toUpperCase();
-            const branchCode = document.getElementById("branch_code").value.trim().toUpperCase();
-            const startDate = document.getElementById("start_date").value;
-            const endDate = document.getElementById("end_date").value;
-
-            // API request
-            try {
-                // Prepend apiBaseUrl here
-                const response = await fetch(
-                    apiBaseUrl + "/api/method/share_holder_management.share_holder_management.share_api.test_db",
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            branch_code: branchCode,
-                            ac_code: acCode,
-                            ac_no: acNo,
-                            start_date: startDate,
-                            end_date: endDate,
-                            export_format: format,
-                        }),
-                    }
-                );
-
-                if (response.ok) {
-                    // Success: Download File
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `Transaction_Statement_${acNo}.${format}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    showAlert(
-                        `Transaction statement (${format.toUpperCase()}) downloaded successfully! ✅`,
-                        "success"
-                    );
-                } else {
-                    let errorMessage = "An error occurred. Please check your data.";
-                    let errorContent;
-                    try {
-                        errorContent = await response.clone().json();
-                        if (errorContent.message) {
-                            errorMessage = errorContent.message;
-                        }
-                    } catch {
-                        errorContent = await response.clone().text();
-                        errorMessage = errorContent;
-                    }
-                    showAlert(errorMessage, "error");
-                }
-            } catch (error) {
-                showAlert("Network error. Please try again.", "error");
-            } finally {
-                setLoading(false);
-                submitButton.disabled = false;
-            }
-        }
-    </script>
-</body>
-
+					if (response.ok) {
+						// Success: Download File
+						const blob = await response.blob();
+						const url = window.URL.createObjectURL(blob);
+						const a = document.createElement("a");
+						a.href = url;
+						a.download = `Transaction_Statement_${acNo}.${format}`;
+						document.body.appendChild(a);
+						a.click();
+						document.body.removeChild(a);
+						showAlert(
+							`Transaction statement (${format.toUpperCase()}) downloaded successfully! ✅`,
+							"success",
+						);
+					} else {
+						let errorMessage = "An error occurred. Please check your data.";
+						let errorContent;
+						try {
+							errorContent = await response.clone().json();
+							if (errorContent.message) {
+								errorMessage = errorContent.message;
+							}
+						} catch {
+							errorContent = await response.clone().text();
+							errorMessage = errorContent;
+						}
+						showAlert(errorMessage, "error");
+					}
+				} catch (error) {
+					showAlert("Network error. Please try again.", "error");
+				} finally {
+					setLoading(false);
+					submitButton.disabled = false;
+				}
+			}
+		</script>
+	</body>
 </html>
