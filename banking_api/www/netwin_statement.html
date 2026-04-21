@@ -817,16 +817,17 @@
 				const branchGroup = branchField.closest('.form-group');
 
 				{% if employee and employee[1] %}
-					// Checked: Show dropdown
+					// Checked: Show searchable dropdown using datalist
 					{% set branches = frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) %}
-					const select = document.createElement("select");
-					select.id = "branch_code";
-					select.className = "form-control";
-					select.required = true;
-					select.innerHTML = '<option value="">Select Branch</option>' + 
-						`{% for b in branches %}<option value="{{ b.branch_code }}">{{ b.branch_code }}</option>{% endfor %}`;
 					
-					branchGroup.replaceChild(select, branchField);
+					const dataList = document.createElement("datalist");
+					dataList.id = "branch_codes";
+					dataList.innerHTML = `{% for b in branches %}<option value="{{ b.branch_code }}">{{ b.branch_code }}</option>{% endfor %}`;
+					document.body.appendChild(dataList);
+					
+					branchField.setAttribute("list", "branch_codes");
+					branchField.placeholder = "Search and select Branch";
+					
 				{% elif employee and not employee[1] and employee[2] %}
 					// Unchecked: Set value and readonly
 					{% set sol_id = employee[2] %}
