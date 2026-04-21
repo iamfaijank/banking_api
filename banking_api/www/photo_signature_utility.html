@@ -902,6 +902,157 @@
 	#modal-image:active {
 		cursor: grabbing;
 	}
+
+	/* --- SINGLE ROW SEARCH BAR OVERRIDES --- */
+	.utility-search-bar {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		gap: 12px;
+		align-items: center;
+		/* Center items vertically */
+	}
+
+	.utility-field .form-control {
+		height: 52px !important;
+		/* Decreased height */
+		border-radius: 16px !important;
+	}
+
+	.utility-actions .btn {
+		height: 52px !important;
+		/* Decreased height */
+		border-radius: 16px !important;
+	}
+
+	.utility-mode-group {
+		height: 52px;
+		/* Match input height */
+		padding: 4px !important;
+	}
+
+	.utility-mode-option {
+		min-height: auto !important;
+		height: 100%;
+	}
+
+	/* Keep it stacked nicely on mobile screens */
+	@media (max-width: 991px) {
+		.utility-search-bar {
+			grid-template-columns: 1fr;
+			align-items: stretch;
+		}
+	}
+
+	/* --- FIX FOR SELECTION HIGHLIGHT OVERFLOW --- */
+	.utility-mode-group {
+		height: 52px;
+		/* Matches the new input height */
+		padding: 4px !important;
+		box-sizing: border-box;
+		/* Ensures padding is calculated inward */
+	}
+
+	.utility-mode-option {
+		height: 100% !important;
+		/* Take up exactly the parent height minus 4px padding */
+		min-height: 0 !important;
+		padding-top: 0 !important;
+		/* Remove default vertical padding */
+		padding-bottom: 0 !important;
+		/* Remove default vertical padding */
+		padding-left: 20px !important;
+		padding-right: 20px !important;
+		margin: 0 !important;
+		box-sizing: border-box;
+		display: inline-flex;
+		align-items: center;
+		/* Vertically centers the text automatically */
+	}
+
+	/* --- OVERALL HEIGHT REDUCTION FOR SEARCH DOCK --- */
+
+	/* 1. Reduce the outer spacing of the wrapper */
+	.utility-search-wrap {
+		padding: 0 16px 12px !important;
+	}
+
+	/* 2. Tighten the inside of the dock */
+	.utility-search-dock {
+		padding: 12px 16px 10px !important;
+		border-radius: 20px !important;
+	}
+
+	/* 3. Shrink the spacing above and below the inputs */
+	.utility-search-head {
+		margin-bottom: 6px !important;
+	}
+
+	/* 4. Make the helper text smaller so it takes less vertical room */
+	.utility-search-meta,
+	.utility-search-hint {
+		font-size: 11px !important;
+		line-height: 1.2 !important;
+	}
+
+	.utility-search-hint {
+		margin-top: 8px !important;
+		margin-bottom: 0 !important;
+	}
+
+	/* 5. Shrink inputs, buttons, and radio group to 46px (down from 52px) */
+	.utility-field .form-control,
+	.utility-actions .btn,
+	.utility-mode-group {
+		height: 46px !important;
+		border-radius: 14px !important;
+	}
+
+	/* 6. Reduce the invisible spacing at the bottom of the page 
+	      that was previously pushing the photos up */
+	.utility-layout {
+		padding-bottom: 110px !important;
+		/* Reduced from 170px */
+	}
+
+	/* Optional: Slightly reduce the minimum height of the photo cards 
+	   so they fit better on smaller laptop screens */
+	.utility-preview-card {
+		min-height: 220px !important;
+		/* Reduced from 260px */
+		padding: 14px !important;
+	}
+
+	/* --- SEARCH BUTTON ENHANCEMENTS --- */
+	.utility-actions .btn-primary {
+		/* Smooth gradient with extra width for animation */
+		background: linear-gradient(135deg, var(--utility-accent), var(--utility-accent-2) 50%, var(--utility-accent-3));
+		background-size: 200% auto;
+		color: #050816 !important;
+		/* Deep dark text for high contrast */
+		font-weight: 700 !important;
+		/* Bolder text */
+		letter-spacing: 0.5px;
+		border: none !important;
+
+		/* Subtle glowing shadow */
+		box-shadow: 0 4px 16px rgba(119, 228, 255, 0.25);
+
+		/* Smooth transitions for all states */
+		transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+	}
+
+	/* Hover State: Shifts gradient, lifts up, and glows brighter */
+	.utility-actions .btn-primary:hover {
+		background-position: right center;
+		transform: translateY(-2px);
+		box-shadow: 0 8px 24px rgba(119, 228, 255, 0.4);
+	}
+
+	/* Active/Click State: Pushes down slightly and reduces glow */
+	.utility-actions .btn-primary:active {
+		transform: translateY(1px);
+		box-shadow: 0 2px 8px rgba(119, 228, 255, 0.2);
+	}
 </style>
 {% endblock %} {% block page_content %}
 <div class="photo-signature-utility">
@@ -987,9 +1138,16 @@
 				</div>
 			</section>
 
+
 			<div class="utility-search-wrap">
 				<div class="utility-search-dock">
-					<div class="utility-search-head">
+					<div class="utility-search-head" style="margin-bottom: 8px;">
+						<div class="utility-search-meta" style="text-align: left;">Single input, single response,
+							operator-first flow.</div>
+					</div>
+
+					<div class="utility-search-bar">
+						<!-- Selection Group -->
 						<div class="utility-mode-group" role="radiogroup" aria-label="Search mode">
 							<label class="utility-mode-option">
 								<input type="radio" name="search-mode" value="account" checked />
@@ -1000,22 +1158,21 @@
 								<span>CIF ID</span>
 							</label>
 						</div>
-						<div class="utility-search-meta">Single input, single response, operator-first flow.</div>
-					</div>
 
-					<div class="utility-search-bar">
+						<!-- Input Fields -->
 						<div class="utility-field" id="account-search-group">
 							<label for="ac-no">Ac-no</label>
 							<input id="ac-no" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control"
 								placeholder="Enter account number" />
 						</div>
 
-						<div class="utility-field" id="cif-search-group">
+						<div class="utility-field" id="cif-search-group" style="display: none;">
 							<label for="gmst-code">CIF Id</label>
 							<input id="gmst-code" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control"
 								placeholder="Enter CIF ID" />
 						</div>
 
+						<!-- Action Buttons -->
 						<div class="utility-actions">
 							<button id="fetch-records" class="btn btn-primary">Search</button>
 							<button id="reset-form" type="button" class="btn btn-default">Reset</button>
