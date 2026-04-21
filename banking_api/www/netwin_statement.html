@@ -811,8 +811,16 @@
     </script> -->
 
 		<script>
-			{% set is_employee = frappe.db.exists("Employee", {"user_id": frappe.session.user}) %}
-			console.log("Current User:", "{{ frappe.session.user }}", "Is Employee:", {{ 'true' if is_employee else 'false' }});
+			{% set employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) %}
+			{% if employee %}
+				{% if employee[1] %}
+					console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: true", "Netwin Statement: checked");
+				{% else %}
+					console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: true", "Netwin Statement: unchecked", "SOL ID:", "{{ employee[2] }}");
+				{% endif %}
+			{% else %}
+				console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: false");
+			{% endif %}
 			// Util for showing/hiding loader
 			function setLoading(isLoading) {
 				document.getElementById("loader").style.display = isLoading ? "block" : "none";
