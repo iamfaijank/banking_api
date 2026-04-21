@@ -816,7 +816,11 @@
 				{% if employee[1] %}
 					console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: true", "Netwin Statement: checked");
 				{% else %}
-					console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: true", "Netwin Statement: unchecked", "SOL ID:", "{{ employee[2] }}");
+					{% set sol_id = employee[2] %}
+					console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: true", "Netwin Statement: unchecked", "SOL ID:", "{{ sol_id }}");
+					{% if sol_id and frappe.db.exists("Sahayog Branch", {"sol_id": sol_id}) %}
+						console.log("Sahayog Branch: true");
+					{% endif %}
 				{% endif %}
 			{% else %}
 				console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: false");
