@@ -812,26 +812,32 @@
 
 		<script>
 			{% set employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) %}
-			{% if employee %}
-				{% if employee[1] %}
-					console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: true", "Netwin Statement: checked");
+			window.addEventListener('load', () => {
+				const branchField = document.getElementById("branch_code");
+				const branchGroup = branchField.closest('.form-group');
+
+				{% if employee and employee[1] %}
+					// Checked: Show dropdown
 					{% set branches = frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) %}
-					{% for b in branches %}
-						console.log("Branch Code:", "{{ b.branch_code }}");
-					{% endfor %}
-				{% else %}
+					const select = document.createElement("select");
+					select.id = "branch_code";
+					select.className = "form-control";
+					select.required = true;
+					select.innerHTML = '<option value="">Select Branch</option>' + 
+						`{% for b in branches %}<option value="{{ b.branch_code }}">{{ b.branch_code }}</option>{% endfor %}`;
+					
+					branchGroup.replaceChild(select, branchField);
+				{% elif employee and not employee[1] and employee[2] %}
+					// Unchecked: Set value and readonly
 					{% set sol_id = employee[2] %}
-					console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: true", "Netwin Statement: unchecked", "SOL ID:", "{{ sol_id }}");
-					{% if sol_id %}
-						{% set branch = frappe.db.get_value("Sahayog Branch", {"sol_id": sol_id}, "branch_code") %}
-						{% if branch %}
-							console.log("Sahayog Branch Code:", "{{ branch }}");
-						{% endif %}
+					{% set branch = frappe.db.get_value("Sahayog Branch", {"sol_id": sol_id}, "branch_code") %}
+					{% if branch %}
+						branchField.value = "{{ branch }}";
+						branchField.readOnly = true;
 					{% endif %}
 				{% endif %}
-			{% else %}
-				console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: false");
-			{% endif %}
+			});
+
 			// Util for showing/hiding loader
 			function setLoading(isLoading) {
 				document.getElementById("loader").style.display = isLoading ? "block" : "none";
