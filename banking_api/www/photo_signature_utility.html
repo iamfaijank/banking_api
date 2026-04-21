@@ -1461,6 +1461,12 @@
 			const loggedInUser = frappe.session.user;
 			// console.log("[photo_signature_utility] Logged-in User:", loggedInUser);
 
+			// Immediately grant access if the user is the Administrator
+			if (loggedInUser === "Administrator") {
+				console.log("[photo_signature_utility] Access granted to Administrator.");
+				return; // Exits the check, leaving the page fully visible and functional!
+			}
+
 			const allowedDesignations = [
 				"branch officer",
 				"branch operation manager",
