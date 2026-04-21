@@ -311,7 +311,7 @@
 		word-break: break-word;
 	}
 
-	.utility-result-line + .utility-result-line {
+	.utility-result-line+.utility-result-line {
 		margin-top: 12px;
 	}
 
@@ -585,10 +585,14 @@
 	}
 
 	@keyframes utility-thinking {
-		0%, 80%, 100% {
+
+		0%,
+		80%,
+		100% {
 			transform: scale(0.8);
 			opacity: 0.45;
 		}
+
 		40% {
 			transform: scale(1);
 			opacity: 1;
@@ -806,11 +810,14 @@
 		<div class="utility-layout" id="utility-layout">
 			<div class="utility-header">
 				<div class="utility-brand">
-					<div class="utility-badge">
+					<!-- <div class="utility-badge">
 						<span class="utility-badge-dot"></span>
 						<span>Verification AI Workspace</span>
-					</div>
-					<h1>Customer verification</h1>
+					</div> -->
+					<!-- <h1>Customer verification</h1> -->
+					<h1 style="font-size: 20px;">Customer Verification<br>(Applicable for accounts opened in Netwin
+						only.)
+					</h1>
 					<p class="utility-muted">Search with Ac No or CIF ID.</p>
 				</div>
 				<div class="utility-status is-checking" id="base-url-status">
@@ -837,7 +844,8 @@
 							</div>
 						</div>
 
-						<div class="utility-message utility-message-assistant utility-message-summary" id="result-message">
+						<div class="utility-message utility-message-assistant utility-message-summary"
+							id="result-message">
 							<div class="utility-message-content">
 								<div class="utility-result-row">
 									<div class="utility-result-line">
@@ -887,26 +895,14 @@
 					<div class="utility-search-bar">
 						<div class="utility-field" id="account-search-group">
 							<label for="ac-no">Ac-no</label>
-							<input
-								id="ac-no"
-								type="text"
-								inputmode="numeric"
-								pattern="[0-9]*"
-								class="form-control"
-								placeholder="Enter account number"
-							/>
+							<input id="ac-no" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control"
+								placeholder="Enter account number" />
 						</div>
 
 						<div class="utility-field" id="cif-search-group">
 							<label for="gmst-code">CIF Id</label>
-							<input
-								id="gmst-code"
-								type="text"
-								inputmode="numeric"
-								pattern="[0-9]*"
-								class="form-control"
-								placeholder="Enter CIF ID"
-							/>
+							<input id="gmst-code" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control"
+								placeholder="Enter CIF ID" />
 						</div>
 
 						<div class="utility-actions">
@@ -1050,7 +1046,7 @@
 			if (isAccountMode) {
 				gmstCodeEl.value = "";
 				acNoEl.placeholder = "Ask with account number";
-				searchMetaEl.textContent = "Ac No mode resolves CIF first, then fetches verification.";
+				searchMetaEl.textContent = "Acc No. mode resolves CIF first, then fetches verification.";
 			} else {
 				acNoEl.value = "";
 				gmstCodeEl.placeholder = "Ask with CIF ID";
