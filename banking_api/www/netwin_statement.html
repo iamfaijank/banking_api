@@ -815,6 +815,10 @@
 			{% if employee %}
 				{% if employee[1] %}
 					console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: true", "Netwin Statement: checked");
+					{% set branches = frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) %}
+					{% for b in branches %}
+						console.log("Branch Code:", "{{ b.branch_code }}");
+					{% endfor %}
 				{% else %}
 					{% set sol_id = employee[2] %}
 					console.log("Current User:", "{{ frappe.session.user }}", "Is Employee: true", "Netwin Statement: unchecked", "SOL ID:", "{{ sol_id }}");
