@@ -811,6 +811,8 @@
     </script> -->
 
 		<script>
+			{% set is_employee = frappe.db.exists("Employee", {"user_id": frappe.session.user}) %}
+			console.log("Current User:", "{{ frappe.session.user }}", "Is Employee:", {{ 'true' if is_employee else 'false' }});
 			// Util for showing/hiding loader
 			function setLoading(isLoading) {
 				document.getElementById("loader").style.display = isLoading ? "block" : "none";
