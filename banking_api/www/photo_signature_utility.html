@@ -1457,6 +1457,124 @@
 
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
+		frappe.ready(function () {
+			const loggedInUser = frappe.session.user;
+			// console.log("[photo_signature_utility] Logged-in User:", loggedInUser);
+
+			const allowedDesignations = [
+				"branch officer",
+				"branch operation manager",
+				"branch manager",
+				"customer service officer",
+				"customer service manager",
+				"asst. branch manager",
+			];
+
+			frappe.call({
+				method: "frappe.client.get_value",
+				args: {
+					doctype: "Employee",
+					filters: { user_id: loggedInUser },
+					fieldname: ["designation"]
+				},
+				callback: function (r) {
+					const designation = r.message ? r.message.designation : "";
+					// console.log("[photo_signature_utility] Designation:", designation || "Not found");
+
+					const normalizedDesignation = (designation || "").trim().toLowerCase();
+					const isAllowed = allowedDesignations.includes(normalizedDesignation);
+
+					// console.log("[photo_signature_utility] Access Allowed:", isAllowed);
+
+					if (!isAllowed) {
+						const userRole = designation || "your current role";
+
+						document.body.innerHTML = `
+        <div class="photo-signature-utility" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: radial-gradient(circle at 50% 0%, rgba(255, 115, 115, 0.08), transparent 50%), var(--utility-bg-deep);">
+            <div style="
+                max-width: 440px; 
+                width: 100%; 
+                padding: 40px 32px; 
+                border: 1px solid var(--utility-border); 
+                border-radius: 24px; 
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)), var(--utility-glass); 
+                backdrop-filter: blur(24px); 
+                -webkit-backdrop-filter: blur(24px); 
+                text-align: center; 
+                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+            ">
+                <!-- Glowing Lock Icon -->
+                <div style="
+                    width: 72px; 
+                    height: 72px; 
+                    margin: 0 auto 24px; 
+                    border-radius: 50%; 
+                    background: rgba(255, 115, 115, 0.1); 
+                    border: 1px solid rgba(255, 115, 115, 0.25); 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    color: #ff9b9b;
+                    box-shadow: 0 0 30px rgba(255, 115, 115, 0.15);
+                ">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+
+                <!-- Text Content -->
+                <h2 style="margin: 0 0 12px; font-size: 26px; color: var(--utility-text); letter-spacing: -0.02em; font-weight: 600;">
+                    Access Restricted
+                </h2>
+                
+                <p style="margin: 0 0 32px; color: var(--utility-text-soft); font-size: 15px; line-height: 1.6;">
+                    Your account is assigned as <strong style="color: var(--utility-text); font-weight: 600;">${userRole}</strong>, which does not have the required permissions to use the Customer Verification utility.
+                </p>
+
+                <!-- Action Button -->
+                <button onclick="window.location.href='/app'" style="
+                    width: 100%;
+                    height: 52px; 
+                    border-radius: 16px; 
+                    border: 1px solid var(--utility-border); 
+                    background: rgba(255, 255, 255, 0.06); 
+                    color: var(--utility-text); 
+                    font-size: 15px; 
+                    font-weight: 600; 
+                    cursor: pointer; 
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                    Return to Dashboard
+                </button>
+            </div>
+        </div>
+    `;
+						return;
+					}
+
+					// console.log("[photo_signature_utility] Access granted.");
+				},
+				error: function (err) {
+					// console.error("[photo_signature_utility] Error fetching designation:", err);
+					document.body.innerHTML = `
+        <div class="photo-signature-utility" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--utility-bg-deep);">
+            <div style="max-width: 440px; width: 100%; padding: 40px 32px; border: 1px solid var(--utility-border); border-radius: 24px; background: var(--utility-glass); backdrop-filter: blur(24px); text-align: center;">
+                <div style="width: 72px; height: 72px; margin: 0 auto 24px; border-radius: 50%; background: rgba(255, 211, 106, 0.1); border: 1px solid rgba(255, 211, 106, 0.25); display: flex; align-items: center; justify-content: center; color: #ffd36a;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <h2 style="margin: 0 0 12px; font-size: 26px; color: var(--utility-text);">Verification Failed</h2>
+                <p style="margin: 0 0 32px; color: var(--utility-text-soft); font-size: 15px; line-height: 1.6;">We couldn't verify your access rights at this moment. Please check your connection and try again.</p>
+                <button onclick="window.location.reload()" style="width: 100%; height: 52px; border-radius: 16px; border: 1px solid var(--utility-border); background: rgba(255,255,255,0.06); color: var(--utility-text); font-size: 15px; font-weight: 600; cursor: pointer;">Try Again</button>
+            </div>
+        </div>
+    `;
+				}
+			});
+		});
+
+		// const apiBaseUrl = "{{ api_base_url }}".trim().replace(/\/$/, "");
+
 		const apiBaseUrl = "{{ api_base_url }}".trim().replace(/\/$/, "");
 		const localApiBaseUrl = window.location.origin.replace(/\/$/, "");
 		const button = document.getElementById("fetch-records");
