@@ -810,39 +810,65 @@
 
     </script> -->
 
-		<script>
-			{% set employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) %}
-			window.addEventListener('load', () => {
-				const branchField = document.getElementById("branch_code");
-				const branchGroup = branchField.closest('.form-group');
+		<script type="application/json" id="employee-data">
+			{{ frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) | json }}
+		</script>
+		<script type="application/json" id="branch-data">
+			{{ frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) | json }}
+		</script>
 
-				{% if employee and employee[1] %}
+		<script>
+			window.addEventListener("load", () => {
+				const branchField = document.getElementById("branch_code");
+				if (!branchField) return;
+				const branchGroup = branchField.closest(".form-group");
+
+				function parseJSONFromId(id) {
+					try {
+						const el = document.getElementById(id);
+						return el ? JSON.parse(el.textContent) : null;
+					} catch (e) {
+						return null;
+					}
+				}
+
+				const employee = parseJSONFromId("employee-data");
+
+				if (employee && employee[1]) {
 					// Checked: Show searchable dropdown using datalist
-					{% set branches = frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) %}
-					
+					const branches = parseJSONFromId("branch-data") || [];
 					const dataList = document.createElement("datalist");
 					dataList.id = "branch_codes";
-					dataList.innerHTML = `{% for b in branches %}<option value="{{ b.branch_code }}">{{ b.branch_code }}</option>{% endfor %}`;
+					dataList.innerHTML = branches
+						.map((b) => `<option value="${b.branch_code}">${b.branch_code}</option>`)
+						.join("");
 					document.body.appendChild(dataList);
-					
+
 					branchField.setAttribute("list", "branch_codes");
 					branchField.placeholder = "Search and select Branch";
-					
-				{% elif employee and not employee[1] and employee[2] %}
-					// Unchecked: Set value and readonly
-					{% set sol_id = employee[2] %}
-					{% set branch = frappe.db.get_value("Sahayog Branch", {"sol_id": sol_id}, "branch_code") %}
-					{% if branch %}
-						branchField.value = "{{ branch }}";
-						branchField.readOnly = true;
-					{% endif %}
-				{% endif %}
+				} else if (employee && !employee[1] && employee[2]) {
+					// Unchecked: fetch branch code by sol_id and set readonly
+					const solId = employee[2];
+					const filters = JSON.stringify([["Sahayog Branch", "sol_id", "=", solId]]);
+					const fields = JSON.stringify(["branch_code"]);
+					fetch(
+						`/api/resource/Sahayog Branch?filters=${encodeURIComponent(filters)}&fields=${encodeURIComponent(fields)}`,
+					)
+						.then((res) => res.json())
+						.then((data) => {
+							if (data && data.data && data.data.length) {
+								branchField.value = data.data[0].branch_code;
+								branchField.readOnly = true;
+							}
+						})
+						.catch(() => {
+							/* ignore fetch error */
+						});
+				}
 			});
-
+		</script>
+		<script>
 			// Util for showing/hiding loader
-			function setLoading(isLoading) {
-				document.getElementById("loader").style.display = isLoading ? "block" : "none";
-			}
 
 			// Util for showing feedback alert
 			function showAlert(message, type) {
