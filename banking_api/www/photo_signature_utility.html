@@ -803,9 +803,120 @@
 			font-size: 24px;
 		}
 	}
+
+	/* Image Hover Effect */
+	.utility-preview-card img {
+		cursor: zoom-in;
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+	}
+
+	.utility-preview-card img:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+	}
+
+	/* Modal Styles */
+	.image-zoom-modal {
+		display: none;
+		position: fixed;
+		z-index: 9999;
+		inset: 0;
+		background-color: rgba(5, 8, 22, 0.85);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+
+	.image-zoom-modal.show {
+		display: flex;
+		opacity: 1;
+	}
+
+	.modal-toolbar {
+		position: absolute;
+		top: 24px;
+		display: flex;
+		gap: 12px;
+		z-index: 10001;
+		background: var(--utility-glass-strong);
+		padding: 8px;
+		border-radius: 16px;
+		border: 1px solid var(--utility-border);
+	}
+
+	.modal-toolbar button {
+		background: rgba(255, 255, 255, 0.1);
+		border: none;
+		color: var(--utility-text);
+		padding: 8px 16px;
+		border-radius: 10px;
+		cursor: pointer;
+		font-weight: 600;
+		transition: background 0.2s;
+	}
+
+	.modal-toolbar button:hover {
+		background: rgba(119, 228, 255, 0.2);
+	}
+
+	.modal-close {
+		position: absolute;
+		top: 24px;
+		right: 32px;
+		color: var(--utility-text);
+		font-size: 40px;
+		font-weight: 300;
+		line-height: 1;
+		cursor: pointer;
+		z-index: 10001;
+		transition: color 0.2s;
+	}
+
+	.modal-close:hover {
+		color: var(--utility-accent-2);
+	}
+
+	.modal-image-container {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+	}
+
+	#modal-image {
+		max-width: 90vw;
+		max-height: 80vh;
+		cursor: grab;
+		border-radius: 12px;
+		box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+		transform-origin: center;
+		will-change: transform;
+	}
+
+	#modal-image:active {
+		cursor: grabbing;
+	}
 </style>
 {% endblock %} {% block page_content %}
 <div class="photo-signature-utility">
+	<!-- Zoom Modal -->
+	<div id="image-zoom-modal" class="image-zoom-modal">
+		<span class="modal-close" id="modal-close-btn">&times;</span>
+		<div class="modal-toolbar">
+			<button id="zoom-in-btn">Zoom In (+)</button>
+			<button id="zoom-out-btn">Zoom Out (-)</button>
+			<button id="zoom-reset-btn">Reset</button>
+		</div>
+		<div class="modal-image-container" id="modal-container">
+			<img id="modal-image" src="" alt="Expanded Verification Image" draggable="false" />
+		</div>
+	</div>
 	<div class="utility-shell">
 		<div class="utility-layout" id="utility-layout">
 			<div class="utility-header">
@@ -920,6 +1031,8 @@
 	</div>
 </div>
 
+
+<!-- 
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
 		const apiBaseUrl = "{{ api_base_url }}".trim().replace(/\/$/, "");
@@ -1181,5 +1294,364 @@
 			resetForm();
 		});
 	});
+</script>
+ -->
+
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		const apiBaseUrl = "{{ api_base_url }}".trim().replace(/\/$/, "");
+		const localApiBaseUrl = window.location.origin.replace(/\/$/, "");
+		const button = document.getElementById("fetch-records");
+		const resetButton = document.getElementById("reset-form");
+		const photoEl = document.getElementById("photo-preview");
+		const signEl = document.getElementById("sign-preview");
+		const photoEmptyEl = document.getElementById("photo-empty");
+		const signEmptyEl = document.getElementById("sign-empty");
+		const customerCifEl = document.getElementById("customer-cif");
+		const customerNameEl = document.getElementById("customer-name");
+		const utilityLayoutEl = document.getElementById("utility-layout");
+		const resultMessageEl = document.getElementById("result-message");
+		const resultPreviewGridEl = document.getElementById("result-preview-grid");
+		const gmstCodeEl = document.getElementById("gmst-code");
+		const acNoEl = document.getElementById("ac-no");
+		const cifSearchGroupEl = document.getElementById("cif-search-group");
+		const accountSearchGroupEl = document.getElementById("account-search-group");
+		const searchModeEls = document.querySelectorAll('input[name="search-mode"]');
+		const searchMetaEl = document.querySelector(".utility-search-meta");
+		const baseUrlStatusEl = document.getElementById("base-url-status");
+		const baseUrlStatusTextEl = document.getElementById("base-url-status-text");
+
+		function allowOnlyDigits(el) {
+			el.addEventListener("input", function () {
+				el.value = el.value.replace(/\D/g, "");
+			});
+		}
+
+		function setImage(el, value) {
+			const emptyEl = el === photoEl ? photoEmptyEl : signEmptyEl;
+
+			if (!value) {
+				el.style.display = "none";
+				el.removeAttribute("src");
+				emptyEl.style.display = "flex";
+				return;
+			}
+
+			el.src = "data:image/*;base64," + value;
+			el.style.display = "block";
+			emptyEl.style.display = "none";
+		}
+
+		function setCustomerCif(value) {
+			customerCifEl.textContent = value || "Not loaded";
+		}
+
+		function setCustomerName(value) {
+			customerNameEl.textContent = value || "Not loaded";
+		}
+
+		function setResultVisibility(visible) {
+			resultMessageEl.style.display = visible ? "block" : "none";
+			resultPreviewGridEl.style.display = visible ? "grid" : "none";
+		}
+
+		function buildApiUrl(path, options) {
+			const useConfiguredBase = options && options.useConfiguredBase;
+			const baseUrl = useConfiguredBase ? apiBaseUrl : localApiBaseUrl;
+			return new URL(baseUrl + path);
+		}
+
+		function setBaseUrlStatus(status) {
+			baseUrlStatusEl.classList.remove("is-checking", "is-available", "is-unavailable");
+
+			if (status === "available") {
+				baseUrlStatusEl.classList.add("is-available");
+				baseUrlStatusTextEl.textContent = "Available";
+				return;
+			}
+
+			if (status === "unavailable") {
+				baseUrlStatusEl.classList.add("is-unavailable");
+				baseUrlStatusTextEl.textContent = "Not Available";
+				return;
+			}
+
+			baseUrlStatusEl.classList.add("is-checking");
+			baseUrlStatusTextEl.textContent = "Checking...";
+		}
+
+		async function checkBaseUrlAvailability() {
+			if (!apiBaseUrl) {
+				setBaseUrlStatus("unavailable");
+				return false;
+			}
+
+			setBaseUrlStatus("checking");
+
+			try {
+				const probeUrl = new URL(apiBaseUrl + "/");
+				probeUrl.searchParams.set("_base_url_probe", Date.now().toString());
+
+				await fetch(probeUrl.toString(), {
+					method: "GET",
+					mode: "no-cors",
+					cache: "no-store",
+				});
+
+				setBaseUrlStatus("available");
+				return true;
+			} catch (error) {
+				setBaseUrlStatus("unavailable");
+				return false;
+			}
+		}
+
+		function getSearchMode() {
+			const selected = Array.from(searchModeEls).find(function (el) {
+				return el.checked;
+			});
+
+			return selected ? selected.value : "account";
+		}
+
+		function updateSearchModeUI() {
+			const isAccountMode = getSearchMode() === "account";
+
+			accountSearchGroupEl.style.display = isAccountMode ? "block" : "none";
+			cifSearchGroupEl.style.display = isAccountMode ? "none" : "block";
+
+			if (isAccountMode) {
+				gmstCodeEl.value = "";
+				acNoEl.placeholder = "Ask with account number";
+				searchMetaEl.textContent = "Acc No. mode resolves CIF first, then fetches verification.";
+			} else {
+				acNoEl.value = "";
+				gmstCodeEl.placeholder = "Ask with CIF ID";
+				searchMetaEl.textContent = "CIF ID mode sends a direct verification request.";
+			}
+		}
+
+		function resetForm() {
+			acNoEl.value = "";
+			gmstCodeEl.value = "";
+			searchModeEls.forEach(function (el) {
+				el.checked = el.value === "account";
+			});
+			updateSearchModeUI();
+			setCustomerCif("");
+			setCustomerName("");
+			setImage(photoEl, null);
+			setImage(signEl, null);
+			setResultVisibility(false);
+			utilityLayoutEl.classList.remove("utility-loading");
+			utilityLayoutEl.classList.remove("utility-has-results");
+		}
+
+		allowOnlyDigits(gmstCodeEl);
+		allowOnlyDigits(acNoEl);
+		[gmstCodeEl, acNoEl].forEach(function (el) {
+			el.addEventListener("keydown", function (event) {
+				if (event.key === "Enter") {
+					event.preventDefault();
+					button.click();
+				}
+			});
+		});
+		searchModeEls.forEach(function (el) {
+			el.addEventListener("change", updateSearchModeUI);
+		});
+		updateSearchModeUI();
+		setResultVisibility(false);
+		checkBaseUrlAvailability();
+
+		button.addEventListener("click", async function () {
+			const searchMode = getSearchMode();
+			const acNo = searchMode === "account" ? acNoEl.value.trim() : "";
+			const cifInput = searchMode === "cif" ? gmstCodeEl.value.trim() : "";
+			let gmstCode = cifInput;
+			setCustomerCif("");
+			setCustomerName("");
+			setImage(photoEl, null);
+			setImage(signEl, null);
+			setResultVisibility(false);
+			utilityLayoutEl.classList.remove("utility-has-results");
+			utilityLayoutEl.classList.add("utility-loading");
+
+			try {
+				if (!apiBaseUrl) {
+					throw new Error("API Base URL is not configured in Netwin Settings.");
+				}
+				if (searchMode === "account" && !acNo) {
+					throw new Error("Please enter Ac-no.");
+				}
+				if (searchMode === "cif" && !gmstCode) {
+					throw new Error("Please enter CIF Id.");
+				}
+
+				if (searchMode === "account") {
+					const helperUrl = buildApiUrl(
+						"/api/method/banking_api.api.fetch_cif_id",
+					);
+					helperUrl.searchParams.set("ac_no", acNo);
+
+					const helperResponse = await fetch(helperUrl.toString(), {
+						method: "GET",
+						headers: {
+							Accept: "application/json",
+						},
+						credentials: "include",
+					});
+					const helperResult = await helperResponse.json();
+					const helperPayload = helperResult.message || helperResult;
+
+					if (
+						helperPayload.status !== "success" ||
+						!helperPayload.data ||
+						!helperPayload.data.gmst_code
+					) {
+						throw new Error(helperPayload.message || "Unable to fetch CIF Id.");
+					}
+
+					gmstCode = helperPayload.data.gmst_code;
+					setCustomerCif(gmstCode);
+				}
+
+				const url = buildApiUrl(
+					"/api/method/banking_api.api.fetch_photo_and_signature",
+				);
+				url.searchParams.set("gmst_code", gmstCode);
+				url.searchParams.set("ac_no", "");
+
+				const response = await fetch(url.toString(), {
+					method: "GET",
+					headers: {
+						Accept: "application/json",
+					},
+					credentials: "include",
+				});
+				const result = await response.json();
+				const payload = result.message || result;
+
+				if (payload.status === "success" && payload.data) {
+					setCustomerCif(payload.data.gmst_code || gmstCode);
+					setCustomerName(payload.data.name);
+					setImage(photoEl, payload.data.photo_long);
+					setImage(signEl, payload.data.sign_long);
+					setResultVisibility(true);
+					utilityLayoutEl.classList.remove("utility-loading");
+					utilityLayoutEl.classList.add("utility-has-results");
+					return;
+				}
+
+				throw new Error(payload.message || "Unable to fetch records.");
+			} catch (error) {
+				utilityLayoutEl.classList.remove("utility-loading");
+				frappe.msgprint({
+					title: "Error",
+					message: error.message,
+					indicator: "red",
+				});
+			}
+		});
+
+		resetButton.addEventListener("click", function () {
+			resetForm();
+		});
+
+		// --- IMAGE ZOOM & PAN LOGIC ---
+		// Moved INSIDE the DOMContentLoaded event listener
+		const modal = document.getElementById("image-zoom-modal");
+		const modalImg = document.getElementById("modal-image");
+		const closeBtn = document.getElementById("modal-close-btn");
+
+		let currentScale = 1;
+		let isDragging = false;
+		let startX, startY, translateX = 0, translateY = 0;
+
+		function updateTransform() {
+			modalImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+		}
+
+		function openModal(imgSrc) {
+			modalImg.src = imgSrc;
+			modal.classList.add("show");
+			// Reset transforms
+			currentScale = 1;
+			translateX = 0;
+			translateY = 0;
+			updateTransform();
+		}
+
+		function closeModal() {
+			modal.classList.remove("show");
+			setTimeout(() => { modalImg.src = ""; }, 300); // Clear image after fade out
+		}
+
+		// Attach click events to the original preview images
+		photoEl.addEventListener("click", function () {
+			if (photoEl.src) openModal(photoEl.src);
+		});
+
+		signEl.addEventListener("click", function () {
+			if (signEl.src) openModal(signEl.src);
+		});
+
+		// Close events
+		closeBtn.addEventListener("click", closeModal);
+		document.getElementById("modal-container").addEventListener("click", function (e) {
+			if (e.target === this) closeModal(); // Close if background clicked
+		});
+
+		// Zoom button controls
+		document.getElementById("zoom-in-btn").addEventListener("click", () => {
+			currentScale += 0.2;
+			updateTransform();
+		});
+
+		document.getElementById("zoom-out-btn").addEventListener("click", () => {
+			currentScale = Math.max(0.2, currentScale - 0.2);
+			updateTransform();
+		});
+
+		document.getElementById("zoom-reset-btn").addEventListener("click", () => {
+			currentScale = 1;
+			translateX = 0;
+			translateY = 0;
+			updateTransform();
+		});
+
+		// Mouse wheel to zoom
+		modalImg.addEventListener("wheel", function (e) {
+			e.preventDefault();
+			const zoomAmount = 0.1;
+			if (e.deltaY < 0) {
+				currentScale += zoomAmount; // Scroll up -> zoom in
+			} else {
+				currentScale = Math.max(0.2, currentScale - zoomAmount); // Scroll down -> zoom out
+			}
+			updateTransform();
+		});
+
+		// Drag to Pan
+		modalImg.addEventListener("mousedown", function (e) {
+			e.preventDefault();
+			isDragging = true;
+			startX = e.clientX - translateX;
+			startY = e.clientY - translateY;
+		});
+
+		window.addEventListener("mousemove", function (e) {
+			if (!isDragging) return;
+			translateX = e.clientX - startX;
+			translateY = e.clientY - startY;
+			updateTransform();
+		});
+
+		window.addEventListener("mouseup", function () {
+			isDragging = false;
+		});
+
+	}); // <-- This is the final closing bracket for DOMContentLoaded
 </script>
 {% endblock %}
