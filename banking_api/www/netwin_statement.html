@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+
+<html>
+
+
+
+<head>
+
+    <title>Transaction Statement</title>
+
+
+    <link rel="stylesheet" href="/assets/frappe/css/bootstrap.css" />
+
+    <style>
+        body {
+
+            font-family: "Segoe UI", Arial, sans-serif;
+
+            margin: 0;
+
+            background-color: #f5f7f9;
+
+        }
+
+        header {
+
+            background: #006768;
+
+            padding: 20px 0;
+
+            text-align: center;
+
+            color: white;
+
+            font-size: 22px;
+
+            font-weight: 600;
+
+        }
+
+        .container {
+
+            max-width: 620px;
+
+            margin: 34px auto;
+
+            background: white;
+
+            border-radius: 14px;
+
+            padding: 36px 30px 26px 30px;
+
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
+
+        }
+
+        .logo {
+
+            text-align: center;
+
+            margin-bottom: 10px;
+
+        }
+
+        .logo img {
+
+            height: 44px;
+
+        }
+
+        h1 {
+
+            text-align: center;
+
+            margin-bottom: 18px;
+
+            color: #006768;
+
+            font-size: 26px;
+
+            font-weight: bold;
+
+        }
+
+        .form-row {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 16px;
+
+            margin-bottom: 15px;
+
+        }
+
+        .form-group {
+
+            flex: 1;
+
+            min-width: 45%;
+
+            margin-bottom: 0;
+
+            position: relative;
+
+        }
+
+        .form-label {
+
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-weight: 600;
+
+            color: #006768;
+
+        }
+
+        .form-control {
+
+            width: 100%;
+
+            padding: 10px;
+
+            border-radius: 7px;
+
+            border: 1px solid #bbb;
+
+            box-sizing: border-box;
+
+            font-size: 15px;
+
+            transition: border 0.22s;
+
+            background: #fafcfc;
+
+        }
+
+        .form-control:focus {
+
+            border-color: #006768;
+
+            box-shadow: 0 0 5px rgba(0, 103, 104, 0.26);
+
+            outline: none;
+
+        }
+
+        .form-control.error {
+
+            border-color: #dc3545;
+
+        }
+
+        .error-hint {
+
+            color: #dc3545;
+
+            font-size: 13px;
+
+            position: absolute;
+
+            bottom: -19px;
+
+            left: 0;
+
+            display: none;
+
+        }
+
+        .error-hint.active {
+
+            display: block;
+
+        }
+
+        .btn-primary {
+
+            width: 100%;
+
+            padding: 13px;
+
+            background-color: #006768;
+
+            color: white;
+
+            border: none;
+
+            cursor: pointer;
+
+            border-radius: 7px;
+
+            font-size: 17px;
+
+            font-weight: 600;
+
+            transition: background 0.18s;
+
+        }
+
+        .btn-primary:hover {
+
+            background-color: #028079;
+
+        }
+
+        .alert {
+
+            margin-top: 20px;
+
+            display: none;
+
+            padding: 16px;
+
+            border-radius: 7px;
+
+            font-weight: 500;
+
+            font-size: 15px;
+
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+        }
+
+        .alert.success {
+
+            background-color: #28a745;
+
+            color: white;
+
+        }
+
+        .alert.error {
+
+            background-color: #dc3545;
+
+            color: white;
+
+        }
+
+        .loader {
+
+            display: none;
+
+            margin: 18px 0;
+
+            text-align: center;
+
+        }
+
+        .loader span {
+
+            width: 11px;
+
+            height: 11px;
+
+            margin: 0 4px;
+
+            background: #006768;
+
+            display: inline-block;
+
+            border-radius: 50%;
+
+            animation: bounce 0.7s infinite alternate;
+
+        }
+
+        .loader span:nth-child(2) {
+
+            animation-delay: 0.16s;
+
+        }
+
+        .loader span:nth-child(3) {
+
+            animation-delay: 0.32s;
+
+        }
+
+
+
+        @keyframes bounce {
+
+            from {
+
+                transform: translateY(0);
+
+            }
+
+            to {
+
+                transform: translateY(-9px);
+
+            }
+
+        }
+
+
+
+        /* Modal Styles */
+
+        .modal-overlay {
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            background: rgba(0, 0, 0, 0.4);
+
+            backdrop-filter: blur(4px);
+
+            display: none;
+
+            align-items: center;
+
+            justify-content: center;
+
+            z-index: 1000;
+
+        }
+
+        .modal-content {
+
+            background: white;
+
+            padding: 30px;
+
+            border-radius: 12px;
+
+            max-width: 400px;
+
+            width: 90%;
+
+            text-align: center;
+
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+        }
+
+        .modal-title {
+
+            font-size: 20px;
+
+            font-weight: bold;
+
+            color: #006768;
+
+            margin-bottom: 20px;
+
+        }
+
+        .modal-buttons {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+
+        }
+
+        .btn-option {
+
+            padding: 12px;
+
+            border: 2px solid #006768;
+
+            background: white;
+
+            color: #006768;
+
+            border-radius: 7px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: all 0.2s;
+
+            font-size: 16px;
+
+        }
+
+        .btn-option:hover {
+
+            background: #006768;
+
+            color: white;
+
+        }
+
+        .btn-cancel {
+
+            margin-top: 15px;
+
+            background: none;
+
+            border: none;
+
+            color: #666;
+
+            cursor: pointer;
+
+            text-decoration: underline;
+
+            font-size: 14px;
+
+        }
+
+
+
+        @media (max-width: 700px) {
+
+            .container {
+
+                max-width: 98vw;
+
+                padding: 18px;
+
+            }
+
+            .form-row {
+
+                flex-direction: column;
+
+                gap: 10px;
+
+            }
+
+        }
+    </style>
+
+
+</head>
+
+
+
+<body>
+
+    {% if frappe.session.user != "Guest" %}
+
+    <header>
+
+        <div>Netwin Banking Statement Portal</div>
+
+
+    </header>
+
+    <div class="container">
+
+        <div style="
+
+ color: #d35400;
+
+ text-align: center;
+
+ font-weight: 500;
+
+ font-size: 14px;
+
+ ">
+
+            <!-- Portal valid till December 6, 2024 only. -->
+
+        </div>
+
+        <h1>Transaction Statement</h1>
+
+        <form id="statement-form" novalidate>
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label for="ac_no" class="form-label">Account No</label>
+
+                    <input type="text" class="form-control" id="ac_no" placeholder="Enter Account No" required
+                        autofocus />
+
+                    <span class="error-hint" id="err-ac_no"></span>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="ac_code" class="form-label">GL Code</label>
+
+                    <input type="text" class="form-control" id="ac_code" placeholder="Enter GL Code" required />
+
+                    <span class="error-hint" id="err-ac_code"></span>
+
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label for="branch_code" class="form-label">Branch Code</label>
+
+                    <input type="text" class="form-control" id="branch_code" placeholder="Enter Branch Code" required />
+
+                    <span class="error-hint" id="err-branch_code"></span>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="start_date" class="form-label">Start Date</label>
+
+                    <input type="date" class="form-control" id="start_date" required />
+
+                    <span class="error-hint" id="err-start_date"></span>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="end_date" class="form-label">End Date</label>
+
+                    <input type="date" class="form-control" id="end_date" required />
+
+                    <span class="error-hint" id="err-end_date"></span>
+
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn-primary">⬇ Download Statement</button>
+
+        </form>
+
+        <div class="loader" id="loader">
+
+            <span></span><span></span><span></span>
+
+        </div>
+
+        <div id="alert-container" class="alert"></div>
+
+    </div>
+
+
+
+    <!-- Format Selection Modal -->
+
+    <div class="modal-overlay" id="format-modal">
+
+        <div class="modal-content">
+
+            <div class="modal-title">Select Export Format</div>
+
+            <div class="modal-buttons">
+
+                <button class="btn-option" onclick="handleDownload('pdf')">
+
+                    📄 Download as PDF
+
+                </button>
+
+                <button class="btn-option" onclick="handleDownload('csv')">
+
+                    📊 Download as CSV
+
+                </button>
+
+            </div>
+
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+
+        </div>
+
+    </div>
+
+
+
+    {% else %}
+
+    {% include "/templates/not-found.html" %} {% endif %}
+
+    <!-- 
+    <script>
+
+        // Util for showing/hiding loader
+
+        function setLoading(isLoading) {
+
+            document.getElementById("loader").style.display = isLoading
+
+                ? "block"
+
+                : "none";
+
+        }
+
+
+
+        // Util for showing feedback alert
+
+        function showAlert(message, type) {
+
+            const alertContainer = document.getElementById("alert-container");
+
+            alertContainer.textContent = message;
+
+            alertContainer.className = "alert " + type;
+
+            alertContainer.style.display = "block";
+
+            setTimeout(() => (alertContainer.style.display = "none"), 6000);
+
+            alertContainer.scrollIntoView({ behavior: "smooth" });
+
+        }
+
+
+
+        // Helper: highlight fields if error
+
+        function showFieldError(fieldName, msg) {
+
+            const input = document.getElementById(fieldName);
+
+            const errHint = document.getElementById("err-" + fieldName);
+
+            if (input && errHint) {
+
+                input.classList.add("error");
+
+                errHint.textContent = msg;
+
+                errHint.classList.add("active");
+
+            }
+
+        }
+
+        // Remove highlight from all fields
+
+        function clearFieldErrors() {
+
+            ["ac_no", "ac_code", "branch_code", "start_date", "end_date"].forEach(
+
+                (f) => {
+
+                    document.getElementById(f).classList.remove("error");
+
+                    const eh = document.getElementById("err-" + f);
+
+                    eh.textContent = "";
+
+                    eh.classList.remove("active");
+
+                }
+
+            );
+
+        }
+
+
+
+        // Example: Fetch branch code auto-fill on page load
+
+        async function fetchBranchCode() {
+
+            try {
+
+                const response = await fetch(
+
+                    "/api/method/share_holder_management.share_holder_management.netwin.netwin"
+
+                );
+
+                if (response.ok) {
+
+                    const data = await response.json();
+
+                    const branchCode = data.message;
+
+                    if (branchCode && branchCode !== "All") {
+
+                        const branchCodeField = document.getElementById("branch_code");
+
+                        branchCodeField.value = branchCode;
+
+                        branchCodeField.readOnly = true;
+
+                    }
+
+                }
+
+            } catch (_) { }
+
+        }
+
+        window.addEventListener("load", fetchBranchCode);
+
+
+
+        // Modal Handlers
+
+        function openModal() {
+
+            document.getElementById("format-modal").style.display = "flex";
+
+        }
+
+        function closeModal() {
+
+            document.getElementById("format-modal").style.display = "none";
+
+        }
+
+
+
+        // Core: Form submission logic with advanced error handling
+
+        document
+
+            .getElementById("statement-form")
+
+            .addEventListener("submit", async (event) => {
+
+                event.preventDefault();
+
+                clearFieldErrors();
+
+
+
+                // Validate first before showing modal
+
+                const acNo = document.getElementById("ac_no").value.trim();
+
+                const acCode = document.getElementById("ac_code").value.trim();
+
+                const branchCode = document.getElementById("branch_code").value.trim();
+
+                const startDate = document.getElementById("start_date").value;
+
+                const endDate = document.getElementById("end_date").value;
+
+
+
+                let clientErrors = {};
+
+                if (!acNo) clientErrors["ac_no"] = "Account number is required.";
+
+                if (!acCode) clientErrors["ac_code"] = "GL Code is required.";
+
+                if (!branchCode) clientErrors["branch_code"] = "Branch Code is required.";
+
+                if (!startDate) clientErrors["start_date"] = "Start date is required.";
+
+                if (!endDate) clientErrors["end_date"] = "End date is required.";
+
+
+
+                if (Object.keys(clientErrors).length) {
+
+                    Object.entries(clientErrors).forEach(([field, msg]) =>
+
+                        showFieldError(field, msg)
+
+                    );
+
+                    showAlert("Please correct the errors and try again.", "error");
+
+                    return;
+
+                }
+
+
+
+                openModal();
+
+            });
+
+
+
+        async function handleDownload(format) {
+
+            closeModal();
+
+            setLoading(true);
+
+
+
+            const submitButton = document.querySelector(".btn-primary");
+
+            submitButton.disabled = true;
+
+
+
+            // Collect form data
+
+            const acNo = document.getElementById("ac_no").value.trim();
+
+            const acCode = document.getElementById("ac_code").value.trim().toUpperCase();
+
+            const branchCode = document.getElementById("branch_code").value.trim().toUpperCase();
+
+            const startDate = document.getElementById("start_date").value;
+
+            const endDate = document.getElementById("end_date").value;
+
+
+
+            // API request
+
+            try {
+
+                const response = await fetch(
+
+                    "/api/method/share_holder_management.share_holder_management.share_api.test_db",
+
+                    {
+
+                        method: "POST",
+
+                        headers: { "Content-Type": "application/json" },
+
+                        body: JSON.stringify({
+
+                            branch_code: branchCode,
+
+                            ac_code: acCode,
+
+                            ac_no: acNo,
+
+                            start_date: startDate,
+
+                            end_date: endDate,
+
+                            export_format: format,
+
+                        }),
+
+                    }
+
+                );
+
+
+
+                if (response.ok) {
+
+                    // Success: Download File
+
+                    const blob = await response.blob();
+
+                    const url = window.URL.createObjectURL(blob);
+
+                    const a = document.createElement("a");
+
+                    a.href = url;
+
+                    a.download = `Transaction_Statement_${acNo}.${format}`;
+
+                    document.body.appendChild(a);
+
+                    a.click();
+
+                    document.body.removeChild(a);
+
+                    showAlert(
+
+                        `Transaction statement (${format.toUpperCase()}) downloaded successfully! ✅`,
+
+                        "success"
+
+                    );
+
+                } else {
+
+                    let errorMessage = "An error occurred. Please check your data.";
+
+                    let errorContent;
+
+                    try {
+
+                        errorContent = await response.clone().json();
+
+                        if (errorContent.message) {
+
+                            errorMessage = errorContent.message;
+
+                        }
+
+                    } catch {
+
+                        errorContent = await response.clone().text();
+
+                        errorMessage = errorContent;
+
+                    }
+
+                    showAlert(errorMessage, "error");
+
+                }
+
+            } catch (error) {
+
+                showAlert("Network error. Please try again.", "error");
+
+            } finally {
+
+                setLoading(false);
+
+                submitButton.disabled = false;
+
+            }
+
+        }
+
+    </script> -->
+
+
+    <script>
+        // Dynamically fetch the API Base URL from 'Netwin Settings' DocType using Jinja
+        // and remove any trailing slash to avoid double slashes like '//api/method/...'
+        let apiBaseUrl = "{{ frappe.db.get_single_value('Netwin Settings', 'api_base_url') or '' }}";
+        apiBaseUrl = apiBaseUrl.replace(/\/$/, "");
+
+        // Util for showing/hiding loader
+        function setLoading(isLoading) {
+            document.getElementById("loader").style.display = isLoading
+                ? "block"
+                : "none";
+        }
+
+        // Util for showing feedback alert
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById("alert-container");
+            alertContainer.textContent = message;
+            alertContainer.className = "alert " + type;
+            alertContainer.style.display = "block";
+            setTimeout(() => (alertContainer.style.display = "none"), 6000);
+            alertContainer.scrollIntoView({ behavior: "smooth" });
+        }
+
+        // Helper: highlight fields if error
+        function showFieldError(fieldName, msg) {
+            const input = document.getElementById(fieldName);
+            const errHint = document.getElementById("err-" + fieldName);
+            if (input && errHint) {
+                input.classList.add("error");
+                errHint.textContent = msg;
+                errHint.classList.add("active");
+            }
+        }
+
+        // Remove highlight from all fields
+        function clearFieldErrors() {
+            ["ac_no", "ac_code", "branch_code", "start_date", "end_date"].forEach(
+                (f) => {
+                    document.getElementById(f).classList.remove("error");
+                    const eh = document.getElementById("err-" + f);
+                    eh.textContent = "";
+                    eh.classList.remove("active");
+                }
+            );
+        }
+
+        // Example: Fetch branch code auto-fill on page load
+        async function fetchBranchCode() {
+            try {
+                // Prepend apiBaseUrl here
+                const response = await fetch(
+                    apiBaseUrl + "/api/method/share_holder_management.share_holder_management.netwin.netwin"
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    const branchCode = data.message;
+                    if (branchCode && branchCode !== "All") {
+                        const branchCodeField = document.getElementById("branch_code");
+                        branchCodeField.value = branchCode;
+                        branchCodeField.readOnly = true;
+                    }
+                }
+            } catch (_) { }
+        }
+        window.addEventListener("load", fetchBranchCode);
+
+        // Modal Handlers
+        function openModal() {
+            document.getElementById("format-modal").style.display = "flex";
+        }
+        function closeModal() {
+            document.getElementById("format-modal").style.display = "none";
+        }
+
+        // Core: Form submission logic with advanced error handling
+        document
+            .getElementById("statement-form")
+            .addEventListener("submit", async (event) => {
+                event.preventDefault();
+                clearFieldErrors();
+
+                // Validate first before showing modal
+                const acNo = document.getElementById("ac_no").value.trim();
+                const acCode = document.getElementById("ac_code").value.trim();
+                const branchCode = document.getElementById("branch_code").value.trim();
+                const startDate = document.getElementById("start_date").value;
+                const endDate = document.getElementById("end_date").value;
+
+                let clientErrors = {};
+                if (!acNo) clientErrors["ac_no"] = "Account number is required.";
+                if (!acCode) clientErrors["ac_code"] = "GL Code is required.";
+                if (!branchCode) clientErrors["branch_code"] = "Branch Code is required.";
+                if (!startDate) clientErrors["start_date"] = "Start date is required.";
+                if (!endDate) clientErrors["end_date"] = "End date is required.";
+
+                if (Object.keys(clientErrors).length) {
+                    Object.entries(clientErrors).forEach(([field, msg]) =>
+                        showFieldError(field, msg)
+                    );
+                    showAlert("Please correct the errors and try again.", "error");
+                    return;
+                }
+
+                openModal();
+            });
+
+        async function handleDownload(format) {
+            closeModal();
+            setLoading(true);
+
+            const submitButton = document.querySelector(".btn-primary");
+            submitButton.disabled = true;
+
+            // Collect form data
+            const acNo = document.getElementById("ac_no").value.trim();
+            const acCode = document.getElementById("ac_code").value.trim().toUpperCase();
+            const branchCode = document.getElementById("branch_code").value.trim().toUpperCase();
+            const startDate = document.getElementById("start_date").value;
+            const endDate = document.getElementById("end_date").value;
+
+            // API request
+            try {
+                // Prepend apiBaseUrl here
+                const response = await fetch(
+                    apiBaseUrl + "/api/method/share_holder_management.share_holder_management.share_api.test_db",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            branch_code: branchCode,
+                            ac_code: acCode,
+                            ac_no: acNo,
+                            start_date: startDate,
+                            end_date: endDate,
+                            export_format: format,
+                        }),
+                    }
+                );
+
+                if (response.ok) {
+                    // Success: Download File
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `Transaction_Statement_${acNo}.${format}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showAlert(
+                        `Transaction statement (${format.toUpperCase()}) downloaded successfully! ✅`,
+                        "success"
+                    );
+                } else {
+                    let errorMessage = "An error occurred. Please check your data.";
+                    let errorContent;
+                    try {
+                        errorContent = await response.clone().json();
+                        if (errorContent.message) {
+                            errorMessage = errorContent.message;
+                        }
+                    } catch {
+                        errorContent = await response.clone().text();
+                        errorMessage = errorContent;
+                    }
+                    showAlert(errorMessage, "error");
+                }
+            } catch (error) {
+                showAlert("Network error. Please try again.", "error");
+            } finally {
+                setLoading(false);
+                submitButton.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>
