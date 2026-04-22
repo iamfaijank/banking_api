@@ -847,10 +847,11 @@
 					const isAdmin = currentUser === "Administrator";
 					console.log("Netwin Statement Status:", isChecked ? "Checked" : "Unchecked");
 					
-					if (!isChecked) {
+					if (!isChecked && !isAdmin) {
 						console.log("User Branch Code:", userBranch);
-						if (!isAdmin && userBranch) {
+						if (userBranch) {
 							branchField.value = userBranch;
+							branchField.readOnly = true;
 						}
 					}
 				} else {
@@ -858,6 +859,7 @@
 				}
 
 				function createDropdown(container, branchField, branches) {
+					if (branchField.readOnly) return;
 					const dropdown = document.createElement("div");
 					dropdown.className = "dropdown-menu";
 					dropdown.style.display = "none";
@@ -898,7 +900,7 @@
 					});
 				}
 
-				if (currentUser === "Administrator" || currentUser === "NT6681" || (employee && employee[1])) {
+				if (currentUser === "Administrator" || (employee && employee[1])) {
 					console.log("Showing dropdown for all branches");
 					createDropdown(branchGroup, branchField, branches);
 				} else if (employee && employee[2]) {
