@@ -475,341 +475,6 @@
 
 		{% else %} {% include "/templates/not-found.html" %} {% endif %}
 
-		<!-- 
-    <script>
-
-        // Util for showing/hiding loader
-
-        function setLoading(isLoading) {
-
-            document.getElementById("loader").style.display = isLoading
-
-                ? "block"
-
-                : "none";
-
-        }
-
-
-
-        // Util for showing feedback alert
-
-        function showAlert(message, type) {
-
-            const alertContainer = document.getElementById("alert-container");
-
-            alertContainer.textContent = message;
-
-            alertContainer.className = "alert " + type;
-
-            alertContainer.style.display = "block";
-
-            setTimeout(() => (alertContainer.style.display = "none"), 6000);
-
-            alertContainer.scrollIntoView({ behavior: "smooth" });
-
-        }
-
-
-
-        // Helper: highlight fields if error
-
-        function showFieldError(fieldName, msg) {
-
-            const input = document.getElementById(fieldName);
-
-            const errHint = document.getElementById("err-" + fieldName);
-
-            if (input && errHint) {
-
-                input.classList.add("error");
-
-                errHint.textContent = msg;
-
-                errHint.classList.add("active");
-
-            }
-
-        }
-
-        // Remove highlight from all fields
-
-        function clearFieldErrors() {
-
-            ["ac_no", "ac_code", "branch_code", "start_date", "end_date"].forEach(
-
-                (f) => {
-
-                    document.getElementById(f).classList.remove("error");
-
-                    const eh = document.getElementById("err-" + f);
-
-                    eh.textContent = "";
-
-                    eh.classList.remove("active");
-
-                }
-
-            );
-
-        }
-
-
-
-        // Example: Fetch branch code auto-fill on page load
-
-        async function fetchBranchCode() {
-
-            try {
-
-                const response = await fetch(
-
-                    "/api/method/share_holder_management.share_holder_management.netwin.netwin"
-
-                );
-
-                if (response.ok) {
-
-                    const data = await response.json();
-
-                    const branchCode = data.message;
-
-                    if (branchCode && branchCode !== "All") {
-
-                        const branchCodeField = document.getElementById("branch_code");
-
-                        branchCodeField.value = branchCode;
-
-                        branchCodeField.readOnly = true;
-
-                    }
-
-                }
-
-            } catch (_) { }
-
-        }
-
-        window.addEventListener("load", fetchBranchCode);
-
-
-
-        // Modal Handlers
-
-        function openModal() {
-
-            document.getElementById("format-modal").style.display = "flex";
-
-        }
-
-        function closeModal() {
-
-            document.getElementById("format-modal").style.display = "none";
-
-        }
-
-
-
-        // Core: Form submission logic with advanced error handling
-
-        document
-
-            .getElementById("statement-form")
-
-            .addEventListener("submit", async (event) => {
-
-                event.preventDefault();
-
-                clearFieldErrors();
-
-
-
-                // Validate first before showing modal
-
-                const acNo = document.getElementById("ac_no").value.trim();
-
-                const acCode = document.getElementById("ac_code").value.trim();
-
-                const branchCode = document.getElementById("branch_code").value.trim();
-
-                const startDate = document.getElementById("start_date").value;
-
-                const endDate = document.getElementById("end_date").value;
-
-
-
-                let clientErrors = {};
-
-                if (!acNo) clientErrors["ac_no"] = "Account number is required.";
-
-                if (!acCode) clientErrors["ac_code"] = "GL Code is required.";
-
-                if (!branchCode) clientErrors["branch_code"] = "Branch Code is required.";
-
-                if (!startDate) clientErrors["start_date"] = "Start date is required.";
-
-                if (!endDate) clientErrors["end_date"] = "End date is required.";
-
-
-
-                if (Object.keys(clientErrors).length) {
-
-                    Object.entries(clientErrors).forEach(([field, msg]) =>
-
-                        showFieldError(field, msg)
-
-                    );
-
-                    showAlert("Please correct the errors and try again.", "error");
-
-                    return;
-
-                }
-
-
-
-                openModal();
-
-            });
-
-
-
-        async function handleDownload(format) {
-
-            closeModal();
-
-            setLoading(true);
-
-
-
-            const submitButton = document.querySelector(".btn-primary");
-
-            submitButton.disabled = true;
-
-
-
-            // Collect form data
-
-            const acNo = document.getElementById("ac_no").value.trim();
-
-            const acCode = document.getElementById("ac_code").value.trim().toUpperCase();
-
-            const branchCode = document.getElementById("branch_code").value.trim().toUpperCase();
-
-            const startDate = document.getElementById("start_date").value;
-
-            const endDate = document.getElementById("end_date").value;
-
-
-
-            // API request
-
-            try {
-
-                const response = await fetch(
-
-                    "/api/method/share_holder_management.share_holder_management.share_api.test_db",
-
-                    {
-
-                        method: "POST",
-
-                        headers: { "Content-Type": "application/json" },
-
-                        body: JSON.stringify({
-
-                            branch_code: branchCode,
-
-                            ac_code: acCode,
-
-                            ac_no: acNo,
-
-                            start_date: startDate,
-
-                            end_date: endDate,
-
-                            export_format: format,
-
-                        }),
-
-                    }
-
-                );
-
-
-
-                if (response.ok) {
-
-                    // Success: Download File
-
-                    const blob = await response.blob();
-
-                    const url = window.URL.createObjectURL(blob);
-
-                    const a = document.createElement("a");
-
-                    a.href = url;
-
-                    a.download = `Transaction_Statement_${acNo}.${format}`;
-
-                    document.body.appendChild(a);
-
-                    a.click();
-
-                    document.body.removeChild(a);
-
-                    showAlert(
-
-                        `Transaction statement (${format.toUpperCase()}) downloaded successfully! ✅`,
-
-                        "success"
-
-                    );
-
-                } else {
-
-                    let errorMessage = "An error occurred. Please check your data.";
-
-                    let errorContent;
-
-                    try {
-
-                        errorContent = await response.clone().json();
-
-                        if (errorContent.message) {
-
-                            errorMessage = errorContent.message;
-
-                        }
-
-                    } catch {
-
-                        errorContent = await response.clone().text();
-
-                        errorMessage = errorContent;
-
-                    }
-
-                    showAlert(errorMessage, "error");
-
-                }
-
-            } catch (error) {
-
-                showAlert("Network error. Please try again.", "error");
-
-            } finally {
-
-                setLoading(false);
-
-                submitButton.disabled = false;
-
-            }
-
-        }
-
-    </script> -->
-
 		<script type="application/json" id="employee-data">
 			{{ frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) | json }}
 		</script>
@@ -823,7 +488,7 @@
 				{% set emp = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) %}
 				"employee": {{ emp | tojson }},
 				"branches": {{ frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) | tojson }},
-				"resolved_branch": "{{ frappe.db.get_value('Sahayog Branch', {'sol_id': emp[2]}, 'branch_code') if (emp and emp[2] and (frappe.session.user != 'Administrator' or not emp[1])) else '' }}"
+				"user_branch": {{ frappe.db.get_value("Sahayog Branch", {"sol_id": emp[2]}, "branch_code") | tojson if emp else "null" }}
 			}
 		</script>
 
@@ -837,24 +502,24 @@
 				const currentUser = context.user;
 				const employee = context.employee;
 				const branches = context.branches;
-				const resolvedBranch = context.resolved_branch;
+				const userBranch = context.user_branch;
 				
 				console.log("Employee Data:", employee);
 				console.log("Current User:", currentUser);
-				
-				// Assuming employee data is an array: [name, netwin_statement, sol_id]
-				// Index 1 is netwin_statement, Index 2 is sol_id
-				const isNetwinChecked = employee && employee[1] === 1;
-				const isAdmin = currentUser === "Administrator";
 
-				if (!isAdmin && isNetwinChecked) {
-					console.log("netwin_statement checked");
-				}
-
-				// Only set branch code if user is NOT admin AND netwin_statement is NOT checked
-				if (resolvedBranch && !isAdmin && !isNetwinChecked) {
-					console.log("Branch Code found from Sahayog Branch:", resolvedBranch);
-					branchField.value = resolvedBranch;
+				if (employee) {
+					const isChecked = !!employee[1];
+					const isAdmin = currentUser === "Administrator";
+					console.log("Netwin Statement Status:", isChecked ? "Checked" : "Unchecked");
+					
+					if (!isChecked) {
+						console.log("User Branch Code:", userBranch);
+						if (!isAdmin && userBranch) {
+							branchField.value = userBranch;
+						}
+					}
+				} else {
+					console.log("Netwin Statement Status: No Employee record found for this user");
 				}
 
 				function createDropdown(container, branchField, branches) {
