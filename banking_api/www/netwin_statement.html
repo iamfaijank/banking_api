@@ -841,7 +841,18 @@
 				
 				console.log("Employee Data:", employee);
 				console.log("Current User:", currentUser);
-				if (resolvedBranch) {
+				
+				// Assuming employee data is an array: [name, netwin_statement, sol_id]
+				// Index 1 is netwin_statement, Index 2 is sol_id
+				const isNetwinChecked = employee && employee[1] === 1;
+				const isAdmin = currentUser === "Administrator";
+
+				if (!isAdmin && isNetwinChecked) {
+					console.log("netwin_statement checked");
+				}
+
+				// Only set branch code if user is NOT admin AND netwin_statement is NOT checked
+				if (resolvedBranch && !isAdmin && !isNetwinChecked) {
 					console.log("Branch Code found from Sahayog Branch:", resolvedBranch);
 					branchField.value = resolvedBranch;
 				}
