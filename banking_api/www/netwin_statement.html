@@ -884,22 +884,8 @@
 					console.log("Showing dropdown for all branches");
 					createDropdown(branchGroup, branchField, branches);
 				} else if (employee && employee[2]) {
-					const solId = employee[2];
-					console.log("Fetching assigned branch for SOL ID:", solId);
-					const filters = JSON.stringify([["Sahayog Branch", "sol_id", "=", solId]]);
-					const fields = JSON.stringify(["branch_code"]);
-					fetch(
-						`/api/resource/Sahayog Branch?filters=${encodeURIComponent(filters)}&fields=${encodeURIComponent(fields)}`,
-					)
-						.then((res) => res.json())
-						.then((data) => {
-							console.log("Branch Data fetched:", data);
-							if (data && data.data && data.data.length) {
-								branchField.value = data.data[0].branch_code;
-								branchField.readOnly = true;
-							}
-						})
-						.catch(() => {});
+					console.log("Showing searchable dropdown for all branches (editable)");
+					createDropdown(branchGroup, branchField, branches);
 				}
 			});
 		</script>
