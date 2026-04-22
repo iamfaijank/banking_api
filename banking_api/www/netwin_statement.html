@@ -820,8 +820,10 @@
 		<script type="application/json" id="user-context">
 			{
 				"user": "{{ frappe.session.user }}",
-				"employee": {{ frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) | tojson }},
-				"branches": {{ frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) | tojson }}
+				{% set emp = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) %}
+				"employee": {{ emp | tojson }},
+				"branches": {{ frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) | tojson }},
+				"user_branch": {{ frappe.db.get_value("Sahayog Branch", {"sol_id": emp[2]}, "branch_code") | tojson if emp else "null" }}
 			}
 		</script>
 
@@ -835,11 +837,29 @@
 				const currentUser = context.user;
 				const employee = context.employee;
 				const branches = context.branches;
+				const userBranch = context.user_branch;
 				
 				console.log("Employee Data:", employee);
 				console.log("Current User:", currentUser);
 
+				if (employee) {
+					const isChecked = !!employee[1];
+					const isAdmin = currentUser === "Administrator";
+					console.log("Netwin Statement Status:", isChecked ? "Checked" : "Unchecked");
+					
+					if (!isChecked && !isAdmin) {
+						console.log("User Branch Code:", userBranch);
+						if (userBranch) {
+							branchField.value = userBranch;
+							branchField.readOnly = true;
+						}
+					}
+				} else {
+					console.log("Netwin Statement Status: No Employee record found for this user");
+				}
+
 				function createDropdown(container, branchField, branches) {
+					if (branchField.readOnly) return;
 					const dropdown = document.createElement("div");
 					dropdown.className = "dropdown-menu";
 					dropdown.style.display = "none";
@@ -880,7 +900,7 @@
 					});
 				}
 
-				if (currentUser === "Administrator" || currentUser === "NT6681" || (employee && employee[1])) {
+				if (currentUser === "Administrator" || (employee && employee[1])) {
 					console.log("Showing dropdown for all branches");
 					createDropdown(branchGroup, branchField, branches);
 				} else if (employee && employee[2]) {
