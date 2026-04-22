@@ -820,8 +820,10 @@
 		<script type="application/json" id="user-context">
 			{
 				"user": "{{ frappe.session.user }}",
-				"employee": {{ frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) | tojson }},
-				"branches": {{ frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) | tojson }}
+				{% set emp = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) %}
+				"employee": {{ emp | tojson }},
+				"branches": {{ frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) | tojson }},
+				"resolved_branch": "{{ frappe.db.get_value('Sahayog Branch', {'sol_id': emp[2]}, 'branch_code') if (emp and emp[2] and (frappe.session.user != 'Administrator' or not emp[1])) else '' }}"
 			}
 		</script>
 
@@ -835,9 +837,13 @@
 				const currentUser = context.user;
 				const employee = context.employee;
 				const branches = context.branches;
+				const resolvedBranch = context.resolved_branch;
 				
 				console.log("Employee Data:", employee);
 				console.log("Current User:", currentUser);
+				if (resolvedBranch) {
+					console.log("Branch Code found from Sahayog Branch:", resolvedBranch);
+				}
 
 				function createDropdown(container, branchField, branches) {
 					const dropdown = document.createElement("div");
