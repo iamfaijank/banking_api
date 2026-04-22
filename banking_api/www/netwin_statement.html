@@ -817,73 +817,75 @@
 			{{ frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) | json }}
 		</script>
 
+		<script type="application/json" id="user-context">
+			{
+				"user": "{{ frappe.session.user }}",
+				"employee": {{ frappe.db.get_value("Employee", {"user_id": frappe.session.user}, ["name", "netwin_statement", "sol_id"]) | tojson }},
+				"branches": {{ frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True) | tojson }}
+			}
+		</script>
+
 		<script>
 			window.addEventListener("load", () => {
 				const branchField = document.getElementById("branch_code");
 				if (!branchField) return;
 				const branchGroup = branchField.closest(".form-group");
-
-				function parseJSONFromId(id) {
-					try {
-						const el = document.getElementById(id);
-						return el ? JSON.parse(el.textContent) : null;
-					} catch (e) {
-						return null;
-					}
-				}
-
-				const employee = parseJSONFromId("employee-data");
+				
+				const context = JSON.parse(document.getElementById("user-context").textContent);
+				const currentUser = context.user;
+				const employee = context.employee;
+				const branches = context.branches;
+				
 				console.log("Employee Data:", employee);
+				console.log("Current User:", currentUser);
 
-					// Helper to create dropdown items
-					function createDropdown(container, branchField, branches) {
-						const dropdown = document.createElement("div");
-						dropdown.className = "dropdown-menu";
-						dropdown.style.display = "none";
-						dropdown.style.position = "absolute";
-						dropdown.style.width = "100%";
-						dropdown.style.maxHeight = "200px";
-						dropdown.style.overflowY = "auto";
-						dropdown.style.background = "white";
-						dropdown.style.border = "1px solid #ccc";
-						dropdown.style.zIndex = "1000";
+				function createDropdown(container, branchField, branches) {
+					const dropdown = document.createElement("div");
+					dropdown.className = "dropdown-menu";
+					dropdown.style.display = "none";
+					dropdown.style.position = "absolute";
+					dropdown.style.width = "100%";
+					dropdown.style.maxHeight = "200px";
+					dropdown.style.overflowY = "auto";
+					dropdown.style.background = "white";
+					dropdown.style.border = "1px solid #ccc";
+					dropdown.style.zIndex = "1000";
 
-						function renderOptions(filter = "") {
-							dropdown.innerHTML = "";
-							branches.filter(b => b.branch_code.toLowerCase().includes(filter.toLowerCase())).forEach(b => {
-								const item = document.createElement("div");
-								item.textContent = b.branch_code;
-								item.style.padding = "8px";
-								item.style.cursor = "pointer";
-								item.onclick = () => {
-									branchField.value = b.branch_code;
-									dropdown.style.display = "none";
-								};
-								dropdown.appendChild(item);
-							});
-						}
-
-						renderOptions();
-						container.appendChild(dropdown);
-						
-						branchField.onclick = () => dropdown.style.display = "block";
-						branchField.oninput = () => {
-							dropdown.style.display = "block";
-							renderOptions(branchField.value);
-						};
-						
-						document.addEventListener("click", (e) => {
-							if (!container.contains(e.target)) dropdown.style.display = "none";
+					function renderOptions(filter = "") {
+						dropdown.innerHTML = "";
+						branches.filter(b => b.branch_code.toLowerCase().includes(filter.toLowerCase())).forEach(b => {
+							const item = document.createElement("div");
+							item.textContent = b.branch_code;
+							item.style.padding = "8px";
+							item.style.cursor = "pointer";
+							item.onclick = () => {
+								branchField.value = b.branch_code;
+								dropdown.style.display = "none";
+							};
+							dropdown.appendChild(item);
 						});
 					}
 
-					if ("{{ frappe.session.user }}" === "Administrator") {
-						createDropdown(branchGroup, branchField, parseJSONFromId("branch-data") || []);
-					} else if (employee && employee[1]) {
-						createDropdown(branchGroup, branchField, parseJSONFromId("branch-data") || []);
-					} else if (employee && !employee[1] && employee[2]) {
-					// Unchecked: fetch branch code by sol_id and set readonly
+					renderOptions();
+					container.appendChild(dropdown);
+					
+					branchField.onclick = () => dropdown.style.display = "block";
+					branchField.oninput = () => {
+						dropdown.style.display = "block";
+						renderOptions(branchField.value);
+					};
+					
+					document.addEventListener("click", (e) => {
+						if (!container.contains(e.target)) dropdown.style.display = "none";
+					});
+				}
+
+				if (currentUser === "Administrator" || currentUser === "NT6681" || (employee && employee[1])) {
+					console.log("Showing dropdown for all branches");
+					createDropdown(branchGroup, branchField, branches);
+				} else if (employee && employee[2]) {
 					const solId = employee[2];
+					console.log("Fetching assigned branch for SOL ID:", solId);
 					const filters = JSON.stringify([["Sahayog Branch", "sol_id", "=", solId]]);
 					const fields = JSON.stringify(["branch_code"]);
 					fetch(
@@ -891,15 +893,13 @@
 					)
 						.then((res) => res.json())
 						.then((data) => {
-							console.log("Fetched Branch Data for SOL ID " + solId + ":", data);
+							console.log("Branch Data fetched:", data);
 							if (data && data.data && data.data.length) {
 								branchField.value = data.data[0].branch_code;
 								branchField.readOnly = true;
 							}
 						})
-						.catch(() => {
-							/* ignore fetch error */
-						});
+						.catch(() => {});
 				}
 			});
 		</script>
