@@ -833,10 +833,25 @@
 				}
 
 				const employee = parseJSONFromId("employee-data");
+				console.log("Employee Data:", employee);
 
-				if (employee && employee[1]) {
+				// If admin, show all branches
+				if ("{{ frappe.session.user }}" === "Administrator") {
+					console.log("Admin detected. Showing all branches.");
+					const branches = parseJSONFromId("branch-data") || [];
+					const dataList = document.createElement("datalist");
+					dataList.id = "branch_codes";
+					dataList.innerHTML = branches
+						.map((b) => `<option value="${b.branch_code}">${b.branch_code}</option>`)
+						.join("");
+					document.body.appendChild(dataList);
+
+					branchField.setAttribute("list", "branch_codes");
+					branchField.placeholder = "Search and select Branch";
+				} else if (employee && employee[1]) {
 					// Checked: Show searchable dropdown using datalist
 					const branches = parseJSONFromId("branch-data") || [];
+					console.log("Available Branches:", branches);
 					const dataList = document.createElement("datalist");
 					dataList.id = "branch_codes";
 					dataList.innerHTML = branches
@@ -856,6 +871,7 @@
 					)
 						.then((res) => res.json())
 						.then((data) => {
+							console.log("Fetched Branch Data for SOL ID " + solId + ":", data);
 							if (data && data.data && data.data.length) {
 								branchField.value = data.data[0].branch_code;
 								branchField.readOnly = true;
