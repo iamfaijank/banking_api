@@ -835,33 +835,53 @@
 				const employee = parseJSONFromId("employee-data");
 				console.log("Employee Data:", employee);
 
-				// If admin, show all branches
-				if ("{{ frappe.session.user }}" === "Administrator") {
-					console.log("Admin detected. Showing all branches.");
-					const branches = parseJSONFromId("branch-data") || [];
-					const dataList = document.createElement("datalist");
-					dataList.id = "branch_codes";
-					dataList.innerHTML = branches
-						.map((b) => `<option value="${b.branch_code}">${b.branch_code}</option>`)
-						.join("");
-					document.body.appendChild(dataList);
+					// Helper to create dropdown items
+					function createDropdown(container, branchField, branches) {
+						const dropdown = document.createElement("div");
+						dropdown.className = "dropdown-menu";
+						dropdown.style.display = "none";
+						dropdown.style.position = "absolute";
+						dropdown.style.width = "100%";
+						dropdown.style.maxHeight = "200px";
+						dropdown.style.overflowY = "auto";
+						dropdown.style.background = "white";
+						dropdown.style.border = "1px solid #ccc";
+						dropdown.style.zIndex = "1000";
 
-					branchField.setAttribute("list", "branch_codes");
-					branchField.placeholder = "Search and select Branch";
-				} else if (employee && employee[1]) {
-					// Checked: Show searchable dropdown using datalist
-					const branches = parseJSONFromId("branch-data") || [];
-					console.log("Available Branches:", branches);
-					const dataList = document.createElement("datalist");
-					dataList.id = "branch_codes";
-					dataList.innerHTML = branches
-						.map((b) => `<option value="${b.branch_code}">${b.branch_code}</option>`)
-						.join("");
-					document.body.appendChild(dataList);
+						function renderOptions(filter = "") {
+							dropdown.innerHTML = "";
+							branches.filter(b => b.branch_code.toLowerCase().includes(filter.toLowerCase())).forEach(b => {
+								const item = document.createElement("div");
+								item.textContent = b.branch_code;
+								item.style.padding = "8px";
+								item.style.cursor = "pointer";
+								item.onclick = () => {
+									branchField.value = b.branch_code;
+									dropdown.style.display = "none";
+								};
+								dropdown.appendChild(item);
+							});
+						}
 
-					branchField.setAttribute("list", "branch_codes");
-					branchField.placeholder = "Search and select Branch";
-				} else if (employee && !employee[1] && employee[2]) {
+						renderOptions();
+						container.appendChild(dropdown);
+						
+						branchField.onclick = () => dropdown.style.display = "block";
+						branchField.oninput = () => {
+							dropdown.style.display = "block";
+							renderOptions(branchField.value);
+						};
+						
+						document.addEventListener("click", (e) => {
+							if (!container.contains(e.target)) dropdown.style.display = "none";
+						});
+					}
+
+					if ("{{ frappe.session.user }}" === "Administrator") {
+						createDropdown(branchGroup, branchField, parseJSONFromId("branch-data") || []);
+					} else if (employee && employee[1]) {
+						createDropdown(branchGroup, branchField, parseJSONFromId("branch-data") || []);
+					} else if (employee && !employee[1] && employee[2]) {
 					// Unchecked: fetch branch code by sol_id and set readonly
 					const solId = employee[2];
 					const filters = JSON.stringify([["Sahayog Branch", "sol_id", "=", solId]]);
