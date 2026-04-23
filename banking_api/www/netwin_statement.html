@@ -581,20 +581,21 @@
 						});
 					}
 
-					if (employee) {
-						const isChecked = !!employee.netwin_statement;
-						const isAdmin = currentUser === "Administrator";
-						console.log(
-							"Netwin Statement Status:",
-							isChecked ? "Checked" : "Unchecked",
-						);
+					const isAdmin = currentUser === "Administrator";
 
-						if (isChecked || isAdmin) {
+					if (isAdmin) {
+						// ✅ ALWAYS allow admin
+						branchField.value = "";
+						branchField.readOnly = false;
+						createDropdown(branchGroup, branchField, branches);
+					} else if (employee) {
+						const isChecked = !!employee.netwin_statement;
+
+						if (isChecked) {
 							branchField.value = "";
 							branchField.readOnly = false;
 							createDropdown(branchGroup, branchField, branches);
 						} else {
-							console.log("User Branch Code:", userBranch);
 							if (userBranch) {
 								branchField.value = userBranch;
 								branchField.readOnly = true;
