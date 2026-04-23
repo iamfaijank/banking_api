@@ -791,31 +791,41 @@
 			// Core: Form submission logic with advanced error handling
 			document.getElementById("statement-form").addEventListener("submit", async (event) => {
 				event.preventDefault();
-				clearFieldErrors();
 
-				// Validate first before showing modal
-				const acNo = document.getElementById("ac_no").value.trim();
-				const acCode = document.getElementById("ac_code").value.trim();
-				const branchCode = document.getElementById("branch_code").value.trim();
-				const startDate = document.getElementById("start_date").value;
-				const endDate = document.getElementById("end_date").value;
+				const btnView = document.getElementById("btn-view");
+				const isViewVisible = window.getComputedStyle(btnView).display !== "none";
 
-				let clientErrors = {};
-				if (!acNo) clientErrors["ac_no"] = "Account number is required.";
-				if (!acCode) clientErrors["ac_code"] = "GL Code is required.";
-				if (!branchCode) clientErrors["branch_code"] = "Branch Code is required.";
-				if (!startDate) clientErrors["start_date"] = "Start date is required.";
-				if (!endDate) clientErrors["end_date"] = "End date is required.";
+				if (isViewVisible) {
+					// If View button is visible, Enter key should trigger handleView
+					handleView();
+				} else {
+					// If Download button is visible (View was already clicked), Enter key should trigger modal
+					clearFieldErrors();
 
-				if (Object.keys(clientErrors).length) {
-					Object.entries(clientErrors).forEach(([field, msg]) =>
-						showFieldError(field, msg),
-					);
-					showAlert("Please correct the errors and try again.", "error");
-					return;
+					// Validate first before showing modal
+					const acNo = document.getElementById("ac_no").value.trim();
+					const acCode = document.getElementById("ac_code").value.trim();
+					const branchCode = document.getElementById("branch_code").value.trim();
+					const startDate = document.getElementById("start_date").value;
+					const endDate = document.getElementById("end_date").value;
+
+					let clientErrors = {};
+					if (!acNo) clientErrors["ac_no"] = "Account number is required.";
+					if (!acCode) clientErrors["ac_code"] = "GL Code is required.";
+					if (!branchCode) clientErrors["branch_code"] = "Branch Code is required.";
+					if (!startDate) clientErrors["start_date"] = "Start date is required.";
+					if (!endDate) clientErrors["end_date"] = "End date is required.";
+
+					if (Object.keys(clientErrors).length) {
+						Object.entries(clientErrors).forEach(([field, msg]) =>
+							showFieldError(field, msg),
+						);
+						showAlert("Please correct the errors and try again.", "error");
+						return;
+					}
+
+					openModal();
 				}
-
-				openModal();
 			});
 
 			async function handleDownload(format) {
