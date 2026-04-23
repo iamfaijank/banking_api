@@ -548,8 +548,10 @@
 					</div>
 
 					<div class="button-group">
-						<button type="submit" class="btn-primary">⬇ Download Statement</button>
-						<button type="button" class="btn-secondary" onclick="handleView()">
+						<button type="submit" class="btn-primary" id="btn-download" style="display: none;">
+							⬇ Download Statement
+						</button>
+						<button type="button" class="btn-secondary" id="btn-view" onclick="handleView()">
 							👁 View Statement
 						</button>
 					</div>
@@ -731,6 +733,12 @@
 				} catch (e) {
 					console.error("Fetch API Call Failed:", e);
 				}
+
+				// Reset buttons if form is changed
+				document.getElementById("statement-form").addEventListener("input", () => {
+					document.getElementById("btn-view").style.display = "block";
+					document.getElementById("btn-download").style.display = "none";
+				});
 			});
 		</script>
 		<script>
@@ -946,6 +954,11 @@
 						document.getElementById("main-layout-wrapper").classList.add("side-by-side");
 						document.getElementById("pdf-preview-wrapper").style.display = "block";
 						resultsContainer.style.display = "block";
+						
+						// Toggle buttons
+						document.getElementById("btn-view").style.display = "none";
+						document.getElementById("btn-download").style.display = "block";
+
 						resultsContainer.scrollIntoView({ behavior: "smooth" });
 						showAlert("Statement preview loaded! ✅", "success");
 					} else {
