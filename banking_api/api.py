@@ -426,7 +426,15 @@ def get_user_context():
             "branch_code"
         )
 
-    branches = frappe.db.get_all("Sahayog Branch", fields=["branch_code"], distinct=True)
+    branches = frappe.db.get_all(
+    "Sahayog Branch",
+    filters=[
+        ["branch_code", "is", "set"],   # remove NULL
+        ["branch_code", "!=", ""]       # remove empty
+    ],
+    fields=["branch_code"],
+    distinct=True
+)
 
     return {
         "user": user,

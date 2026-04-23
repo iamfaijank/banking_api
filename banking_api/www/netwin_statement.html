@@ -495,9 +495,9 @@
 				try {
 					const response = await fetch("/api/method/banking_api.api.get_user_context", {
 						method: "GET",
-						headers: { "Accept": "application/json" }
+						headers: { Accept: "application/json" },
 					});
-					
+
 					if (!response.ok) {
 						throw new Error(`HTTP error! status: ${response.status}`);
 					}
@@ -512,6 +512,18 @@
 					const employee = context.employee;
 					const branches = context.branches;
 					const userBranch = context.user_branch;
+
+					// ✅ 1. Check if branches is valid array
+					if (!Array.isArray(branches)) {
+						console.error("Branches is not an array:", branches);
+						return; // stop execution to avoid crash
+					}
+
+					// ✅ 2. Log invalid records
+					console.log(
+						"Invalid branch records:",
+						branches.filter((b) => !b || !b.branch_code),
+					);
 
 					console.log("Current User Detail:", currentUser);
 					console.log("Employee Data:", employee);
@@ -531,19 +543,26 @@
 
 						function renderOptions(filter = "") {
 							dropdown.innerHTML = "";
+							const search = (filter || "").toLowerCase();
+
 							branches
-								.filter((b) =>
-									b.branch_code.toLowerCase().includes(filter.toLowerCase()),
-								)
+								.filter((b) => {
+									if (!b || !b.branch_code) return false;
+									if (typeof b.branch_code !== "string") return false;
+
+									return b.branch_code.toLowerCase().includes(search);
+								})
 								.forEach((b) => {
 									const item = document.createElement("div");
 									item.textContent = b.branch_code;
 									item.style.padding = "8px";
 									item.style.cursor = "pointer";
+
 									item.onclick = () => {
 										branchField.value = b.branch_code;
 										dropdown.style.display = "none";
 									};
+
 									dropdown.appendChild(item);
 								});
 						}
@@ -565,7 +584,10 @@
 					if (employee) {
 						const isChecked = !!employee.netwin_statement;
 						const isAdmin = currentUser === "Administrator";
-						console.log("Netwin Statement Status:", isChecked ? "Checked" : "Unchecked");
+						console.log(
+							"Netwin Statement Status:",
+							isChecked ? "Checked" : "Unchecked",
+						);
 
 						if (isChecked || isAdmin) {
 							branchField.value = "";
@@ -579,15 +601,13 @@
 							}
 						}
 					} else {
-						console.log("Netwin Statement Status: No Employee record found for this user");
+						console.log(
+							"Netwin Statement Status: No Employee record found for this user",
+						);
 					}
 				} catch (e) {
 					console.error("Fetch API Call Failed:", e);
 				}
-
-
-
-
 			});
 		</script>
 		<script>
