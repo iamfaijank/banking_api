@@ -413,6 +413,48 @@
 				gap: 10px;
 				margin-top: 20px;
 			}
+
+			/* Side-by-Side Layout */
+			.main-wrapper {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				width: 100%;
+				transition: all 0.4s ease;
+				max-width: 1400px;
+				margin: 0 auto;
+			}
+
+			.main-wrapper.side-by-side {
+				flex-direction: row;
+				align-items: flex-start;
+				justify-content: center;
+				gap: 20px;
+				padding: 0 20px;
+			}
+
+			.main-wrapper.side-by-side .container {
+				margin: 30px 0;
+				flex: 0 0 450px;
+			}
+
+			.main-wrapper.side-by-side .results-container {
+				margin: 30px 0;
+				flex: 1;
+				display: block; /* Ensure it shows up */
+			}
+
+			@media (max-width: 1100px) {
+				.main-wrapper.side-by-side {
+					flex-direction: column;
+					align-items: center;
+				}
+				.main-wrapper.side-by-side .container,
+				.main-wrapper.side-by-side .results-container {
+					width: 100%;
+					max-width: 620px;
+				}
+			}
 		</style>
 	</head>
 
@@ -423,129 +465,112 @@
 			<div>Netwin Banking Statement Portal</div>
 		</header>
 
-		<div class="container">
-			<div
-				style="
-					color: #d35400;
+		<div class="main-wrapper" id="main-layout-wrapper">
+			<div class="container">
+				<div
+					style="
+						color: #d35400;
 
-					text-align: center;
+						text-align: center;
 
-					font-weight: 500;
+						font-weight: 500;
 
-					font-size: 14px;
-				"
-			>
-				<!-- Portal valid till December 6, 2024 only. -->
-			</div>
-
-			<h1>Transaction Statement</h1>
-
-			<form id="statement-form" novalidate>
-				<div class="form-row">
-					<div class="form-group">
-						<label for="ac_no" class="form-label">Account No</label>
-
-						<input
-							type="text"
-							class="form-control"
-							id="ac_no"
-							placeholder="Enter Account No"
-							required
-							autofocus
-						/>
-
-						<span class="error-hint" id="err-ac_no"></span>
-					</div>
-
-					<div class="form-group">
-						<label for="ac_code" class="form-label">GL Code</label>
-
-						<input
-							type="text"
-							class="form-control"
-							id="ac_code"
-							placeholder="Enter GL Code"
-							required
-						/>
-
-						<span class="error-hint" id="err-ac_code"></span>
-					</div>
-				</div>
-
-				<div class="form-row">
-					<div class="form-group">
-						<label for="branch_code" class="form-label">Branch Code</label>
-
-						<input
-							type="text"
-							class="form-control"
-							id="branch_code"
-							placeholder="Enter Branch Code"
-							required
-						/>
-
-						<span class="error-hint" id="err-branch_code"></span>
-					</div>
-
-					<div class="form-group">
-						<label for="start_date" class="form-label">Start Date</label>
-
-						<input type="date" class="form-control" id="start_date" required />
-
-						<span class="error-hint" id="err-start_date"></span>
-					</div>
-
-					<div class="form-group">
-						<label for="end_date" class="form-label">End Date</label>
-
-						<input type="date" class="form-control" id="end_date" required />
-
-						<span class="error-hint" id="err-end_date"></span>
-					</div>
-				</div>
-
-				<div class="button-group">
-					<button type="submit" class="btn-primary">⬇ Download Statement</button>
-					<button type="button" class="btn-secondary" onclick="handleView()">
-						👁 View Statement
-					</button>
-				</div>
-			</form>
-
-			<div class="loader" id="loader"><span></span><span></span><span></span></div>
-
-			<div id="alert-container" class="alert"></div>
-		</div>
-
-		<!-- Result Section Container -->
-		<div id="results-container" class="results-container">
-			<div class="button-group" style="margin-bottom: 15px; justify-content: flex-end">
-				<button
-					class="btn-option"
-					style="font-size: 12px; padding: 5px 10px"
-					onclick="toggleViewMode('pdf')"
+						font-size: 14px;
+					"
 				>
-					📄 PDF View
-				</button>
-				<button
-					class="btn-option"
-					style="font-size: 12px; padding: 5px 10px"
-					onclick="toggleViewMode('table')"
-				>
-					📊 Table View
-				</button>
+					<!-- Portal valid till December 6, 2024 only. -->
+				</div>
+
+				<h1>Transaction Statement</h1>
+
+				<form id="statement-form" novalidate>
+					<div class="form-row">
+						<div class="form-group">
+							<label for="ac_no" class="form-label">Account No</label>
+
+							<input
+								type="text"
+								class="form-control"
+								id="ac_no"
+								placeholder="Enter Account No"
+								required
+								autofocus
+							/>
+
+							<span class="error-hint" id="err-ac_no"></span>
+						</div>
+
+						<div class="form-group">
+							<label for="ac_code" class="form-label">GL Code</label>
+
+							<input
+								type="text"
+								class="form-control"
+								id="ac_code"
+								placeholder="Enter GL Code"
+								required
+							/>
+
+							<span class="error-hint" id="err-ac_code"></span>
+						</div>
+					</div>
+
+					<div class="form-row">
+						<div class="form-group">
+							<label for="branch_code" class="form-label">Branch Code</label>
+
+							<input
+								type="text"
+								class="form-control"
+								id="branch_code"
+								placeholder="Enter Branch Code"
+								required
+							/>
+
+							<span class="error-hint" id="err-branch_code"></span>
+						</div>
+
+						<div class="form-group">
+							<label for="start_date" class="form-label">Start Date</label>
+
+							<input type="date" class="form-control" id="start_date" required />
+
+							<span class="error-hint" id="err-start_date"></span>
+						</div>
+
+						<div class="form-group">
+							<label for="end_date" class="form-label">End Date</label>
+
+							<input type="date" class="form-control" id="end_date" required />
+
+							<span class="error-hint" id="err-end_date"></span>
+						</div>
+					</div>
+
+					<div class="button-group">
+						<button type="submit" class="btn-primary">⬇ Download Statement</button>
+						<button type="button" class="btn-secondary" onclick="handleView()">
+							👁 View Statement
+						</button>
+					</div>
+				</form>
+
+				<div class="loader" id="loader"><span></span><span></span><span></span></div>
+
+				<div id="alert-container" class="alert"></div>
 			</div>
 
-			<div id="pdf-preview-wrapper" style="display: none">
-				<iframe
-					id="pdf-iframe"
-					width="100%"
-					height="800px"
-					style="border: 1px solid #ccc; border-radius: 8px"
-				></iframe>
+			<!-- Result Section Container -->
+			<div id="results-container" class="results-container">
+				<div id="pdf-preview-wrapper" style="display: none">
+					<iframe
+						id="pdf-iframe"
+						width="100%"
+						height="800px"
+						style="border: 1px solid #ccc; border-radius: 8px"
+					></iframe>
+				</div>
 			</div>
-
-			<div id="results-table-wrapper"></div>
 		</div>
 
 		<!-- Format Selection Modal -->
@@ -918,6 +943,7 @@
 						// Append parameters to hide toolbar and nav panes
 						iframe.src = url + "#toolbar=0&navpanes=0&view=FitH";
 
+						document.getElementById("main-layout-wrapper").classList.add("side-by-side");
 						document.getElementById("pdf-preview-wrapper").style.display = "block";
 						resultsContainer.style.display = "block";
 						resultsContainer.scrollIntoView({ behavior: "smooth" });
