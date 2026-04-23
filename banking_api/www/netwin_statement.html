@@ -756,7 +756,6 @@
 				alertContainer.className = "alert " + type;
 				alertContainer.style.display = "block";
 				setTimeout(() => (alertContainer.style.display = "none"), 6000);
-				alertContainer.scrollIntoView({ behavior: "smooth" });
 			}
 
 			// Helper: highlight fields if error
@@ -969,7 +968,6 @@
 						document.getElementById("btn-view").style.display = "none";
 						document.getElementById("btn-download").style.display = "block";
 
-						resultsContainer.scrollIntoView({ behavior: "smooth" });
 						showAlert("Statement preview loaded! ✅", "success");
 					} else {
 						showAlert("Failed to load PDF preview.", "error");
