@@ -135,7 +135,7 @@ def get_columns():
 
 
 def get_data(filters):
-	conditions = ["m.cif_status IN ('Approved', 'Rejected', 'No Action Needed')"]
+	conditions = ["1=1"]
 	values = {}
 
 	if filters.get("from_date"):
@@ -196,11 +196,29 @@ def get_report_summary(data):
 	for r in data:
 		unique_docs[r.get("aadhar")] = r.get("cif_status")
 
+	draft = sum(1 for st in unique_docs.values() if st == "Draft")
+	pending = sum(1 for st in unique_docs.values() if st == "Pending Verification")
 	approved = sum(1 for st in unique_docs.values() if st == "Approved")
 	rejected = sum(1 for st in unique_docs.values() if st == "Rejected")
 	no_action = sum(1 for st in unique_docs.values() if st == "No Action Needed")
 
-	return [
+	summary = []
+	if draft > 0:
+		summary.append({
+			"value": draft,
+			"label": _("Draft Aadhaars"),
+			"datatype": "Int",
+			"indicator": "Gray"
+		})
+	if pending > 0:
+		summary.append({
+			"value": pending,
+			"label": _("Pending Verification"),
+			"datatype": "Int",
+			"indicator": "Orange"
+		})
+
+	summary.extend([
 		{
 			"value": approved,
 			"label": _("Approved Aadhaars"),
@@ -231,7 +249,8 @@ def get_report_summary(data):
 			"datatype": "Int",
 			"indicator": "Purple"
 		}
-	]
+	])
+	return summary
 
 
 def get_chart(data):
@@ -246,26 +265,40 @@ def get_chart(data):
 	date_status_map = {}
 	for (d_str, aadhar), st in unique_docs.items():
 		if d_str not in date_status_map:
-			date_status_map[d_str] = {"Approved": 0, "Rejected": 0, "No Action Needed": 0}
+			date_status_map[d_str] = {"Approved": 0, "Rejected": 0, "No Action Needed": 0, "Draft": 0, "Pending Verification": 0}
 		if st in date_status_map[d_str]:
 			date_status_map[d_str][st] += 1
 
 	labels = sorted(list(date_status_map.keys()))[-10:]
+	draft_data = [date_status_map[d]["Draft"] for d in labels]
+	pending_data = [date_status_map[d]["Pending Verification"] for d in labels]
 	approved_data = [date_status_map[d]["Approved"] for d in labels]
 	rejected_data = [date_status_map[d]["Rejected"] for d in labels]
 	no_action_data = [date_status_map[d]["No Action Needed"] for d in labels]
 
+	datasets = []
+	colors = []
+	if any(draft_data):
+		datasets.append({"name": _("Draft"), "values": draft_data})
+		colors.append("#6b7280")
+	if any(pending_data):
+		datasets.append({"name": _("Pending Verification"), "values": pending_data})
+		colors.append("#f59e0b")
+
+	datasets.extend([
+		{"name": _("Approved"), "values": approved_data},
+		{"name": _("Rejected"), "values": rejected_data},
+		{"name": _("No Action Needed"), "values": no_action_data}
+	])
+	colors.extend(["#16a34a", "#dc2626", "#2563eb"])
+
 	return {
 		"data": {
 			"labels": labels,
-			"datasets": [
-				{"name": _("Approved"), "values": approved_data},
-				{"name": _("Rejected"), "values": rejected_data},
-				{"name": _("No Action Needed"), "values": no_action_data}
-			]
+			"datasets": datasets
 		},
 		"type": "bar",
-		"colors": ["#16a34a", "#dc2626", "#2563eb"]
+		"colors": colors
 	}
 
 @frappe.whitelist()
