@@ -19,7 +19,7 @@ frappe.query_reports["CIF Merge Status Report"] = {
 			"fieldname": "cif_status",
 			"label": __("CIF Status"),
 			"fieldtype": "Select",
-			"options": "\nApproved\nRejected\nNo Action Needed"
+			"options": "\nDraft\nPending Verification\nApproved\nRejected\nNo Action Needed"
 		}
 	],
 	"formatter": function(value, row, column, data, default_formatter) {
@@ -31,6 +31,10 @@ frappe.query_reports["CIF Merge Status Report"] = {
 				value = `<span class="indicator-pill red font-weight-bold">${__("Rejected")}</span>`;
 			} else if (data.cif_status === "No Action Needed") {
 				value = `<span class="indicator-pill blue font-weight-bold">${__("No Action Needed")}</span>`;
+			} else if (data.cif_status === "Pending Verification") {
+				value = `<span class="indicator-pill orange font-weight-bold">${__("Pending Verification")}</span>`;
+			} else if (data.cif_status === "Draft") {
+				value = `<span class="indicator-pill gray font-weight-bold">${__("Draft")}</span>`;
 			}
 		} else if (column.fieldname === "cif_type") {
 			if (data.cif_type === "Primary") {
