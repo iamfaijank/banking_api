@@ -390,7 +390,7 @@
 
 	<div class="main-content">
 		<div class="page-heading">Account Ledger Inquiry</div>
-		<div id="db-status" class="search-status checking">Checking database connection...</div>
+		<div id="db-status" class="search-status"></div>
 
 		<div class="info-panel">
 			<div class="help-icon">?</div>
@@ -523,6 +523,13 @@
 		}
 	}
 
+	function setStatusMessage(message, state) {
+		var el = document.getElementById('db-status');
+		if (!el) return;
+		el.className = 'search-status ' + (state || '');
+		el.textContent = message || '';
+	}
+
 	function formatAmount(val) {
 		if (val === null || val === undefined || val === '') return '';
 		var num = Number(val);
@@ -597,16 +604,18 @@
 			if (res.status === 'success') {
 				ledgerData = res;
 				renderLedgerData(accountId);
-				setDbStatus('connected', 'db is connected');
+				setDbStatus('connected', '');
 			} else {
-				setDbStatus('failed', res.message || 'Unable to fetch account ledger data.');
+				updateDbStar(false);
+				setStatusMessage(res.message || 'Unable to fetch account ledger data.', 'failed');
 			}
 		}
 
 		function handleError(err) {
 			var msg = 'Unable to fetch account ledger data.';
 			if (err && err.message) msg = err.message;
-			setDbStatus('failed', msg);
+			updateDbStar(dbConnected);
+			setStatusMessage(msg, 'failed');
 		}
 
 		if (window.frappe && typeof frappe.call === 'function') {
@@ -635,7 +644,8 @@
 							}
 						}
 					} catch (e) {}
-					setDbStatus('failed', msg);
+					updateDbStar(dbConnected);
+					setStatusMessage(msg, 'failed');
 				}
 			});
 			return;
@@ -673,7 +683,8 @@
 							msg = data.exception;
 						}
 					} catch (e) {}
-					setDbStatus('failed', msg);
+					updateDbStar(dbConnected);
+					setStatusMessage(msg, 'failed');
 					return;
 				}
 				handleResponse(data.message || {});
@@ -688,9 +699,9 @@
 		}
 		dbCheckInFlight = true;
 		if (typeof callback === 'function') dbCheckCallbacks.push(callback);
-		setDbStatus('checking', 'Checking database connection...');
 		dbConnected = false;
 		updateDbStar(false);
+		setStatusMessage('', '');
 
 		var method = 'banking_api.www.finacle_passbook.check_finacle_migration_connection';
 
@@ -698,10 +709,12 @@
 			res = res || {};
 			if (res.status === 'success') {
 				dbConnected = true;
-				setDbStatus('connected', 'db is connected');
+				updateDbStar(true);
+				setStatusMessage('', '');
 			} else {
 				dbConnected = false;
-				setDbStatus('failed', res.message || 'Database connection failed');
+				updateDbStar(false);
+				setStatusMessage('', '');
 			}
 			dbCheckInFlight = false;
 			var cbs = dbCheckCallbacks.slice();
@@ -712,7 +725,8 @@
 		function handleError() {
 			dbConnected = false;
 			dbCheckInFlight = false;
-			setDbStatus('failed', 'Unable to test database connection.');
+			updateDbStar(false);
+			setStatusMessage('', '');
 			var cbs = dbCheckCallbacks.slice();
 			dbCheckCallbacks = [];
 			cbs.forEach(function (cb) { try { cb(false, {}); } catch (e) {} });
@@ -760,10 +774,11 @@
 
 		function doFetch() {
 			if (!dbConnected) {
-				setDbStatus('failed', 'Database is not connected.');
+				updateDbStar(false);
+				setStatusMessage('', '');
 				return;
 			}
-			setDbStatus('checking', 'Fetching account ledger...');
+			setStatusMessage('Fetching account ledger...', 'checking');
 			fetchAccountLedger(keyword);
 		}
 
