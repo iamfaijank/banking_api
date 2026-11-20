@@ -1,0 +1,519 @@
+{% extends "templates/web.html" %}
+{% set no_header = True %}
+{% set no_footer = True %}
+{% set hide_navbar = True %}
+{% set full_width = True %}
+
+{% block title %}Account Ledger Inquiry{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block header %}{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block style %}
+{{ super() }}
+<style>
+	[data-path="/finacle_passbook"] .navbar,
+	[data-path="/finacle_passbook"] .page-breadcrumbs,
+	[data-path="/finacle_passbook"] .page-header-wrapper,
+	[data-path="/finacle_passbook"] .page-footer,
+	[data-path="/finacle_passbook"] header,
+	[data-path="/finacle_passbook"] .web-footer {
+		display: none !important;
+	}
+
+	[data-path="/finacle_passbook"] .page-content-wrapper,
+	[data-path="/finacle_passbook"] .page_content,
+	[data-path="/finacle_passbook"] main,
+	[data-path="/finacle_passbook"] .container {
+		width: 100% !important;
+		max-width: none !important;
+		padding: 0 !important;
+		margin: 0 !important;
+		background: #ffffff !important;
+	}
+
+	body[data-path="/finacle_passbook"] {
+		margin: 0;
+		background: #e6e6e6;
+		font-family: Arial, Tahoma, sans-serif;
+		color: #000;
+	}
+
+	.finacle-screen {
+		width: 1200px;
+		min-height: 498px;
+		margin: 0 auto;
+		background: #fff;
+		box-sizing: border-box;
+	}
+
+	/* Browser chrome (mock) */
+	.browser-bar {
+		background: #f3f3f3;
+		border-bottom: 1px solid #d0d0d0;
+		font-size: 12px;
+	}
+	.browser-address-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 4px 8px;
+		border-bottom: 1px solid #d9d9d9;
+		background: #fff;
+	}
+	.browser-not-secure {
+		color: #c62828;
+		font-size: 12px;
+		white-space: nowrap;
+	}
+	.browser-url {
+		flex: 1;
+		border: 1px solid #cfcfcf;
+		border-radius: 2px;
+		padding: 2px 6px;
+		font-size: 12px;
+		color: #333;
+		background: #fff;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.ie-notice {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 4px 8px;
+		font-size: 12px;
+		color: #333;
+		background: #f7f7f7;
+	}
+	.ie-notice .ie-text { flex: 1; }
+	.ie-notice .ie-open {
+		background: #0078d4;
+		color: #fff;
+		border: 1px solid #006cbd;
+		padding: 2px 8px;
+		font-size: 12px;
+		cursor: default;
+	}
+	.ie-notice .ie-learn { color: #0066cc; text-decoration: underline; cursor: default; }
+	.ie-notice .ie-close { margin-left: 4px; color: #666; font-size: 14px; }
+
+	/* User info toolbar */
+	.user-toolbar {
+		display: flex;
+		align-items: center;
+		background: #f2f2f2;
+		border-bottom: 1px solid #d0d0d0;
+		font-size: 11px;
+		color: #222;
+		padding: 2px 6px;
+		min-height: 22px;
+	}
+	.user-toolbar .ut-item {
+		padding: 0 8px;
+		white-space: nowrap;
+	}
+	.user-toolbar .ut-sep {
+		width: 1px;
+		height: 14px;
+		background: #cfcfcf;
+	}
+	.user-toolbar .ut-spacer { flex: 1; }
+	.user-toolbar .ut-icon {
+		padding: 0 6px;
+		color: #555;
+		font-size: 12px;
+		line-height: 1;
+	}
+	.user-toolbar .ut-dd::after { content: " \25BE"; font-size: 10px; color: #555; }
+
+	/* App header */
+	.app-header {
+		display: flex;
+		align-items: center;
+		background: #b9d7ea;
+		padding: 4px 8px;
+		border-bottom: 1px solid #9ec3da;
+		min-height: 38px;
+	}
+	.logo-sahayog {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.05;
+		color: #0b5c8a;
+		font-weight: bold;
+		margin-right: 16px;
+	}
+	.logo-sahayog .brand { font-size: 20px; letter-spacing: 0.5px; }
+	.logo-sahayog .tagline { font-size: 8px; font-weight: normal; color: #1d6f9f; }
+	.header-right {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.header-search {
+		display: flex;
+		align-items: center;
+		background: #fff;
+		border: 1px solid #9fc2d8;
+		height: 22px;
+		padding: 0 4px;
+		font-size: 11px;
+		color: #666;
+		min-width: 180px;
+	}
+	.header-search .placeholder { flex: 1; color: #777; }
+	.header-search .sicon { color: #666; font-size: 12px; }
+	.logo-finacle {
+		font-size: 18px;
+		font-weight: bold;
+		color: #003399;
+		font-family: Tahoma, Arial, sans-serif;
+		white-space: nowrap;
+	}
+	.logo-finacle span { color: #e53935; font-size: 12px; vertical-align: super; font-weight: normal; }
+	.star-icon { color: #666; font-size: 16px; padding-left: 4px; }
+
+	/* Navigation menu */
+	.nav-menu {
+		display: flex;
+		align-items: center;
+		gap: 0;
+		background: #fff;
+		border-bottom: 1px solid #cfdde8;
+		padding: 2px 4px;
+		font-size: 11px;
+	}
+	.nav-back {
+		color: #0066cc;
+		padding: 2px 6px;
+		font-size: 12px;
+	}
+	.nav-item {
+		color: #0066cc;
+		background: #fff;
+		border: 1px solid #7fb3d5;
+		padding: 1px 6px;
+		margin-right: 2px;
+		line-height: 1.4;
+		white-space: nowrap;
+	}
+	.nav-meta {
+		color: #333;
+		padding: 0 8px;
+		white-space: nowrap;
+	}
+
+	/* Content */
+	.main-content {
+		padding: 4px 8px 6px 8px;
+		background: #fff;
+	}
+	.page-heading {
+		font-size: 13px;
+		font-weight: bold;
+		color: #000;
+		margin: 2px 0 4px 0;
+		padding-left: 21px;
+	}
+
+	.info-panel {
+		margin-left: 29px;
+		margin-right: 8px;
+		border: 1px solid #a9a9a9;
+		background: #fff;
+		position: relative;
+		padding: 4px 6px 2px 6px;
+		box-sizing: border-box;
+	}
+	.help-icon {
+		position: absolute;
+		top: 3px;
+		right: 4px;
+		width: 14px;
+		height: 14px;
+		border: 1px solid #888;
+		border-radius: 50%;
+		font-size: 10px;
+		color: #555;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: #fff;
+		line-height: 1;
+	}
+
+	.acct-grid {
+		display: flex;
+		gap: 24px;
+		padding-right: 18px;
+	}
+	.acct-col { flex: 1; }
+	.acct-row {
+		display: flex;
+		font-size: 11px;
+		line-height: 1.35;
+		margin: 0;
+	}
+	.acct-label {
+		font-weight: bold;
+		color: #000;
+		min-width: 150px;
+		white-space: nowrap;
+	}
+	.acct-value {
+		font-weight: normal;
+		color: #000;
+	}
+
+	.pagination {
+		text-align: right;
+		font-size: 11px;
+		color: #333;
+		padding: 2px 2px 1px 0;
+		margin-top: 2px;
+	}
+
+	.ledger-table {
+		width: 100%;
+		border-collapse: collapse;
+		table-layout: fixed;
+		font-size: 10px;
+		margin-top: 1px;
+	}
+	.ledger-table th,
+	.ledger-table td {
+		border: 1px solid #b5b5b5;
+		padding: 1px 3px;
+		line-height: 1.25;
+		vertical-align: middle;
+	}
+	.ledger-table th {
+		background: #d9d9d9;
+		color: #333;
+		font-weight: bold;
+		text-align: left;
+	}
+	.ledger-table tbody tr:nth-child(odd) { background: #ffffff; }
+	.ledger-table tbody tr:nth-child(even) { background: #f2f2f2; }
+	.ledger-table .col-icon { width: 22px; text-align: center; }
+	.ledger-table .col-txndt { width: 95px; }
+	.ledger-table .col-valdt { width: 95px; }
+	.ledger-table .col-inst { width: 85px; }
+	.ledger-table .col-part { width: auto; }
+	.ledger-table .col-ccy { width: 40px; text-align: center; }
+	.ledger-table .col-dr { width: 95px; text-align: right; }
+	.ledger-table .col-cr { width: 95px; text-align: right; }
+	.ledger-table .col-bal { width: 95px; text-align: right; }
+	.ledger-table td.num { text-align: right; }
+	.ledger-table td.ccy { text-align: center; }
+	.rec-icon {
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		border: 1px solid #666;
+		background: #eee;
+		vertical-align: middle;
+	}
+	.bal-selected {
+		background: #0066cc;
+		color: #fff;
+	}
+
+	.ok-wrap {
+		margin-left: 29px;
+		margin-top: 4px;
+	}
+	.ok-btn {
+		font-size: 11px;
+		font-family: Arial, Tahoma, sans-serif;
+		color: #000;
+		background: #f5f5f5;
+		border: 1px solid #888;
+		padding: 1px 10px;
+		border-radius: 0;
+		min-width: 36px;
+		line-height: 1.4;
+		cursor: default;
+	}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="finacle-screen">
+	<!-- Browser / application area (mock) -->
+	<div class="browser-bar">
+		<div class="browser-address-row">
+			<span class="browser-not-secure">Not secure</span>
+			<div class="browser-url">https://smcmig.sahayog.com:2950/finfinra/ui/SSOLogin.jsp</div>
+		</div>
+		<div class="ie-notice">
+			<span class="ie-text">You're in Internet Explorer mode. Most pages work better in Microsoft Edge.</span>
+			<span class="ie-open">Open in Microsoft Edge</span>
+			<span class="ie-learn">Learn more</span>
+			<span class="ie-close">&#10005;</span>
+		</div>
+	</div>
+
+	<!-- User information toolbar -->
+	<div class="user-toolbar">
+		<div class="ut-item">User: SAHONT778</div>
+		<div class="ut-sep"></div>
+		<div class="ut-item ut-dd">Calendar: Gregorian</div>
+		<div class="ut-sep"></div>
+		<div class="ut-item">Time Zone: IST</div>
+		<div class="ut-spacer"></div>
+		<div class="ut-icon" title="Search">&#128269;</div>
+		<div class="ut-sep"></div>
+		<div class="ut-item ut-dd">Solution: CoreServer</div>
+		<div class="ut-sep"></div>
+		<div class="ut-icon">&#9881;</div>
+		<div class="ut-sep"></div>
+		<div class="ut-icon">&#9993;</div>
+		<div class="ut-sep"></div>
+		<div class="ut-icon">&#63;</div>
+		<div class="ut-sep"></div>
+		<div class="ut-icon">&#9211;</div>
+	</div>
+
+	<!-- SAHAYOG application header -->
+	<div class="app-header">
+		<div class="logo-sahayog">
+			<div class="brand">SAHAYOG</div>
+			<div class="tagline">Empowering People</div>
+		</div>
+		<div class="header-right">
+			<div class="header-search">
+				<span class="placeholder">Enter keyword</span>
+				<span class="sicon">&#128269;</span>
+			</div>
+			<div class="logo-finacle">Finacle</div>
+			<div class="star-icon">&#9734;</div>
+		</div>
+	</div>
+
+	<!-- Navigation menu -->
+	<div class="nav-menu">
+		<span class="nav-back">&#8617;</span>
+		<span class="nav-item">Home</span>
+		<span class="nav-item">Menu</span>
+		<span class="nav-item">Show Memo Pad</span>
+		<span class="nav-item">Background Menu</span>
+		<span class="nav-item">CCY Converter</span>
+		<span class="nav-meta">20 November, 2026</span>
+		<span class="nav-meta">1001</span>
+		<span class="nav-meta">01</span>
+	</div>
+
+	<div class="main-content">
+		<div class="page-heading">Account Ledger Inquiry</div>
+
+		<div class="info-panel">
+			<div class="help-icon">?</div>
+
+			<div class="acct-grid">
+				<div class="acct-col">
+					<div class="acct-row"><span class="acct-label">A/c. ID</span><span class="acct-value">100120100343269 INR 1001 DIPAK PREMAL KATRE</span></div>
+					<div class="acct-row"><span class="acct-label">A/c. Status</span><span class="acct-value">ACTIVE</span></div>
+					<div class="acct-row"><span class="acct-label">A/c. Open Date</span><span class="acct-value">11-11-2025</span></div>
+					<div class="acct-row"><span class="acct-label">GL Subhead</span><span class="acct-value">49010</span></div>
+					<div class="acct-row"><span class="acct-label">Opening Bal.</span><span class="acct-value">INR 0.00 CR.</span></div>
+					<div class="acct-row"><span class="acct-label">Closing Bal.</span><span class="acct-value">INR 0.00 CR.</span></div>
+					<div class="acct-row"><span class="acct-label">Funds in Clg.</span><span class="acct-value">INR 0.00 CR.</span></div>
+				</div>
+				<div class="acct-col">
+					<div class="acct-row"><span class="acct-label">A/c. Status Date</span><span class="acct-value">11-11-2025</span></div>
+					<div class="acct-row"><span class="acct-label">A/c. Close Date</span><span class="acct-value">12-11-2026</span></div>
+					<div class="acct-row"><span class="acct-label">A/c. Type</span><span class="acct-value">CUSTOMER ACCOUNT</span></div>
+					<div class="acct-row"><span class="acct-label">Available Amt.</span><span class="acct-value">INR 0.00 CR.</span></div>
+					<div class="acct-row"><span class="acct-label">Effective Available Amt.</span><span class="acct-value">INR 0.00 DR.</span></div>
+					<div class="acct-row"><span class="acct-label">Float Bal.</span><span class="acct-value">INR 0.00 CR.</span></div>
+				</div>
+			</div>
+
+			<div class="pagination">&#9664; Page 1 of 1 &#9654;</div>
+
+			<table class="ledger-table">
+				<thead>
+					<tr>
+						<th class="col-icon"></th>
+						<th class="col-txndt">Transaction Date</th>
+						<th class="col-valdt">Value Date</th>
+						<th class="col-inst">Instrument No</th>
+						<th class="col-part">Particulars</th>
+						<th class="col-ccy">CCY</th>
+						<th class="col-dr">Debit Amt.</th>
+						<th class="col-cr">Credit Amt.</th>
+						<th class="col-bal">Bal.</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td class="col-icon"><span class="rec-icon"></span></td>
+						<td>12-11-2026</td>
+						<td>12-11-2026</td>
+						<td></td>
+						<td>Closure proceeds credited to [100110020386000].</td>
+						<td class="ccy">INR</td>
+						<td class="num">16,130.00</td>
+						<td class="num"></td>
+						<td class="num">0.00CR.</td>
+					</tr>
+					<tr>
+						<td class="col-icon"><span class="rec-icon"></span></td>
+						<td>12-11-2026</td>
+						<td>12-11-2026</td>
+						<td></td>
+						<td>100120100343269 : II Perid :12/1</td>
+						<td class="ccy">INR</td>
+						<td class="num"></td>
+						<td class="num">1,130.00</td>
+						<td class="num bal-selected">16,130.00CR.</td>
+					</tr>
+					<tr>
+						<td class="col-icon"><span class="rec-icon"></span></td>
+						<td>16-09-2026</td>
+						<td>16-09-2026</td>
+						<td></td>
+						<td>M/USHA/100120100343269/9B0C</td>
+						<td class="ccy">INR</td>
+						<td class="num"></td>
+						<td class="num">5,000.00</td>
+						<td class="num">15,000.00CR.</td>
+					</tr>
+					<tr>
+						<td class="col-icon"><span class="rec-icon"></span></td>
+						<td>20-02-2026</td>
+						<td>20-02-2026</td>
+						<td></td>
+						<td>M/USHA/100120100343269/C695F</td>
+						<td class="ccy">INR</td>
+						<td class="num"></td>
+						<td class="num">5,000.00</td>
+						<td class="num">10,000.00CR.</td>
+					</tr>
+					<tr>
+						<td class="col-icon"><span class="rec-icon"></span></td>
+						<td>11-11-2025</td>
+						<td>11-11-2025</td>
+						<td></td>
+						<td>AMT TRF FROM AGENT CURRENT AC</td>
+						<td class="ccy">INR</td>
+						<td class="num"></td>
+						<td class="num">5,000.00</td>
+						<td class="num">5,000.00CR.</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div class="ok-wrap">
+			<button type="button" class="ok-btn">OK</button>
+		</div>
+	</div>
+</div>
+{% endblock %}
