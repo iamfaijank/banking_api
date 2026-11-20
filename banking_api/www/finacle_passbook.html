@@ -375,6 +375,19 @@
 		height: 22px;
 		box-sizing: border-box;
 		outline: none;
+		vertical-align: middle;
+	}
+	.entry-box button {
+		font-size: 12px;
+		font-family: Arial, Tahoma, sans-serif;
+		color: #000;
+		background: #f5f5f5;
+		border: 1px solid #888;
+		padding: 1px 10px;
+		height: 22px;
+		margin-left: 8px;
+		cursor: pointer;
+		vertical-align: middle;
 	}
 </style>
 {% endblock %}
@@ -383,7 +396,8 @@
 <div id="entry-screen" class="entry-screen">
 	<div class="entry-box">
 		<label for="ac-id-input">A/c. ID</label>
-		<input type="text" id="ac-id-input" placeholder="Enter A/c. ID" onclick="showLedger()" onfocus="showLedger()" />
+		<input type="text" id="ac-id-input" placeholder="Enter A/c. ID" />
+		<button type="button" id="ac-id-btn">OK</button>
 	</div>
 </div>
 
@@ -564,10 +578,30 @@
 
 <script>
 	function showLedger() {
+		var input = document.getElementById('ac-id-input');
+		if (!input || !input.value.trim()) {
+			if (input) input.focus();
+			return;
+		}
 		var entry = document.getElementById('entry-screen');
 		var ledger = document.getElementById('ledger-screen');
 		if (entry) entry.style.display = 'none';
 		if (ledger) ledger.style.display = 'block';
 	}
+
+	document.addEventListener('DOMContentLoaded', function () {
+		var btn = document.getElementById('ac-id-btn');
+		var input = document.getElementById('ac-id-input');
+		if (btn) {
+			btn.addEventListener('click', showLedger);
+		}
+		if (input) {
+			input.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter') {
+					showLedger();
+				}
+			});
+		}
+	});
 </script>
 {% endblock %}
