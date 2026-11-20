@@ -189,7 +189,9 @@
 		white-space: nowrap;
 	}
 	.logo-finacle span { color: #e53935; font-size: 12px; vertical-align: super; font-weight: normal; }
-	.star-icon { color: #666; font-size: 16px; padding-left: 4px; }
+	.star-icon { color: #808080; font-size: 16px; padding-left: 4px; }
+	.star-icon.connected { color: #1b5e20; }
+	.star-icon.disconnected { color: #808080; }
 
 	/* Navigation menu */
 	.nav-menu {
@@ -382,7 +384,7 @@
 				<span class="sicon" id="keyword-search" title="Search">&#128269;</span>
 			</div>
 			<div class="logo-finacle">Finacle</div>
-			<div class="star-icon">&#9734;</div>
+			<div class="star-icon disconnected" id="db-star">&#9734;</div>
 		</div>
 	</div>
 
@@ -502,11 +504,23 @@
 	var dbCheckCallbacks = [];
 	var ledgerData = null;
 
+	function updateDbStar(connected) {
+		var star = document.getElementById('db-star');
+		if (!star) return;
+		star.className = 'star-icon ' + (connected ? 'connected' : 'disconnected');
+	}
+
 	function setDbStatus(state, message) {
 		var el = document.getElementById('db-status');
-		if (!el) return;
-		el.className = 'search-status ' + (state || '');
-		el.textContent = message || '';
+		if (el) {
+			el.className = 'search-status ' + (state || '');
+			el.textContent = message || '';
+		}
+		if (state === 'connected') {
+			updateDbStar(true);
+		} else if (state === 'failed') {
+			updateDbStar(false);
+		}
 	}
 
 	function formatAmount(val) {
@@ -676,6 +690,7 @@
 		if (typeof callback === 'function') dbCheckCallbacks.push(callback);
 		setDbStatus('checking', 'Checking database connection...');
 		dbConnected = false;
+		updateDbStar(false);
 
 		var method = 'banking_api.www.finacle_passbook.check_finacle_migration_connection';
 
