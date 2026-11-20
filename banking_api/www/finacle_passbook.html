@@ -339,11 +339,11 @@
 		color: #fff;
 	}
 
-	.ok-wrap {
+	.download-wrap {
 		margin-left: 0;
 		margin-top: 4px;
 	}
-	.ok-btn {
+	.download-btn {
 		font-size: 11px;
 		font-family: Arial, Tahoma, sans-serif;
 		color: #000;
@@ -353,7 +353,7 @@
 		border-radius: 0;
 		min-width: 36px;
 		line-height: 1.4;
-		cursor: default;
+		cursor: pointer;
 	}
 
 	#ledger-screen { display: block; }
@@ -435,8 +435,8 @@
 			</table>
 		</div>
 
-		<div class="ok-wrap">
-			<button type="button" class="ok-btn">OK</button>
+		<div class="download-wrap">
+			<button type="button" class="download-btn" id="download-btn">Download</button>
 		</div>
 	</div>
 </div>
@@ -736,9 +736,48 @@
 		doFetch();
 	}
 
+	function csvEscape(value) {
+		var str = value == null ? '' : String(value);
+		if (/[",\n]/.test(str)) {
+			return '"' + str.replace(/"/g, '""') + '"';
+		}
+		return str;
+	}
+
+	function downloadLedger() {
+		if (!ledgerData || !ledgerData.data || !ledgerData.data.length) {
+			setStatusMessage('No data to download.', 'failed');
+			return;
+		}
+
+		var rows = ledgerData.data || [];
+		var columns = (ledgerData.columns && ledgerData.columns.length)
+			? ledgerData.columns
+			: Object.keys(rows[0] || {});
+
+		var lines = [];
+		lines.push(columns.map(csvEscape).join(','));
+		rows.forEach(function (row) {
+			lines.push(columns.map(function (col) { return csvEscape(row[col]); }).join(','));
+		});
+
+		var csvContent = lines.join('\n');
+		var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+		var url = URL.createObjectURL(blob);
+		var a = document.createElement('a');
+		var accountId = (document.getElementById('keyword-input') || {}).value || (ledgerData.account_id || 'account_ledger');
+		a.href = url;
+		a.download = 'account_ledger_' + String(accountId).trim().replace(/[^a-zA-Z0-9_-]/g, '_') + '.csv';
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
 		var input = document.getElementById('keyword-input');
 		var searchBtn = document.getElementById('keyword-search');
+		var downloadBtn = document.getElementById('download-btn');
 		var tbody = document.querySelector('.ledger-table tbody');
 
 		if (tbody) {
@@ -754,6 +793,9 @@
 		}
 		if (searchBtn) {
 			searchBtn.addEventListener('click', showLedger);
+		}
+		if (downloadBtn) {
+			downloadBtn.addEventListener('click', downloadLedger);
 		}
 
 		testDbConnection();
