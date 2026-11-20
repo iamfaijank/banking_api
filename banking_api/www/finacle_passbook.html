@@ -604,12 +604,10 @@
 </div>
 
 <script>
-	function showLedger() {
-		var input = document.getElementById('ac-id-input');
-		if (!input || !input.value.trim()) {
-			if (input) input.focus();
-			return;
-		}
+	var dbConnected = false;
+	var ledgerData = null;
+
+	function showLedgerScreen() {
 		var entry = document.getElementById('entry-screen');
 		var ledger = document.getElementById('ledger-screen');
 		if (entry) entry.style.display = 'none';
@@ -623,21 +621,170 @@
 		el.textContent = message || '';
 	}
 
+	function formatAmount(val) {
+		if (val === null || val === undefined || val === '') return '';
+		var num = Number(val);
+		if (isNaN(num)) return String(val);
+		return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+	}
+
+	function cleanAccountNumber(val) {
+		if (val === null || val === undefined) return '';
+		return String(val).replace(/^="?|"?$/g, '').trim();
+	}
+
+	function renderLedgerData(accountId) {
+		if (!ledgerData || !ledgerData.data) return;
+
+		var rows = ledgerData.data || [];
+		if (rows.length) {
+			var first = rows[0] || {};
+			var acctNo = cleanAccountNumber(first['ACCOUNT NUMBER'] || accountId);
+			var custName = first['CUSTOMER NAME'] || '';
+			var acctIdEl = document.querySelector('.acct-grid .acct-col:first-child .acct-row:first-child .acct-value');
+			if (acctIdEl && (acctNo || custName)) {
+				acctIdEl.textContent = [acctNo, custName].filter(Boolean).join('  ');
+			}
+		}
+
+		var tbody = document.querySelector('.ledger-table tbody');
+		if (!tbody) return;
+		tbody.innerHTML = '';
+
+		rows.forEach(function (row, idx) {
+			var tr = document.createElement('tr');
+			var dr = Number(row['TRANSACTION DEBIT AMOUNT'] || 0);
+			var cr = Number(row['TRANSACTION CREDIT AMOUNT'] || 0);
+			var bal = row['BALANCE'];
+			var balText = bal === null || bal === undefined || bal === '' ? '' : (formatAmount(bal) + 'CR.');
+
+			function td(className, text) {
+				var cell = document.createElement('td');
+				if (className) cell.className = className;
+				cell.textContent = text == null ? '' : String(text);
+				return cell;
+			}
+
+			var iconTd = document.createElement('td');
+			iconTd.className = 'col-icon';
+			var icon = document.createElement('span');
+			icon.className = 'rec-icon';
+			iconTd.appendChild(icon);
+
+			tr.appendChild(iconTd);
+			tr.appendChild(td('', row['GL DATE'] || ''));
+			tr.appendChild(td('', row['GL DATE'] || ''));
+			tr.appendChild(td('', row['INSTRUMENT NUMBER'] || ''));
+			tr.appendChild(td('', row['PARTICULARS'] || ''));
+			tr.appendChild(td('ccy', 'INR'));
+			tr.appendChild(td('num', dr ? formatAmount(dr) : ''));
+			tr.appendChild(td('num', cr ? formatAmount(cr) : ''));
+			var balTd = td('num', balText);
+			if (idx === 1) balTd.className += ' bal-selected';
+			tr.appendChild(balTd);
+
+			tbody.appendChild(tr);
+		});
+	}
+
+	function fetchAccountLedger(accountId) {
+		var method = 'banking_api.www.finacle_passbook.get_account_ledger';
+
+		function handleResponse(res) {
+			res = res || {};
+			if (res.status === 'success') {
+				ledgerData = res;
+				renderLedgerData(accountId);
+				showLedgerScreen();
+			} else {
+				setDbStatus('failed', res.message || 'Unable to fetch account ledger data.');
+			}
+		}
+
+		function handleError(err) {
+			var msg = 'Unable to fetch account ledger data.';
+			if (err && err.message) msg = err.message;
+			setDbStatus('failed', msg);
+		}
+
+		if (window.frappe && typeof frappe.call === 'function') {
+			frappe.call({
+				method: method,
+				args: { account_id: accountId },
+				callback: function (r) {
+					handleResponse(r.message || {});
+				},
+				error: function (r) {
+					var msg = (r && r.message) || (r && r._server_messages) || 'Unable to fetch account ledger data.';
+					if (typeof msg === 'string' && msg.indexOf('[') === 0) {
+						try { msg = JSON.parse(JSON.parse(msg)[0]).message || msg; } catch (e) {}
+					}
+					setDbStatus('failed', msg);
+				}
+			});
+			return;
+		}
+
+		var headers = {
+			'Accept': 'application/json',
+			'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+			'X-Frappe-CMD': method
+		};
+		var token = (window.frappe && frappe.csrf_token) || window.csrf_token;
+		if (token) {
+			headers['X-Frappe-CSRF-Token'] = token;
+		}
+
+		fetch('/api/method/' + method, {
+			method: 'POST',
+			headers: headers,
+			credentials: 'same-origin',
+			body: 'account_id=' + encodeURIComponent(accountId)
+		})
+			.then(function (r) { return r.json(); })
+			.then(function (data) {
+				if (data.exc) {
+					handleError({ message: 'Unable to fetch account ledger data.' });
+					return;
+				}
+				handleResponse(data.message || {});
+			})
+			.catch(handleError);
+	}
+
+	function showLedger() {
+		var input = document.getElementById('ac-id-input');
+		if (!input || !input.value.trim()) {
+			if (input) input.focus();
+			return;
+		}
+		if (!dbConnected) {
+			setDbStatus('failed', 'Database is not connected. Please test connection first.');
+			return;
+		}
+		setDbStatus('connected', 'db is connected. Fetching account ledger...');
+		fetchAccountLedger(input.value.trim());
+	}
+
 	function testDbConnection() {
 		setDbStatus('checking', 'Checking database connection...');
+		dbConnected = false;
 
 		var method = 'banking_api.www.finacle_passbook.check_finacle_migration_connection';
 
 		function handleResponse(res) {
 			res = res || {};
 			if (res.status === 'success') {
+				dbConnected = true;
 				setDbStatus('connected', 'db is connected');
 			} else {
+				dbConnected = false;
 				setDbStatus('failed', res.message || 'Database connection failed');
 			}
 		}
 
 		function handleError() {
+			dbConnected = false;
 			setDbStatus('failed', 'Unable to test database connection.');
 		}
 
