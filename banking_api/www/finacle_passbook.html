@@ -389,6 +389,28 @@
 		cursor: pointer;
 		vertical-align: middle;
 	}
+	.db-status-wrap {
+		margin-top: 12px;
+		font-size: 12px;
+		font-family: Arial, Tahoma, sans-serif;
+	}
+	.db-status {
+		margin-bottom: 6px;
+		min-height: 16px;
+	}
+	.db-status.connected { color: #1b5e20; font-weight: bold; }
+	.db-status.failed { color: #b71c1c; }
+	.db-status.checking { color: #333; }
+	.db-test-btn {
+		font-size: 12px;
+		font-family: Arial, Tahoma, sans-serif;
+		color: #000;
+		background: #f5f5f5;
+		border: 1px solid #888;
+		padding: 1px 10px;
+		height: 22px;
+		cursor: pointer;
+	}
 </style>
 {% endblock %}
 
@@ -398,6 +420,11 @@
 		<label for="ac-id-input">A/c. ID</label>
 		<input type="text" id="ac-id-input" placeholder="Enter A/c. ID" />
 		<button type="button" id="ac-id-btn">OK</button>
+
+		<div class="db-status-wrap">
+			<div id="db-status" class="db-status checking">Checking database connection...</div>
+			<button type="button" id="db-test-btn" class="db-test-btn">Test Connection</button>
+		</div>
 	</div>
 </div>
 
@@ -589,9 +616,68 @@
 		if (ledger) ledger.style.display = 'block';
 	}
 
+	function setDbStatus(state, message) {
+		var el = document.getElementById('db-status');
+		if (!el) return;
+		el.className = 'db-status ' + (state || '');
+		el.textContent = message || '';
+	}
+
+	function testDbConnection() {
+		setDbStatus('checking', 'Checking database connection...');
+
+		var method = 'banking_api.www.finacle_passbook.check_finacle_migration_connection';
+
+		function handleResponse(res) {
+			res = res || {};
+			if (res.status === 'success') {
+				setDbStatus('connected', 'db is connected');
+			} else {
+				setDbStatus('failed', res.message || 'Database connection failed');
+			}
+		}
+
+		function handleError() {
+			setDbStatus('failed', 'Unable to test database connection.');
+		}
+
+		if (window.frappe && typeof frappe.call === 'function') {
+			frappe.call({
+				method: method,
+				callback: function (r) {
+					handleResponse(r.message || {});
+				},
+				error: handleError
+			});
+			return;
+		}
+
+		var headers = {
+			'Accept': 'application/json',
+			'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+			'X-Frappe-CMD': method
+		};
+		var token = (window.frappe && frappe.csrf_token) || window.csrf_token;
+		if (token) {
+			headers['X-Frappe-CSRF-Token'] = token;
+		}
+
+		fetch('/api/method/' + method, {
+			method: 'POST',
+			headers: headers,
+			credentials: 'same-origin',
+			body: ''
+		})
+			.then(function (r) { return r.json(); })
+			.then(function (data) { handleResponse(data.message || {}); })
+			.catch(handleError);
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
 		var btn = document.getElementById('ac-id-btn');
 		var input = document.getElementById('ac-id-input');
+		var dbBtn = document.getElementById('db-test-btn');
+
 		if (btn) {
 			btn.addEventListener('click', showLedger);
 		}
@@ -602,6 +688,11 @@
 				}
 			});
 		}
+		if (dbBtn) {
+			dbBtn.addEventListener('click', testDbConnection);
+		}
+
+		testDbConnection();
 	});
 </script>
 {% endblock %}
