@@ -715,10 +715,24 @@
 					handleResponse(r.message || {});
 				},
 				error: function (r) {
-					var msg = (r && r.message) || (r && r._server_messages) || 'Unable to fetch account ledger data.';
-					if (typeof msg === 'string' && msg.indexOf('[') === 0) {
-						try { msg = JSON.parse(JSON.parse(msg)[0]).message || msg; } catch (e) {}
-					}
+					var msg = 'Unable to fetch account ledger data.';
+					try {
+						if (r && r._server_messages) {
+							var sm = JSON.parse(r._server_messages);
+							if (sm && sm.length) {
+								var parsed = JSON.parse(sm[0]);
+								msg = (parsed && parsed.message) || msg;
+							}
+						} else if (r && r.message) {
+							msg = r.message;
+						} else if (r && r.responseJSON && r.responseJSON._server_messages) {
+							var sm2 = JSON.parse(r.responseJSON._server_messages);
+							if (sm2 && sm2.length) {
+								var parsed2 = JSON.parse(sm2[0]);
+								msg = (parsed2 && parsed2.message) || msg;
+							}
+						}
+					} catch (e) {}
 					setDbStatus('failed', msg);
 				}
 			});
@@ -741,10 +755,23 @@
 			credentials: 'same-origin',
 			body: 'account_id=' + encodeURIComponent(accountId)
 		})
-			.then(function (r) { return r.json(); })
-			.then(function (data) {
-				if (data.exc) {
-					handleError({ message: 'Unable to fetch account ledger data.' });
+			.then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+			.then(function (result) {
+				var data = result.data || {};
+				if (!result.ok || data.exc) {
+					var msg = 'Unable to fetch account ledger data.';
+					try {
+						if (data._server_messages) {
+							var sm = JSON.parse(data._server_messages);
+							if (sm && sm.length) {
+								var parsed = JSON.parse(sm[0]);
+								msg = (parsed && parsed.message) || msg;
+							}
+						} else if (data.exception) {
+							msg = data.exception;
+						}
+					} catch (e) {}
+					setDbStatus('failed', msg);
 					return;
 				}
 				handleResponse(data.message || {});

@@ -163,9 +163,13 @@ def get_account_ledger(account_id):
 			"columns": columns,
 			"data": data,
 		}
-	except Exception:
+	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "Finacle Passbook: Get Account Ledger Failed")
-		frappe.throw(_("Unable to fetch account ledger data."))
+		message = _("Unable to fetch account ledger data.")
+		err = str(e).strip()
+		if err:
+			message = _("{0} ({1})").format(message, err.splitlines()[0])
+		frappe.throw(message)
 	finally:
 		if cursor:
 			cursor.close()
