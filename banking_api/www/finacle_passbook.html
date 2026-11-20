@@ -736,42 +736,85 @@
 		doFetch();
 	}
 
-	function csvEscape(value) {
-		var str = value == null ? '' : String(value);
-		if (/[",\n]/.test(str)) {
-			return '"' + str.replace(/"/g, '""') + '"';
-		}
-		return str;
-	}
-
 	function downloadLedger() {
-		if (!ledgerData || !ledgerData.data || !ledgerData.data.length) {
-			setStatusMessage('No data to download.', 'failed');
+		var input = document.getElementById('keyword-input');
+		var accountId = input && input.value ? input.value.trim() : '';
+		if (!accountId) {
+			setStatusMessage('Enter keyword to download.', 'failed');
+			if (input) input.focus();
 			return;
 		}
 
-		var rows = ledgerData.data || [];
-		var columns = (ledgerData.columns && ledgerData.columns.length)
-			? ledgerData.columns
-			: Object.keys(rows[0] || {});
+		var method = 'banking_api.www.finacle_passbook.download_account_ledger_pdf';
+		var headers = {
+			'Accept': 'application/pdf,application/json',
+			'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+			'X-Frappe-CMD': method
+		};
+		var token = (window.frappe && frappe.csrf_token) || window.csrf_token;
+		if (token) {
+			headers['X-Frappe-CSRF-Token'] = token;
+		}
 
-		var lines = [];
-		lines.push(columns.map(csvEscape).join(','));
-		rows.forEach(function (row) {
-			lines.push(columns.map(function (col) { return csvEscape(row[col]); }).join(','));
-		});
+		setStatusMessage('Generating PDF...', 'checking');
 
-		var csvContent = lines.join('\n');
-		var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-		var url = URL.createObjectURL(blob);
-		var a = document.createElement('a');
-		var accountId = (document.getElementById('keyword-input') || {}).value || (ledgerData.account_id || 'account_ledger');
-		a.href = url;
-		a.download = 'account_ledger_' + String(accountId).trim().replace(/[^a-zA-Z0-9_-]/g, '_') + '.csv';
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
+		fetch('/api/method/' + method, {
+			method: 'POST',
+			headers: headers,
+			credentials: 'same-origin',
+			body: 'account_id=' + encodeURIComponent(accountId)
+		})
+			.then(function (r) {
+				var ct = (r.headers.get('content-type') || '').toLowerCase();
+				if (r.ok && ct.indexOf('application/pdf') !== -1) {
+					var disposition = r.headers.get('content-disposition') || '';
+					var filename = accountId + ' HPBP.pdf';
+					var match = /filename="?([^";]+)"?/i.exec(disposition);
+					if (match && match[1]) filename = match[1];
+					return r.blob().then(function (blob) {
+						return { ok: true, blob: blob, filename: filename };
+					});
+				}
+				return r.json().then(function (data) {
+					return { ok: false, data: data, status: r.status };
+				}).catch(function () {
+					return { ok: false, data: {}, status: r.status };
+				});
+			})
+			.then(function (result) {
+				if (result.ok) {
+					var url = URL.createObjectURL(result.blob);
+					var a = document.createElement('a');
+					a.href = url;
+					a.download = result.filename || (accountId + ' HPBP.pdf');
+					document.body.appendChild(a);
+					a.click();
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url);
+					setStatusMessage('', '');
+					return;
+				}
+
+				var msg = 'Unable to download PDF.';
+				var data = result.data || {};
+				try {
+					if (data._server_messages) {
+						var sm = JSON.parse(data._server_messages);
+						if (sm && sm.length) {
+							var parsed = JSON.parse(sm[0]);
+							msg = (parsed && parsed.message) || msg;
+						}
+					} else if (data.exception) {
+						msg = data.exception;
+					} else if (data.message) {
+						msg = data.message;
+					}
+				} catch (e) {}
+				setStatusMessage(msg, 'failed');
+			})
+			.catch(function () {
+				setStatusMessage('Unable to download PDF.', 'failed');
+			});
 	}
 
 	document.addEventListener('DOMContentLoaded', function () {
