@@ -804,24 +804,34 @@
 				body: body,
 				startY: 40,
 				theme: 'plain',
+				tableWidth: doc.internal.pageSize.getWidth() - 56,
 				styles: {
 					font: 'helvetica',
 					fontSize: 9,
-					cellPadding: 2,
+					cellPadding: { top: 2, right: 4, bottom: 2, left: 2 },
 					textColor: 0,
-					lineWidth: 0
+					lineColor: 0,
+					lineWidth: 0,
+					overflow: 'linebreak',
+					valign: 'top'
 				},
 				headStyles: {
 					fontStyle: 'bold',
-					textColor: 0
+					textColor: 0,
+					valign: 'middle'
 				},
 				columnStyles: {
-					0: { cellWidth: 60 },
-					1: { cellWidth: 220 },
-					2: { cellWidth: 80 },
-					3: { cellWidth: 70, halign: 'right' },
-					4: { cellWidth: 70, halign: 'right' },
-					5: { cellWidth: 80, halign: 'right' }
+					0: { cellWidth: 55, halign: 'left' },   // Date
+					1: { cellWidth: 215, halign: 'left' },  // Particular
+					2: { cellWidth: 65, halign: 'left' },   // Cheque No.
+					3: { cellWidth: 68, halign: 'right' },  // Debit
+					4: { cellWidth: 68, halign: 'right' },  // Credit
+					5: { cellWidth: 68, halign: 'right' }   // Balance
+				},
+				didParseCell: function (data) {
+					if (data.column.index >= 3) {
+						data.cell.styles.halign = 'right';
+					}
 				},
 				margin: { left: 28, right: 28 }
 			});
