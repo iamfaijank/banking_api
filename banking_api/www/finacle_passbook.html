@@ -362,7 +362,6 @@
 	}
 	.ledger-table tbody tr:nth-child(odd) { background: #ffffff; }
 	.ledger-table tbody tr:nth-child(even) { background: #f2f2f2; }
-	.ledger-table .col-icon { width: 22px; text-align: center; }
 	.ledger-table .col-txndt { width: 95px; }
 	.ledger-table .col-valdt { width: 95px; }
 	.ledger-table .col-inst { width: 85px; }
@@ -373,14 +372,6 @@
 	.ledger-table .col-bal { width: 95px; text-align: right; }
 	.ledger-table td.num { text-align: right; }
 	.ledger-table td.ccy { text-align: center; }
-	.rec-icon {
-		display: inline-block;
-		width: 10px;
-		height: 10px;
-		border: 1px solid #666;
-		background: #eee;
-		vertical-align: middle;
-	}
 	.ledger-table tbody tr:hover td {
 		background: #0066cc;
 		color: #fff;
@@ -456,7 +447,6 @@
 				<table class="ledger-table">
 					<thead>
 						<tr>
-							<th class="col-icon"></th>
 							<th class="col-txndt">Transaction Date</th>
 							<th class="col-valdt">Value Date</th>
 							<th class="col-inst">Instrument No</th>
@@ -580,13 +570,6 @@
 				return cell;
 			}
 
-			var iconTd = document.createElement('td');
-			iconTd.className = 'col-icon';
-			var icon = document.createElement('span');
-			icon.className = 'rec-icon';
-			iconTd.appendChild(icon);
-
-			tr.appendChild(iconTd);
 			tr.appendChild(td('', row['GL DATE'] || ''));
 			tr.appendChild(td('', row['GL DATE'] || ''));
 			tr.appendChild(td('', row['INSTRUMENT NUMBER'] || ''));
@@ -843,6 +826,66 @@
 		try {
 			var jsPDF = window.jspdf.jsPDF;
 			var doc = new jsPDF({ unit: 'pt', format: 'a4' });
+			var pageWidth = doc.internal.pageSize.getWidth();
+			var left = 40;
+			var labelX = 40;
+			var colonX = 170;
+			var valueX = 180;
+			var lineH = 16;
+
+			var rows = ledgerData.data || [];
+			var first = rows[0] || {};
+			var summary = ledgerData.account_summary || {};
+			var acctNo = cleanAccountNumber(first['ACCOUNT NUMBER'] || ledgerData.account_id || accountId);
+			var custName = (first['CUSTOMER NAME'] || '').toString().trim();
+			var openDate = (summary.ac_open_date || '').toString().trim();
+			var closeDate = (summary.ac_close_date || '').toString().trim();
+
+			function drawLabelValue(label, value, y) {
+				doc.setFont('helvetica', 'normal');
+				doc.setFontSize(10);
+				doc.text(String(label || ''), labelX, y);
+				doc.text(':', colonX, y);
+				doc.text(String(value || ''), valueX, y);
+			}
+
+			// Page 1: User/account info (front page)
+			doc.setFont('helvetica', 'bold');
+			doc.setFontSize(11);
+			doc.text('BANK NAME : SAHAYOG MULTISTATE CREDIT CO.OPERATIVE SOCIETY LTD', left, 60);
+
+			doc.setFont('helvetica', 'normal');
+			doc.setFontSize(10);
+			var y = 95;
+			drawLabelValue('BRANCH NAME', '', y); y += lineH;
+			drawLabelValue('BRANCH CODE', '', y); y += lineH;
+			drawLabelValue('ADDRESS', '', y); y += lineH;
+			drawLabelValue('', '', y); y += lineH;
+			y += lineH;
+			drawLabelValue('PHONE NO', '', y); y += lineH;
+			y += lineH;
+			drawLabelValue('NATURE OF ACCOUNT', (summary.ac_type || ''), y); y += (lineH * 2);
+
+			drawLabelValue('CUSTOMER NAME', custName, y); y += lineH;
+			drawLabelValue('ACCOUNT NUMBER', acctNo, y); y += lineH;
+			drawLabelValue('CUSTOMER ID', '', y); y += lineH;
+			drawLabelValue('Nominee Reg', '', y); y += lineH;
+			drawLabelValue('NOMINEE NAME', '', y); y += lineH;
+			drawLabelValue('Joint Account', '', y); y += lineH;
+			drawLabelValue('ADDRESS', '', y); y += lineH;
+			drawLabelValue('', '', y); y += lineH;
+			y += lineH;
+			drawLabelValue('A/c OPEN DATE', openDate, y); y += lineH;
+			drawLabelValue('MOBILE NO', '', y); y += lineH;
+			drawLabelValue('MATURITY DATE', closeDate, y); y += lineH;
+			drawLabelValue('MOP', '', y); y += lineH;
+			drawLabelValue('IFSC code', '', y); y += lineH;
+			drawLabelValue('E-Transaction No', '', y); y += lineH;
+			drawLabelValue('AGENT CODE', '', y); y += lineH;
+			drawLabelValue('AGENT NAME', '', y);
+
+			// Page 2: Statement only
+			doc.addPage();
 
 			var head = [['Date', 'Particular', 'Cheque No.', 'Debit', 'Credit', 'Balance']];
 			var body = (ledgerData.data || []).map(function (row) {
