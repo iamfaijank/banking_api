@@ -721,19 +721,28 @@ def get_statement_download_data(account_id):
 		mop = (gam.get("mode_of_oper_code") or "").strip()
 		joint = "Y" if (gam.get("acct_ownership") or "").strip().upper() == "J" else ("Y" if mop and mop.upper() not in ("SELF", "1") else "N")
 
-		sol_addr_parts = [p for p in [sol.get("addr_1"), sol.get("addr_2"), sol.get("addr_3")] if (p or "").strip()]
-		sol_city = " ".join([p for p in [sol.get("city_code"), sol.get("state_code"), sol.get("pin_code")] if (p or "").strip()])
-		cust_addr_1 = (address.get("address_line1") or "").strip()
-		cust_addr_2 = " ".join([p for p in [address.get("address_line2"), address.get("address_line3")] if (p or "").strip()])
-		cust_addr_3 = " ".join([p for p in [address.get("city"), address.get("state"), address.get("zip")] if (p or "").strip()])
+		sol_addr_parts = [p.strip() for p in [sol.get("addr_1"), sol.get("addr_2"), sol.get("addr_3")] if (p or "").strip()]
+		sol_city = " ".join([p.strip() for p in [sol.get("city_code"), sol.get("state_code"), sol.get("pin_code")] if (p or "").strip()])
+		branch_addr_lines = list(sol_addr_parts)
+		if sol_city and sol_city not in branch_addr_lines:
+			branch_addr_lines.append(sol_city)
+		while len(branch_addr_lines) < 3:
+			branch_addr_lines.append("")
+
+		cust_addr_lines = [p.strip() for p in [address.get("address_line1"), address.get("address_line2"), address.get("address_line3")] if (p or "").strip()]
+		cust_city = " ".join([p.strip() for p in [address.get("city"), address.get("state"), address.get("zip")] if (p or "").strip()])
+		if cust_city and cust_city not in cust_addr_lines:
+			cust_addr_lines.append(cust_city)
+		while len(cust_addr_lines) < 3:
+			cust_addr_lines.append("")
 
 		front_page = {
 			"bank_name": "SAHAYOG MULTISTATE CREDIT CO.OPERATIVE SOCIETY LTD",
 			"branch_name": (sol.get("sol_desc") or "").strip(),
 			"branch_code": (sol.get("br_code") or sol.get("sol_id") or "").strip(),
-			"branch_address_1": sol_addr_parts[0] if len(sol_addr_parts) > 0 else "",
-			"branch_address_2": sol_addr_parts[1] if len(sol_addr_parts) > 1 else sol_city,
-			"branch_address_3": sol_addr_parts[2] if len(sol_addr_parts) > 2 else ("" if len(sol_addr_parts) > 1 else sol_city),
+			"branch_address_1": branch_addr_lines[0],
+			"branch_address_2": branch_addr_lines[1],
+			"branch_address_3": branch_addr_lines[2],
 			"phone_no": "",
 			"nature_of_account": (gam.get("schm_type") or gam.get("schm_code") or base.get("account_summary", {}).get("ac_type") or "").strip(),
 			"customer_name": (gam.get("acct_name") or "").strip(),
@@ -742,15 +751,15 @@ def get_statement_download_data(account_id):
 			"nominee_reg": "Y" if nom_available else "N",
 			"nominee_name": (nominee.get("nom_name") or "").strip(),
 			"joint_account": joint,
-			"customer_address_1": cust_addr_1,
-			"customer_address_2": cust_addr_2,
-			"customer_address_3": cust_addr_3,
+			"customer_address_1": cust_addr_lines[0],
+			"customer_address_2": cust_addr_lines[1],
+			"customer_address_3": cust_addr_lines[2],
 			"ac_open_date": fmt_dt(gam.get("acct_opn_date")),
 			"mobile_no": mobile,
 			"maturity_date": fmt_dt(gam.get("acct_cls_date")),
 			"mop": mop,
-			"ifsc_code": "",
-			"e_transaction_no": "",
+			"ifsc_code": "ICIC0000104",
+			"e_transaction_no": f"SAHG{_clean_acct(gam.get('foracid') or account_id)}",
 			"agent_code": "",
 			"agent_name": "",
 			"closure_voucher": closure_voucher,
