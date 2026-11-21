@@ -14,6 +14,11 @@
 {% block style %}
 {{ super() }}
 <style>
+	html, body {
+		height: 100%;
+		overflow: hidden !important;
+	}
+
 	[data-path="/finacle_passbook"] .navbar,
 	[data-path="/finacle_passbook"] .page-breadcrumbs,
 	[data-path="/finacle_passbook"] .page-header-wrapper,
@@ -26,12 +31,19 @@
 	[data-path="/finacle_passbook"] .page-content-wrapper,
 	[data-path="/finacle_passbook"] .page_content,
 	[data-path="/finacle_passbook"] main,
-	[data-path="/finacle_passbook"] .container {
+	[data-path="/finacle_passbook"] .container,
+	[data-path="/finacle_passbook"] .web-page,
+	[data-path="/finacle_passbook"] section.page_content,
+	[data-path="/finacle_passbook"] .layout-main-section-wrapper,
+	[data-path="/finacle_passbook"] .layout-main-section {
 		width: 100% !important;
 		max-width: none !important;
 		padding: 0 !important;
 		margin: 0 !important;
 		background: #ffffff !important;
+		height: 100% !important;
+		min-height: 0 !important;
+		overflow: hidden !important;
 	}
 
 	body[data-path="/finacle_passbook"] {
@@ -39,14 +51,23 @@
 		background: #fff;
 		font-family: Arial, Tahoma, sans-serif;
 		color: #000;
+		overflow: hidden !important;
+	}
+
+	#ledger-screen {
+		height: 100%;
+		overflow: hidden;
 	}
 
 	.finacle-screen {
 		width: 100%;
-		min-height: 100vh;
+		height: 100%;
 		margin: 0;
 		background: #fff;
 		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
 	/* Browser chrome (mock) */
@@ -227,6 +248,11 @@
 	.main-content {
 		padding: 0;
 		background: #fff;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
 	}
 	.page-heading {
 		font-size: 13px;
@@ -234,6 +260,9 @@
 		color: #000;
 		margin: 2px 0 4px 0;
 		padding-left: 0;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 	}
 
 	.info-panel {
@@ -244,6 +273,11 @@
 		position: relative;
 		padding: 4px 6px 2px 6px;
 		box-sizing: border-box;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
 	}
 	.help-icon {
 		position: absolute;
@@ -294,8 +328,8 @@
 	}
 
 	.ledger-table-wrap {
-		height: calc(100vh - 235px);
-		min-height: 120px;
+		flex: 1;
+		min-height: 0;
 		overflow-y: auto;
 		overflow-x: hidden;
 	}
@@ -366,7 +400,6 @@
 		cursor: pointer;
 	}
 
-	#ledger-screen { display: block; }
 	.search-status {
 		margin: 2px 0 4px 0;
 		font-size: 11px;
@@ -399,7 +432,7 @@
 	</div>
 
 	<div class="main-content">
-		<div class="page-heading">Account Ledger Inquiry</div>
+		<div class="page-heading"><span>Account Ledger Inquiry</span><button type="button" class="download-btn" id="download-btn">Download</button></div>
 		<div id="db-status" class="search-status"></div>
 
 		<div class="info-panel">
@@ -424,8 +457,6 @@
 					<div class="acct-row"><span class="acct-label">Float Bal.</span><span class="acct-value"></span></div>
 				</div>
 			</div>
-
-			<div class="pagination"><button type="button" class="download-btn" id="download-btn">Download</button></div>
 
 			<div class="ledger-table-wrap">
 				<table class="ledger-table">
