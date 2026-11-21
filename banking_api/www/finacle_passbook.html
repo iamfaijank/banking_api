@@ -334,7 +334,7 @@
 		background: #eee;
 		vertical-align: middle;
 	}
-	.bal-selected {
+	.ledger-table tbody tr:hover td {
 		background: #0066cc;
 		color: #fff;
 	}
@@ -561,9 +561,7 @@
 			tr.appendChild(td('ccy', 'INR'));
 			tr.appendChild(td('num', dr ? formatAmount(dr) : ''));
 			tr.appendChild(td('num', cr ? formatAmount(cr) : ''));
-			var balTd = td('num', balText);
-			if (idx === 1) balTd.className += ' bal-selected';
-			tr.appendChild(balTd);
+			tr.appendChild(td('num', balText));
 
 			tbody.appendChild(tr);
 		});
