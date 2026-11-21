@@ -573,6 +573,200 @@ def _build_ledger_pdf_html(result):
 	return html
 
 
+CLOSURE_VOUCHER_QUERY = """
+SELECT 
+    h.tran_id           AS "TRAN ID",
+    g.foracid           AS "ACCOUNT NUMBER",
+    g.acct_name         AS "ACCOUNT NAME",
+    h.part_tran_type    AS "DR_CR",
+    h.tran_amt          AS "AMOUNT",
+    h.tran_particular   AS "PARTICULARS"
+FROM tbaadm.gam g_rd
+-- RD ka Closing Debit Leg (Using 'Closure proceeds')
+JOIN tbaadm.htd h_rd 
+    ON g_rd.acid = h_rd.acid 
+   AND h_rd.part_tran_type = 'D'
+   AND h_rd.tran_particular LIKE '%Closure proceeds%'
+-- Usi voucher ke baaki saare Legs
+JOIN tbaadm.htd h 
+    ON h_rd.tran_id = h.tran_id 
+   AND h_rd.tran_date = h.tran_date
+JOIN tbaadm.gam g 
+    ON h.acid = g.acid
+WHERE g_rd.foracid = %s   -- <-- Apna Closed RD Account Number dalein
+ORDER BY h.part_tran_srl_num
+"""
+
+
+def _safe_fetchone_dict(cursor, query, params):
+	try:
+		cursor.execute(query, params)
+		row = cursor.fetchone()
+		if not row:
+			return {}
+		cols = [d[0] for d in cursor.description]
+		return dict(zip(cols, row))
+	except Exception:
+		return {}
+
+
+def _safe_fetchall_dicts(cursor, query, params):
+	try:
+		cursor.execute(query, params)
+		rows = cursor.fetchall() or []
+		cols = [d[0] for d in cursor.description]
+		return [dict(zip(cols, r)) for r in rows]
+	except Exception:
+		return []
+
+
+@frappe.whitelist(allow_guest=False)
+def get_statement_download_data(account_id):
+	"""Return enriched account details for statement PDF front page (download only)."""
+	account_id = (account_id or "").strip()
+	if not account_id:
+		frappe.throw(_("A/c. ID is required."))
+
+	base = _fetch_account_ledger_data(account_id)
+	doc = _get_finacle_migration_config_doc()
+	conn = None
+	cursor = None
+	front_page = {}
+
+	try:
+		conn = doc.get_connection(retries=1, timeout=10)
+		cursor = conn.cursor()
+
+		gam = _safe_fetchone_dict(cursor, """
+			SELECT
+				g.foracid, g.acct_name, g.cust_id, g.cif_id, g.sol_id,
+				g.acct_opn_date, g.acct_cls_date, g.acct_cls_flg, g.frez_code,
+				g.mode_of_oper_code, g.nom_available_flg, g.schm_code, g.schm_type,
+				g.acct_ownership, g.gl_sub_head_code, g.crncy_code, g.schm_sub_type
+			FROM tbaadm.gam g
+			WHERE g.foracid = %s AND g.entity_cre_flg = 'Y'
+			LIMIT 1
+		""", (account_id,))
+
+		sol = {}
+		sol_id = (gam.get("sol_id") or "").strip() if gam else ""
+		if sol_id:
+			sol = _safe_fetchone_dict(cursor, """
+				SELECT sol_id, sol_desc, br_code, addr_1, addr_2, addr_3, city_code, state_code, pin_code, cntry_code
+				FROM tbaadm.sol
+				WHERE sol_id = %s
+				LIMIT 1
+			""", (sol_id,))
+
+		nominee = {}
+		if gam.get("acid") is None:
+			# get acid for nominee lookup
+			acid_row = _safe_fetchone_dict(cursor, "SELECT acid FROM tbaadm.gam WHERE foracid=%s AND entity_cre_flg='Y' LIMIT 1", (account_id,))
+			gam_acid = acid_row.get("acid")
+		else:
+			gam_acid = gam.get("acid")
+		if gam_acid:
+			nominee = _safe_fetchone_dict(cursor, """
+				SELECT nom_name, nom_reg_num, nom_reltn_code
+				FROM tbaadm.ant
+				WHERE acid = %s AND del_flg = 'N'
+				ORDER BY nom_srl_num
+				LIMIT 1
+			""", (gam_acid,))
+
+		cif_id = (gam.get("cif_id") or gam.get("cust_id") or "").strip()
+		address = {}
+		mobile = ""
+		if cif_id:
+			address = _safe_fetchone_dict(cursor, """
+				SELECT address_line1, address_line2, address_line3, city, state, zip, country
+				FROM crmuser.address
+				WHERE (orgkey = %s OR orgid = %s OR personid = %s)
+				ORDER BY preferredaddress DESC NULLS LAST, addressid DESC
+				LIMIT 1
+			""", (cif_id, cif_id, cif_id))
+			phone = _safe_fetchone_dict(cursor, """
+				SELECT phoneno1, phoneno1localcode, phoneno1citycode, phoneno1countrycode,
+				       phoneno2, phoneno2localcode, phoneno2citycode, phoneno2countrycode
+				FROM crmuser.address
+				WHERE (orgkey = %s OR orgid = %s OR personid = %s)
+				ORDER BY preferredaddress DESC NULLS LAST, addressid DESC
+				LIMIT 1
+			""", (cif_id, cif_id, cif_id))
+			for k in ["phoneno1localcode", "phoneno1", "phoneno2localcode", "phoneno2"]:
+				v = (phone.get(k) or "").strip()
+				if v and v not in ("0",):
+					mobile = v
+					break
+			if not mobile:
+				acct_phone = _safe_fetchone_dict(cursor, """
+					SELECT phone_cell, smsbankingmobilenumber, phone_home, preferredphone
+					FROM crmuser.accounts
+					WHERE orgkey = %s OR otuoldcifid = %s
+					LIMIT 1
+				""", (cif_id, cif_id))
+				for k in ["smsbankingmobilenumber", "phone_cell", "preferredphone", "phone_home"]:
+					v = (acct_phone.get(k) or "").strip()
+					if v and v not in ("0",):
+						mobile = v
+						break
+
+		closure_voucher = _safe_fetchall_dicts(cursor, CLOSURE_VOUCHER_QUERY, (account_id,))
+
+		# derive values
+		def fmt_dt(v):
+			return _format_date_display(v)
+
+		nom_available = (gam.get("nom_available_flg") or "").strip().upper() == "Y" or bool(nominee.get("nom_name"))
+		mop = (gam.get("mode_of_oper_code") or "").strip()
+		joint = "Y" if (gam.get("acct_ownership") or "").strip().upper() == "J" else ("Y" if mop and mop.upper() not in ("SELF", "1") else "N")
+
+		sol_addr_parts = [p for p in [sol.get("addr_1"), sol.get("addr_2"), sol.get("addr_3")] if (p or "").strip()]
+		sol_city = " ".join([p for p in [sol.get("city_code"), sol.get("state_code"), sol.get("pin_code")] if (p or "").strip()])
+		cust_addr_1 = (address.get("address_line1") or "").strip()
+		cust_addr_2 = " ".join([p for p in [address.get("address_line2"), address.get("address_line3")] if (p or "").strip()])
+		cust_addr_3 = " ".join([p for p in [address.get("city"), address.get("state"), address.get("zip")] if (p or "").strip()])
+
+		front_page = {
+			"bank_name": "SAHAYOG MULTISTATE CREDIT CO.OPERATIVE SOCIETY LTD",
+			"branch_name": (sol.get("sol_desc") or "").strip(),
+			"branch_code": (sol.get("br_code") or sol.get("sol_id") or "").strip(),
+			"branch_address_1": sol_addr_parts[0] if len(sol_addr_parts) > 0 else "",
+			"branch_address_2": sol_addr_parts[1] if len(sol_addr_parts) > 1 else sol_city,
+			"branch_address_3": sol_addr_parts[2] if len(sol_addr_parts) > 2 else ("" if len(sol_addr_parts) > 1 else sol_city),
+			"phone_no": "",
+			"nature_of_account": (gam.get("schm_type") or gam.get("schm_code") or base.get("account_summary", {}).get("ac_type") or "").strip(),
+			"customer_name": (gam.get("acct_name") or "").strip(),
+			"account_number": _clean_acct(gam.get("foracid") or account_id),
+			"customer_id": (gam.get("cust_id") or gam.get("cif_id") or "").strip(),
+			"nominee_reg": "Y" if nom_available else "N",
+			"nominee_name": (nominee.get("nom_name") or "").strip(),
+			"joint_account": joint,
+			"customer_address_1": cust_addr_1,
+			"customer_address_2": cust_addr_2,
+			"customer_address_3": cust_addr_3,
+			"ac_open_date": fmt_dt(gam.get("acct_opn_date")),
+			"mobile_no": mobile,
+			"maturity_date": fmt_dt(gam.get("acct_cls_date")),
+			"mop": mop,
+			"ifsc_code": "",
+			"e_transaction_no": "",
+			"agent_code": "",
+			"agent_name": "",
+			"closure_voucher": closure_voucher,
+		}
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "Finacle Passbook: Get Statement Download Data Failed")
+	finally:
+		if cursor:
+			cursor.close()
+		if conn:
+			conn.close()
+
+	base["front_page"] = front_page
+	return base
+
+
 @frappe.whitelist(allow_guest=False)
 def download_account_ledger_pdf(account_id):
 	"""Generate and download account ledger PDF (HPBP-style) for the given account ID."""

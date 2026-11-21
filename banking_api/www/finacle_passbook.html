@@ -804,6 +804,129 @@
 		return Math.abs(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'Cr';
 	}
 
+	function buildStatementPdf(downloadData, accountId) {
+		var jsPDF = window.jspdf.jsPDF;
+		var doc = new jsPDF({ unit: 'pt', format: 'a4' });
+		var left = 40;
+		var labelX = 40;
+		var colonX = 170;
+		var valueX = 180;
+		var lineH = 16;
+
+		var rows = (downloadData && downloadData.data) || [];
+		var first = rows[0] || {};
+		var fp = (downloadData && downloadData.front_page) || {};
+		var summary = (downloadData && downloadData.account_summary) || {};
+
+		var acctNo = cleanAccountNumber(fp.account_number || first['ACCOUNT NUMBER'] || downloadData.account_id || accountId);
+		var custName = (fp.customer_name || first['CUSTOMER NAME'] || '').toString().trim();
+
+		function drawLabelValue(label, value, y) {
+			doc.setFont('helvetica', 'normal');
+			doc.setFontSize(10);
+			doc.text(String(label || ''), labelX, y);
+			doc.text(':', colonX, y);
+			var val = value == null ? '' : String(value);
+			doc.text(val, valueX, y);
+		}
+
+		// Page 1: User/account info (front page)
+		doc.setFont('helvetica', 'bold');
+		doc.setFontSize(11);
+		doc.text('BANK NAME : ' + (fp.bank_name || 'SAHAYOG MULTISTATE CREDIT CO.OPERATIVE SOCIETY LTD'), left, 60);
+
+		doc.setFont('helvetica', 'normal');
+		doc.setFontSize(10);
+		var y = 95;
+		var branchName = (fp.branch_name || '').toString().trim();
+		var branchCode = (fp.branch_code || '').toString().trim();
+		var branchLine = branchName;
+		if (branchCode) branchLine += (branchLine ? '                ' : '') + 'BRANCH CODE : ' + branchCode;
+		drawLabelValue('BRANCH NAME', branchLine, y); y += lineH;
+		drawLabelValue('ADDRESS', (fp.branch_address_1 || ''), y); y += lineH;
+		drawLabelValue('', (fp.branch_address_2 || ''), y); y += lineH;
+		drawLabelValue('', (fp.branch_address_3 || ''), y); y += lineH;
+		y += lineH;
+		drawLabelValue('PHONE NO', (fp.phone_no || ''), y); y += lineH;
+		y += lineH;
+		drawLabelValue('NATURE OF ACCOUNT', (fp.nature_of_account || summary.ac_type || ''), y); y += (lineH * 2);
+
+		drawLabelValue('CUSTOMER NAME', custName, y); y += lineH;
+		drawLabelValue('ACCOUNT NUMBER', acctNo, y); y += lineH;
+		drawLabelValue('CUSTOMER ID', (fp.customer_id || ''), y); y += lineH;
+		drawLabelValue('Nominee Reg', (fp.nominee_reg || ''), y); y += lineH;
+		drawLabelValue('NOMINEE NAME', (fp.nominee_name || ''), y); y += lineH;
+		drawLabelValue('Joint Account', (fp.joint_account || ''), y); y += lineH;
+		drawLabelValue('ADDRESS', (fp.customer_address_1 || ''), y); y += lineH;
+		drawLabelValue('', (fp.customer_address_2 || ''), y); y += lineH;
+		drawLabelValue('', (fp.customer_address_3 || ''), y); y += lineH;
+		y += lineH;
+		drawLabelValue('A/c OPEN DATE', (fp.ac_open_date || summary.ac_open_date || ''), y); y += lineH;
+		drawLabelValue('MOBILE NO', (fp.mobile_no || ''), y); y += lineH;
+		drawLabelValue('MATURITY DATE', (fp.maturity_date || summary.ac_close_date || ''), y); y += lineH;
+		drawLabelValue('MOP', (fp.mop || ''), y); y += lineH;
+		drawLabelValue('IFSC code', (fp.ifsc_code || ''), y); y += lineH;
+		drawLabelValue('E-Transaction No', (fp.e_transaction_no || ''), y); y += lineH;
+		drawLabelValue('AGENT CODE', (fp.agent_code || ''), y); y += lineH;
+		drawLabelValue('AGENT NAME', (fp.agent_name || ''), y);
+
+		// Page 2+: Statement only
+		doc.addPage();
+		var head = [['Date', 'Particular', 'Cheque No.', 'Debit', 'Credit', 'Balance']];
+		var body = rows.map(function (row) {
+			var dr = Number(row['TRANSACTION DEBIT AMOUNT'] || 0);
+			var cr = Number(row['TRANSACTION CREDIT AMOUNT'] || 0);
+			return [
+				fmtDateDDMMYY(row['GL DATE'] || ''),
+				(row['PARTICULARS'] || '').toString(),
+				(row['INSTRUMENT NUMBER'] || '').toString(),
+				dr ? fmtAmt(dr) : '',
+				cr ? fmtAmt(cr) : '',
+				fmtBal(row['BALANCE'])
+			];
+		});
+
+		doc.autoTable({
+			head: head,
+			body: body,
+			startY: 40,
+			theme: 'plain',
+			tableWidth: doc.internal.pageSize.getWidth() - 56,
+			styles: {
+				font: 'helvetica',
+				fontSize: 9,
+				cellPadding: { top: 2, right: 4, bottom: 2, left: 2 },
+				textColor: 0,
+				lineColor: 0,
+				lineWidth: 0,
+				overflow: 'linebreak',
+				valign: 'top'
+			},
+			headStyles: {
+				fontStyle: 'bold',
+				textColor: 0,
+				valign: 'middle'
+			},
+			columnStyles: {
+				0: { cellWidth: 55, halign: 'left' },
+				1: { cellWidth: 215, halign: 'left' },
+				2: { cellWidth: 65, halign: 'left' },
+				3: { cellWidth: 68, halign: 'right' },
+				4: { cellWidth: 68, halign: 'right' },
+				5: { cellWidth: 68, halign: 'right' }
+			},
+			didParseCell: function (data) {
+				if (data.column.index >= 3) {
+					data.cell.styles.halign = 'right';
+				}
+			},
+			margin: { left: 28, right: 28 }
+		});
+
+		var safeId = String(cleanAccountNumber(acctNo || accountId) || accountId).replace(/[^a-zA-Z0-9_-]/g, '_');
+		doc.save(safeId + ' HPBP.pdf');
+	}
+
 	function downloadLedger() {
 		var input = document.getElementById('keyword-input');
 		var accountId = input && input.value ? input.value.trim() : (ledgerData && ledgerData.account_id) || '';
@@ -823,127 +946,48 @@
 			return;
 		}
 
-		try {
-			var jsPDF = window.jspdf.jsPDF;
-			var doc = new jsPDF({ unit: 'pt', format: 'a4' });
-			var pageWidth = doc.internal.pageSize.getWidth();
-			var left = 40;
-			var labelX = 40;
-			var colonX = 170;
-			var valueX = 180;
-			var lineH = 16;
+		setStatusMessage('Generating PDF...', 'checking');
 
-			var rows = ledgerData.data || [];
-			var first = rows[0] || {};
-			var summary = ledgerData.account_summary || {};
-			var acctNo = cleanAccountNumber(first['ACCOUNT NUMBER'] || ledgerData.account_id || accountId);
-			var custName = (first['CUSTOMER NAME'] || '').toString().trim();
-			var openDate = (summary.ac_open_date || '').toString().trim();
-			var closeDate = (summary.ac_close_date || '').toString().trim();
+		var method = 'banking_api.www.finacle_passbook.get_statement_download_data';
 
-			function drawLabelValue(label, value, y) {
-				doc.setFont('helvetica', 'normal');
-				doc.setFontSize(10);
-				doc.text(String(label || ''), labelX, y);
-				doc.text(':', colonX, y);
-				doc.text(String(value || ''), valueX, y);
+		function onData(data) {
+			try {
+				var payload = data || ledgerData || {};
+				if (!payload.data || !payload.data.length) payload.data = (ledgerData && ledgerData.data) || [];
+				if (!payload.account_summary) payload.account_summary = (ledgerData && ledgerData.account_summary) || {};
+				buildStatementPdf(payload, accountId);
+				setStatusMessage('', '');
+			} catch (e) {
+				setStatusMessage('Unable to generate PDF.', 'failed');
 			}
-
-			// Page 1: User/account info (front page)
-			doc.setFont('helvetica', 'bold');
-			doc.setFontSize(11);
-			doc.text('BANK NAME : SAHAYOG MULTISTATE CREDIT CO.OPERATIVE SOCIETY LTD', left, 60);
-
-			doc.setFont('helvetica', 'normal');
-			doc.setFontSize(10);
-			var y = 95;
-			drawLabelValue('BRANCH NAME', '', y); y += lineH;
-			drawLabelValue('BRANCH CODE', '', y); y += lineH;
-			drawLabelValue('ADDRESS', '', y); y += lineH;
-			drawLabelValue('', '', y); y += lineH;
-			y += lineH;
-			drawLabelValue('PHONE NO', '', y); y += lineH;
-			y += lineH;
-			drawLabelValue('NATURE OF ACCOUNT', (summary.ac_type || ''), y); y += (lineH * 2);
-
-			drawLabelValue('CUSTOMER NAME', custName, y); y += lineH;
-			drawLabelValue('ACCOUNT NUMBER', acctNo, y); y += lineH;
-			drawLabelValue('CUSTOMER ID', '', y); y += lineH;
-			drawLabelValue('Nominee Reg', '', y); y += lineH;
-			drawLabelValue('NOMINEE NAME', '', y); y += lineH;
-			drawLabelValue('Joint Account', '', y); y += lineH;
-			drawLabelValue('ADDRESS', '', y); y += lineH;
-			drawLabelValue('', '', y); y += lineH;
-			y += lineH;
-			drawLabelValue('A/c OPEN DATE', openDate, y); y += lineH;
-			drawLabelValue('MOBILE NO', '', y); y += lineH;
-			drawLabelValue('MATURITY DATE', closeDate, y); y += lineH;
-			drawLabelValue('MOP', '', y); y += lineH;
-			drawLabelValue('IFSC code', '', y); y += lineH;
-			drawLabelValue('E-Transaction No', '', y); y += lineH;
-			drawLabelValue('AGENT CODE', '', y); y += lineH;
-			drawLabelValue('AGENT NAME', '', y);
-
-			// Page 2: Statement only
-			doc.addPage();
-
-			var head = [['Date', 'Particular', 'Cheque No.', 'Debit', 'Credit', 'Balance']];
-			var body = (ledgerData.data || []).map(function (row) {
-				var dr = Number(row['TRANSACTION DEBIT AMOUNT'] || 0);
-				var cr = Number(row['TRANSACTION CREDIT AMOUNT'] || 0);
-				return [
-					fmtDateDDMMYY(row['GL DATE'] || ''),
-					(row['PARTICULARS'] || '').toString(),
-					(row['INSTRUMENT NUMBER'] || '').toString(),
-					dr ? fmtAmt(dr) : '',
-					cr ? fmtAmt(cr) : '',
-					fmtBal(row['BALANCE'])
-				];
-			});
-
-			doc.autoTable({
-				head: head,
-				body: body,
-				startY: 40,
-				theme: 'plain',
-				tableWidth: doc.internal.pageSize.getWidth() - 56,
-				styles: {
-					font: 'helvetica',
-					fontSize: 9,
-					cellPadding: { top: 2, right: 4, bottom: 2, left: 2 },
-					textColor: 0,
-					lineColor: 0,
-					lineWidth: 0,
-					overflow: 'linebreak',
-					valign: 'top'
-				},
-				headStyles: {
-					fontStyle: 'bold',
-					textColor: 0,
-					valign: 'middle'
-				},
-				columnStyles: {
-					0: { cellWidth: 55, halign: 'left' },   // Date
-					1: { cellWidth: 215, halign: 'left' },  // Particular
-					2: { cellWidth: 65, halign: 'left' },   // Cheque No.
-					3: { cellWidth: 68, halign: 'right' },  // Debit
-					4: { cellWidth: 68, halign: 'right' },  // Credit
-					5: { cellWidth: 68, halign: 'right' }   // Balance
-				},
-				didParseCell: function (data) {
-					if (data.column.index >= 3) {
-						data.cell.styles.halign = 'right';
-					}
-				},
-				margin: { left: 28, right: 28 }
-			});
-
-			var safeId = String(cleanAccountNumber(ledgerData.account_id || accountId) || accountId).replace(/[^a-zA-Z0-9_-]/g, '_');
-			doc.save(safeId + ' HPBP.pdf');
-			setStatusMessage('', '');
-		} catch (e) {
-			setStatusMessage('Unable to generate PDF.', 'failed');
 		}
+
+		if (window.frappe && typeof frappe.call === 'function') {
+			frappe.call({
+				method: method,
+				args: { account_id: accountId },
+				callback: function (r) { onData((r && r.message) || ledgerData); },
+				error: function () { try { buildStatementPdf(ledgerData, accountId); setStatusMessage('', ''); } catch (e) { setStatusMessage('Unable to generate PDF.', 'failed'); } }
+			});
+			return;
+		}
+
+		var headers = {
+			'Accept': 'application/json',
+			'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+			'X-Frappe-CMD': method
+		};
+		var token = (window.frappe && frappe.csrf_token) || window.csrf_token;
+		if (token) headers['X-Frappe-CSRF-Token'] = token;
+		fetch('/api/method/' + method, {
+			method: 'POST',
+			headers: headers,
+			credentials: 'same-origin',
+			body: 'account_id=' + encodeURIComponent(accountId)
+		})
+			.then(function (r) { return r.json(); })
+			.then(function (res) { onData((res && res.message) || ledgerData); })
+			.catch(function () { try { buildStatementPdf(ledgerData, accountId); setStatusMessage('', ''); } catch (e) { setStatusMessage('Unable to generate PDF.', 'failed'); } });
 	}
 
 	document.addEventListener('DOMContentLoaded', function () {
