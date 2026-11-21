@@ -87,10 +87,10 @@ FROM params p
 JOIN all_txns h ON p.acid = h.acid
 ORDER BY
     p.foracid ASC,
-    h.tran_date ASC,
-    h.rcre_time ASC,
-    h.tran_id ASC,
-    h.part_tran_srl_num ASC"""
+    h.tran_date DESC,
+    h.rcre_time DESC,
+    h.tran_id DESC,
+    h.part_tran_srl_num DESC"""
 
 
 def _get_finacle_migration_config_name():
@@ -320,8 +320,8 @@ def _fetch_account_summary(cursor, account_id, ledger_data):
 		if ledger_data:
 			first = ledger_data[0]
 			summary["ac_id"] = _clean_acct(first.get("ACCOUNT NUMBER") or account_id)
-			last = ledger_data[-1]
-			summary["closing_bal"] = _format_money(last.get("BALANCE"), "INR", "CR")
+			latest = ledger_data[0]
+			summary["closing_bal"] = _format_money(latest.get("BALANCE"), "INR", "CR")
 		return summary
 
 	cols = [d[0] for d in cursor.description]
@@ -375,10 +375,10 @@ def _fetch_account_summary(cursor, account_id, ledger_data):
 		opening = 0.0
 	summary["opening_bal"] = _format_money(opening, ccy, "CR")
 
-	# Closing balance: last txn balance in fetched period, else current clear balance
+	# Closing balance: latest txn balance in fetched period, else current clear balance
 	if ledger_data:
-		last = ledger_data[-1]
-		summary["closing_bal"] = _format_money(last.get("BALANCE"), ccy, "CR")
+		latest = ledger_data[0]
+		summary["closing_bal"] = _format_money(latest.get("BALANCE"), ccy, "CR")
 	else:
 		summary["closing_bal"] = _format_money(clr_bal, ccy, "CR" if clr_bal >= 0 else "DR")
 
