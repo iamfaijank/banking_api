@@ -400,15 +400,7 @@
 		cursor: pointer;
 	}
 
-	.search-status {
-		margin: 2px 0 4px 0;
-		font-size: 11px;
-		font-family: Arial, Tahoma, sans-serif;
-		min-height: 14px;
-	}
-	.search-status.connected { color: #1b5e20; }
-	.search-status.failed { color: #b71c1c; }
-	.search-status.checking { color: #333; }
+
 </style>
 {% endblock %}
 
@@ -433,7 +425,6 @@
 
 	<div class="main-content">
 		<div class="page-heading"><span>Account Ledger Inquiry</span><button type="button" class="download-btn" id="download-btn">Download</button></div>
-		<div id="db-status" class="search-status"></div>
 
 		<div class="info-panel">
 			<div class="help-icon">?</div>
@@ -614,7 +605,8 @@
 			if (res.status === 'success') {
 				ledgerData = res;
 				renderLedgerData(accountId);
-				setDbStatus('connected', '');
+				updateDbStar(true);
+				setStatusMessage('', '');
 			} else {
 				updateDbStar(false);
 				setStatusMessage(res.message || 'Unable to fetch account ledger data.', 'failed');
