@@ -293,6 +293,13 @@
 		margin-top: 2px;
 	}
 
+	.ledger-table-wrap {
+		max-height: calc(100vh - 340px);
+		min-height: 120px;
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
 	.ledger-table {
 		width: 100%;
 		border-collapse: collapse;
@@ -312,6 +319,9 @@
 		color: #333;
 		font-weight: bold;
 		text-align: left;
+		position: sticky;
+		top: 0;
+		z-index: 2;
 	}
 	.ledger-table tbody tr:nth-child(odd) { background: #ffffff; }
 	.ledger-table tbody tr:nth-child(even) { background: #f2f2f2; }
@@ -417,22 +427,24 @@
 
 			<div class="pagination"><button type="button" class="download-btn" id="download-btn">Download</button></div>
 
-			<table class="ledger-table">
-				<thead>
-					<tr>
-						<th class="col-icon"></th>
-						<th class="col-txndt">Transaction Date</th>
-						<th class="col-valdt">Value Date</th>
-						<th class="col-inst">Instrument No</th>
-						<th class="col-part">Particulars</th>
-						<th class="col-ccy">CCY</th>
-						<th class="col-dr">Debit Amt.</th>
-						<th class="col-cr">Credit Amt.</th>
-						<th class="col-bal">Bal.</th>
-					</tr>
-				</thead>
-				<tbody></tbody>
-			</table>
+			<div class="ledger-table-wrap">
+				<table class="ledger-table">
+					<thead>
+						<tr>
+							<th class="col-icon"></th>
+							<th class="col-txndt">Transaction Date</th>
+							<th class="col-valdt">Value Date</th>
+							<th class="col-inst">Instrument No</th>
+							<th class="col-part">Particulars</th>
+							<th class="col-ccy">CCY</th>
+							<th class="col-dr">Debit Amt.</th>
+							<th class="col-cr">Credit Amt.</th>
+							<th class="col-bal">Bal.</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
 		</div>
 	</div>
 </div>
