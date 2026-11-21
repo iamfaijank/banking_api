@@ -489,18 +489,45 @@
 	}
 
 	function renderLedgerData(accountId) {
-		if (!ledgerData || !ledgerData.data) return;
+		if (!ledgerData) return;
 
 		var rows = ledgerData.data || [];
-		if (rows.length) {
+		var summary = ledgerData.account_summary || {};
+
+		var summaryMap = {
+			'A/c. ID': summary.ac_id || '',
+			'A/c. Status': summary.ac_status || '',
+			'A/c. Open Date': summary.ac_open_date || '',
+			'GL Subhead': summary.gl_subhead || '',
+			'Opening Bal.': summary.opening_bal || '',
+			'Closing Bal.': summary.closing_bal || '',
+			'Funds in Clg.': summary.funds_in_clg || '',
+			'A/c. Status Date': summary.ac_status_date || '',
+			'A/c. Close Date': summary.ac_close_date || '',
+			'A/c. Type': summary.ac_type || '',
+			'Available Amt.': summary.available_amt || '',
+			'Effective Available Amt.': summary.effective_available_amt || '',
+			'Float Bal.': summary.float_bal || ''
+		};
+
+		if (!summaryMap['A/c. ID'] && rows.length) {
 			var first = rows[0] || {};
 			var acctNo = cleanAccountNumber(first['ACCOUNT NUMBER'] || accountId);
 			var custName = first['CUSTOMER NAME'] || '';
-			var acctIdEl = document.querySelector('.acct-grid .acct-col:first-child .acct-row:first-child .acct-value');
-			if (acctIdEl && (acctNo || custName)) {
-				acctIdEl.textContent = [acctNo, custName].filter(Boolean).join('  ');
-			}
+			summaryMap['A/c. ID'] = [acctNo, custName].filter(Boolean).join('  ');
+		} else if (!summaryMap['A/c. ID'] && accountId) {
+			summaryMap['A/c. ID'] = cleanAccountNumber(accountId);
 		}
+
+		document.querySelectorAll('.acct-grid .acct-row').forEach(function (row) {
+			var labelEl = row.querySelector('.acct-label');
+			var valueEl = row.querySelector('.acct-value');
+			if (!labelEl || !valueEl) return;
+			var label = (labelEl.textContent || '').trim();
+			if (Object.prototype.hasOwnProperty.call(summaryMap, label)) {
+				valueEl.textContent = summaryMap[label] || '';
+			}
+		});
 
 		var tbody = document.querySelector('.ledger-table tbody');
 		if (!tbody) return;

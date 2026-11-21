@@ -140,6 +140,251 @@ def check_finacle_migration_connection():
 		}
 
 
+ACCOUNT_SUMMARY_QUERY = """
+SELECT
+	g.foracid,
+	g.acct_name,
+	g.crncy_code,
+	g.acct_opn_date,
+	g.gl_sub_head_code,
+	g.acct_cls_flg,
+	g.acct_cls_date,
+	g.active_status,
+	g.frez_code,
+	g.last_frez_date,
+	g.last_unfrez_date,
+	g.schm_type,
+	g.schm_code,
+	g.acct_ownership,
+	g.clr_bal_amt,
+	g.un_clr_bal_amt,
+	g.drwng_power,
+	g.lien_amt,
+	g.system_reserved_amt,
+	g.future_bal_amt,
+	g.sol_id
+FROM tbaadm.gam g
+WHERE g.foracid = %s
+  AND g.entity_cre_flg = 'Y'
+LIMIT 1
+"""
+
+OPENING_BALANCE_QUERY = """
+WITH params AS (
+	SELECT
+		DATE '2025-11-11' AS start_date,
+		g.acid
+	FROM tbaadm.gam g
+	WHERE g.foracid = %s
+	  AND g.entity_cre_flg = 'Y'
+),
+all_txns AS (
+	SELECT
+		h.acid,
+		h.tran_date,
+		h.tran_id,
+		h.part_tran_srl_num,
+		h.part_tran_type,
+		h.tran_amt,
+		h.rcre_time,
+		h.acct_balance
+	FROM tbaadm.htd h
+	JOIN params p ON h.acid = p.acid
+	WHERE h.tran_date < p.start_date
+	  AND h.pstd_flg = 'Y'
+	  AND h.del_flg = 'N'
+	UNION ALL
+	SELECT
+		d.acid,
+		d.tran_date,
+		d.tran_id,
+		d.part_tran_srl_num,
+		d.part_tran_type,
+		d.tran_amt,
+		d.rcre_time,
+		d.acct_balance
+	FROM tbaadm.dtd d
+	JOIN params p ON d.acid = p.acid
+	WHERE d.tran_date < p.start_date
+	  AND d.pstd_flg = 'Y'
+	  AND d.del_flg = 'N'
+)
+SELECT
+	ABS(
+		h.acct_balance +
+		CASE
+			WHEN h.part_tran_type = 'C' THEN h.tran_amt
+			WHEN h.part_tran_type = 'D' THEN -h.tran_amt
+			ELSE 0
+		END
+	) AS opening_balance
+FROM all_txns h
+ORDER BY
+	h.tran_date DESC,
+	h.rcre_time DESC,
+	h.tran_id DESC,
+	h.part_tran_srl_num DESC
+LIMIT 1
+"""
+
+
+def _format_date_display(val):
+	if not val:
+		return ""
+	try:
+		if hasattr(val, "strftime"):
+			return val.strftime("%d-%m-%Y")
+	except Exception:
+		pass
+	s = str(val).strip()
+	if len(s) >= 10 and s[4] == "-" and s[7] == "-":
+		# YYYY-MM-DD...
+		return f"{s[8:10]}-{s[5:7]}-{s[0:4]}"
+	if len(s) == 10 and s[2] == "-" and s[5] == "-":
+		return s
+	return s
+
+
+def _format_money(val, currency="INR", cr_dr=None):
+	if val is None or val == "":
+		return ""
+	try:
+		num = float(val)
+	except Exception:
+		return str(val)
+	amt = "{:,.2f}".format(abs(num))
+	prefix = f"{currency} " if currency else ""
+	if cr_dr == "CR":
+		return f"{prefix}{amt} CR."
+	if cr_dr == "DR":
+		return f"{prefix}{amt} DR."
+	if num < 0:
+		return f"{prefix}{amt} DR."
+	return f"{prefix}{amt} CR."
+
+
+def _derive_account_status(row):
+	cls_flg = (row.get("acct_cls_flg") or "").strip()
+	active_status = (row.get("active_status") or "").strip()
+	frez_code = (row.get("frez_code") or "").strip()
+	if cls_flg == "Y":
+		return "CLOSED"
+	if frez_code and frez_code.upper() not in ("N", "NONE"):
+		return "FROZEN"
+	if active_status == "I":
+		return "INACTIVE"
+	return "ACTIVE"
+
+
+def _derive_account_status_date(row, status):
+	if status == "CLOSED":
+		return row.get("acct_cls_date")
+	if status == "FROZEN":
+		return row.get("last_frez_date") or row.get("acct_opn_date")
+	return row.get("last_unfrez_date") or row.get("acct_opn_date")
+
+
+def _derive_account_type(row):
+	ownership = (row.get("acct_ownership") or "").strip().upper()
+	schm_type = (row.get("schm_type") or "").strip()
+	schm_code = (row.get("schm_code") or "").strip()
+	if ownership == "C":
+		return "CUSTOMER ACCOUNT"
+	if ownership == "O":
+		return "OFFICE ACCOUNT"
+	parts = [p for p in [schm_type, schm_code] if p]
+	return " ".join(parts) if parts else ""
+
+
+def _fetch_account_summary(cursor, account_id, ledger_data):
+	summary = {
+		"ac_id": _clean_acct(account_id),
+		"ac_status": "",
+		"ac_open_date": "",
+		"gl_subhead": "",
+		"opening_bal": "",
+		"closing_bal": "",
+		"funds_in_clg": "",
+		"ac_status_date": "",
+		"ac_close_date": "",
+		"ac_type": "",
+		"available_amt": "",
+		"effective_available_amt": "",
+		"float_bal": "",
+	}
+
+	cursor.execute(ACCOUNT_SUMMARY_QUERY, (account_id,))
+	row = cursor.fetchone()
+	if not row:
+		# fallback minimal summary from ledger data
+		if ledger_data:
+			first = ledger_data[0]
+			summary["ac_id"] = _clean_acct(first.get("ACCOUNT NUMBER") or account_id)
+			last = ledger_data[-1]
+			summary["closing_bal"] = _format_money(last.get("BALANCE"), "INR", "CR")
+		return summary
+
+	cols = [d[0] for d in cursor.description]
+	g = dict(zip(cols, row))
+	ccy = (g.get("crncy_code") or "INR").strip() or "INR"
+
+	status = _derive_account_status(g)
+	status_date = _derive_account_status_date(g, status)
+	ac_id = _clean_acct(g.get("foracid") or account_id)
+	acct_name = (g.get("acct_name") or "").strip()
+	if acct_name:
+		ac_id = f"{ac_id} {ccy} {acct_name}"
+
+	summary["ac_id"] = ac_id.strip()
+	summary["ac_status"] = status
+	summary["ac_open_date"] = _format_date_display(g.get("acct_opn_date"))
+	summary["gl_subhead"] = (g.get("gl_sub_head_code") or "").strip()
+	summary["ac_status_date"] = _format_date_display(status_date)
+	summary["ac_close_date"] = _format_date_display(g.get("acct_cls_date"))
+	summary["ac_type"] = _derive_account_type(g)
+
+	funds_in_clg = float(g.get("un_clr_bal_amt") or 0)
+	summary["funds_in_clg"] = _format_money(funds_in_clg, ccy, "CR")
+	summary["float_bal"] = _format_money(funds_in_clg, ccy, "CR")
+
+	clr_bal = float(g.get("clr_bal_amt") or 0)
+	lien_amt = float(g.get("lien_amt") or 0)
+	sys_reserved = float(g.get("system_reserved_amt") or 0)
+	available = clr_bal - lien_amt - sys_reserved
+	drwng_power = g.get("drwng_power")
+	eff_available = available
+	if drwng_power is not None:
+		try:
+			dp = float(drwng_power)
+			# use drawing power as effective available when it differs meaningfully
+			if dp != 0:
+				eff_available = dp
+		except Exception:
+			pass
+	summary["available_amt"] = _format_money(available, ccy, "CR" if available >= 0 else "DR")
+	summary["effective_available_amt"] = _format_money(eff_available, ccy, "CR" if eff_available >= 0 else "DR")
+
+	# Opening balance: balance before statement start date, else 0
+	opening = 0.0
+	try:
+		cursor.execute(OPENING_BALANCE_QUERY, (account_id,))
+		ob = cursor.fetchone()
+		if ob and ob[0] is not None:
+			opening = float(ob[0])
+	except Exception:
+		opening = 0.0
+	summary["opening_bal"] = _format_money(opening, ccy, "CR")
+
+	# Closing balance: last txn balance in fetched period, else current clear balance
+	if ledger_data:
+		last = ledger_data[-1]
+		summary["closing_bal"] = _format_money(last.get("BALANCE"), ccy, "CR")
+	else:
+		summary["closing_bal"] = _format_money(clr_bal, ccy, "CR" if clr_bal >= 0 else "DR")
+
+	return summary
+
+
 def _fetch_account_ledger_data(account_id):
 	account_id = (account_id or "").strip()
 	if not account_id:
@@ -156,11 +401,20 @@ def _fetch_account_ledger_data(account_id):
 		columns = [desc[0] for desc in cursor.description] if cursor.description else []
 		rows = cursor.fetchall() or []
 		data = [dict(zip(columns, row)) for row in rows]
+
+		account_summary = {}
+		try:
+			account_summary = _fetch_account_summary(cursor, account_id, data)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Finacle Passbook: Get Account Summary Failed")
+			account_summary = {}
+
 		return {
 			"status": "success",
 			"account_id": account_id,
 			"columns": columns,
 			"data": data,
+			"account_summary": account_summary,
 		}
 	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "Finacle Passbook: Get Account Ledger Failed")
