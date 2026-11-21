@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commission Dashboard</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <script src="/assets/sahayog/js/petite-vue.iife.js"></script>
+    <link rel="stylesheet" href="./commission.css">
+</head>
+
+<body>
+    <div id="app" v-scope>
+        <div v-effect="$el._i || ($el._i = 1, init())" style="display:none"></div>
+
+        <div class="dashboard">
+            <header class="dash-header">
+                <div class="header-left">
+                    <h1>Commission Dashboard</h1>
+                    <p class="subtitle">Head Office · Agent Commission Overview</p>
+                </div>
+
+                <div class="header-actions">
+                    <button class="btn-pay" :disabled="selectedCount === 0" @click="openPayDialog()">
+                        Pay Now [[ selectedCount > 0 ? '(' + selectedCount + ')' : '' ]]
+                    </button>
+
+                    <button class="btn-refresh" :class="{ spinning: loading }" @click="refreshAll()">
+                        Refresh
+                    </button>
+                </div>
+            </header>
+
+            <div class="error-banner" v-if="errorMsg">⚠️ [[ errorMsg ]]</div>
+
+            <div class="stats-grid">
+                <div class="stat-card" v-for="(card, idx) in statCards" :key="card.key"
+                    :style="{ '--delay': idx * 60 + 'ms' }">
+                    <div class="stat-icon" :style="{ background: card.color }">[[ card.icon ]]</div>
+                    <div class="stat-body">
+                        <div class="stat-label">[[ card.label ]]</div>
+                        <div class="stat-value">[[ card.prefix ]][[ formatNumber(displayValues[card.key]) ]]</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <div class="filter-group autocomplete-group">
+                    <label>SOL</label>
+                    <div class="autocomplete-wrap">
+                        <input type="text" v-model="autocomplete.sol_id.query" placeholder="Search SOL..."
+                            @input="onAutocompleteInput('sol_id')" @focus="onAutocompleteFocus('sol_id')"
+                            @blur="onAutocompleteBlur('sol_id')">
+
+                        <button v-if="autocomplete.sol_id.query" class="clear-btn"
+                            @mousedown.prevent="clearAutocomplete('sol_id')">×</button>
+
+                        <div class="autocomplete-dropdown" v-if="autocomplete.sol_id.open">
+                            <div class="autocomplete-item" v-for="opt in getMatches('sol_id')" :key="opt.value"
+                                @mousedown.prevent="selectOption('sol_id', opt)">
+                                [[ opt.label ]]
+                            </div>
+                            <div class="autocomplete-empty" v-if="getMatches('sol_id').length === 0">No matches</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-group autocomplete-group">
+                    <label>Scheme Code</label>
+                    <div class="autocomplete-wrap">
+                        <input type="text" v-model="autocomplete.scheme_code.query" placeholder="Search Scheme..."
+                            @input="onAutocompleteInput('scheme_code')" @focus="onAutocompleteFocus('scheme_code')"
+                            @blur="onAutocompleteBlur('scheme_code')">
+
+                        <button v-if="autocomplete.scheme_code.query" class="clear-btn"
+                            @mousedown.prevent="clearAutocomplete('scheme_code')">×</button>
+
+                        <div class="autocomplete-dropdown" v-if="autocomplete.scheme_code.open">
+                            <div class="autocomplete-item" v-for="opt in getMatches('scheme_code')" :key="opt.value"
+                                @mousedown.prevent="selectOption('scheme_code', opt)">
+                                [[ opt.label ]]
+                            </div>
+                            <div class="autocomplete-empty" v-if="getMatches('scheme_code').length === 0">No matches
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-group autocomplete-group">
+                    <label>Agent Code</label>
+                    <div class="autocomplete-wrap">
+                        <input type="text" v-model="autocomplete.agent_code.query" placeholder="Search Agent..."
+                            @input="onAutocompleteInput('agent_code')" @focus="onAutocompleteFocus('agent_code')"
+                            @blur="onAutocompleteBlur('agent_code')">
+
+                        <button v-if="autocomplete.agent_code.query" class="clear-btn"
+                            @mousedown.prevent="clearAutocomplete('agent_code')">×</button>
+
+                        <div class="autocomplete-dropdown" v-if="autocomplete.agent_code.open">
+                            <div class="autocomplete-item" v-for="opt in getMatches('agent_code')" :key="opt.value"
+                                @mousedown.prevent="selectOption('agent_code', opt)">
+                                [[ opt.label ]]
+                            </div>
+                            <div class="autocomplete-empty" v-if="getMatches('agent_code').length === 0">No matches
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-group search-group">
+                    <label>Operative Account</label>
+                    <div class="search-input">
+                        <input type="text" v-model="filters.agent_operative_account" placeholder="Search account no..."
+                            @input="onSearchInput()">
+
+                        <button v-if="filters.agent_operative_account" class="clear-btn"
+                            @click="filters.agent_operative_account = ''; fetchRecords(true)">×</button>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn-apply" @click="fetchRecords(true)">Apply</button>
+                    <button class="btn-reset" @click="resetFilters()">Reset</button>
+                </div>
+            </div>
+
+            <div class="active-chips" v-if="activeFilterChips.length">
+                <span class="chip-tag" v-for="chip in activeFilterChips" :key="chip.key">
+                    [[ chip.label ]]
+                    <button @click="clearFilter(chip.key)">×</button>
+                </span>
+            </div>
+
+            <div class="table-card">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="checkbox-col">
+                                    <input type="checkbox" :checked="isPageAllSelected" @change="toggleSelectAllPage()">
+                                </th>
+                                <th>Agent Code</th>
+                                <th>SOL ID</th>
+                                <th>SOL Name</th>
+                                <th>Dist</th>
+                                <th>Region</th>
+                                <th>Zone</th>
+                                <th>Auth ID</th>
+                                <th>Auth Name</th>
+                                <th>Role</th>
+                                <th>Scheme Code</th>
+                                <th>Scheme Description</th>
+                                <th>Group Name</th>
+                                <th>Commission Type</th>
+                                <th>Agent Name</th>
+                                <th>PAN</th>
+                                <th>PAN Status</th>
+                                <th class="num">Applicable TDS Rate (%)</th>
+                                <th>CIF</th>
+                                <th>Agent Saving Account</th>
+                                <th>Agent Security Account</th>
+                                <th>Agent Operative Account</th>
+
+                                <th class="num">FD Collection</th>
+                                <th class="num">FD Eligible Amount</th>
+                                <th class="num">FD Commission</th>
+
+                                <th class="num">DAM Collection</th>
+                                <th class="num">DAM Eligible Amount</th>
+                                <th class="num">DAM Commission</th>
+
+                                <th class="num">MIS Collection</th>
+                                <th class="num">MIS Eligible Amount</th>
+                                <th class="num">MIS Commission</th>
+
+                                <th class="num">RD Collection</th>
+                                <th class="num">RD Eligible Amount</th>
+                                <th class="num">RD Commission</th>
+
+                                <th class="num">DD Collection</th>
+                                <th class="num">DD Eligible Amount</th>
+                                <th class="num">DD Commission</th>
+
+                                <th class="num">SMBG Collection</th>
+                                <th class="num">SMBG Eligible Amount</th>
+                                <th class="num">SMBG Commission</th>
+
+                                <th class="num">Total Collection</th>
+                                <th class="num">Total Eligible Amount</th>
+                                <th class="num">Total Commission</th>
+                                <th class="num">TDS</th>
+                                <th class="num">Security Deposit</th>
+                                <th class="num">Mobile App Deduction</th>
+                                <th class="num">Net Pay</th>
+                            </tr>
+                        </thead>
+
+                        <tbody v-if="loading">
+                            <tr class="skeleton-row" v-for="n in 6" :key="n">
+                                <td colspan="47">
+                                    <div class="skeleton-bar"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <tbody v-if="!loading && records.length > 0">
+                            <tr v-for="(row, idx) in records" :key="row.agent_code" class="data-row"
+                                :class="{ 'row-selected': isRowSelected(row.agent_code) }">
+
+                                <td class="checkbox-col">
+                                    <input type="checkbox" :checked="isRowSelected(row.agent_code)"
+                                        @change="toggleRow(row)">
+                                </td>
+
+                                <td>[[ row.agent_code || '—' ]]</td>
+                                <td>[[ row.sol_id || '—' ]]</td>
+                                <td>[[ row.sol_name || '—' ]]</td>
+                                <td>[[ row.dist || '—' ]]</td>
+                                <td>[[ row.region || '—' ]]</td>
+                                <td>[[ row.zone || '—' ]]</td>
+                                <td>[[ row.auth_id || '—' ]]</td>
+                                <td>[[ row.auth_name || '—' ]]</td>
+                                <td>[[ row.role || '—' ]]</td>
+                                <td>[[ row.scheme_code || '—' ]]</td>
+                                <td>[[ row.scheme_description || '—' ]]</td>
+                                <td>[[ row.group_name || '—' ]]</td>
+                                <td>[[ row.commission_type || '—' ]]</td>
+                                <td>[[ row.agent_name || '—' ]]</td>
+                                <td>[[ row.pan || '—' ]]</td>
+                                <td>[[ row.pan_status || '—' ]]</td>
+                                <td class="num">[[ formatNumber(row.applicable_tds_rate) ]]%</td>
+                                <td>[[ row.cif || '—' ]]</td>
+                                <td>[[ row.agent_saving_account || '—' ]]</td>
+                                <td>[[ row.agent_security_account || '—' ]]</td>
+                                <td>[[ row.agent_operative_account || '—' ]]</td>
+
+                                <td class="num">[[ formatCurrency(row.fd_collection) ]]</td>
+                                <td class="num">[[ formatCurrency(row.fd_eligible_amount) ]]</td>
+                                <td class="num">[[ formatCurrency(row.fd_commission) ]]</td>
+
+                                <td class="num">[[ formatCurrency(row.dam_collection) ]]</td>
+                                <td class="num">[[ formatCurrency(row.dam_eligible_amount) ]]</td>
+                                <td class="num">[[ formatCurrency(row.dam_commission) ]]</td>
+
+                                <td class="num">[[ formatCurrency(row.mis_collection) ]]</td>
+                                <td class="num">[[ formatCurrency(row.mis_eligible_amount) ]]</td>
+                                <td class="num">[[ formatCurrency(row.mis_commission) ]]</td>
+
+                                <td class="num">[[ formatCurrency(row.rd_collection) ]]</td>
+                                <td class="num">[[ formatCurrency(row.rd_eligible_amount) ]]</td>
+                                <td class="num">[[ formatCurrency(row.rd_commission) ]]</td>
+
+                                <td class="num">[[ formatCurrency(row.dd_collection) ]]</td>
+                                <td class="num">[[ formatCurrency(row.dd_eligible_amount) ]]</td>
+                                <td class="num">[[ formatCurrency(row.dd_commission) ]]</td>
+
+                                <td class="num">[[ formatCurrency(row.smbg_collection) ]]</td>
+                                <td class="num">[[ formatCurrency(row.smbg_eligible_amount) ]]</td>
+                                <td class="num">[[ formatCurrency(row.smbg_commission) ]]</td>
+
+                                <td class="num strong">[[ formatCurrency(row.total_collection) ]]</td>
+                                <td class="num strong">[[ formatCurrency(row.total_eligible_amount) ]]</td>
+                                <td class="num strong">[[ formatCurrency(row.total_commission) ]]</td>
+                                <td class="num">[[ formatCurrency(row.tds) ]]</td>
+                                <td class="num">[[ formatCurrency(row.security_deposit) ]]</td>
+                                <td class="num">[[ formatCurrency(row.mobile_app_deduction) ]]</td>
+                                <td class="num strong">[[ formatCurrency(row.net_pay) ]]</td>
+                            </tr>
+                        </tbody>
+
+                        <tbody v-if="!loading && records.length === 0">
+                            <tr>
+                                <td colspan="47" class="empty-state">
+                                    <div class="empty-icon">📄</div>
+                                    No commission records found for the selected filters.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" v-if="!loading && records.length > 0">
+                    <div class="page-info">
+                        Showing <strong>[[ pageStart ]]–[[ pageEnd ]]</strong>
+                        of <strong>[[ formatNumber(pagination.total) ]]</strong> records
+                    </div>
+
+                    <div class="page-controls">
+                        <button class="page-btn" :disabled="pagination.page === 1"
+                            @click="goToPage(pagination.page - 1)">
+                            ‹ Prev
+                        </button>
+
+                        <span class="page-num">
+                            Page [[ pagination.page ]] of [[ totalPages ]]
+                        </span>
+
+                        <button class="page-btn" :disabled="pagination.page >= totalPages"
+                            @click="goToPage(pagination.page + 1)">
+                            Next ›
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" v-if="showPayDialog" @click.self="closePayDialog()">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h3>Confirm Payment Run</h3>
+                    <button class="modal-close" @click="closePayDialog()">×</button>
+                </div>
+
+                <div class="modal-body">
+                    <p>
+                        You are about to run payment for the selected agent-wise consolidated records.
+                        Unselected records will be excluded from this payment run.
+                    </p>
+
+                    <div class="modal-stats">
+                        <div class="modal-stat">
+                            <div class="modal-stat-label">Selected Records</div>
+                            <div class="modal-stat-value">[[ selectedCount ]]</div>
+                        </div>
+
+                        <div class="modal-stat">
+                            <div class="modal-stat-label">Total Net Pay</div>
+                            <div class="modal-stat-value">₹[[ formatNumber(selectedTotalNetPay) ]]</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-error" v-if="payError">⚠️ [[ payError ]]</div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-reset" @click="closePayDialog()" :disabled="payProcessing">
+                        Cancel
+                    </button>
+
+                    <button class="btn-apply" @click="confirmPayment()" :disabled="payProcessing">
+                        [[ payProcessing ? 'Processing...' : 'Confirm & Pay' ]]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            groupedMethod: '/api/method/banking_api.www.commission.get_commission_detailed_report',
+            groupedCountMethod: '/api/method/banking_api.www.commission.get_commission_detailed_report_count',
+            summaryMethod: '/api/method/banking_api.www.commission.get_commission_summary',
+            filterOptionsMethod: '/api/method/banking_api.www.commission.get_commission_filter_options'
+        };
+
+        const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        function apiHeaders() {
+            return { 'X-Frappe-CSRF-Token': CSRF_TOKEN };
+        }
+
+        async function apiGet(path, params) {
+            const qs = new URLSearchParams(params).toString();
+            const res = await fetch(`${path}?${qs}`, {
+                headers: apiHeaders(),
+                credentials: 'same-origin'
+            });
+
+            const json = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                const detail = json._server_messages || json.exc || json.message || res.statusText;
+                throw new Error(`${res.status}: ${detail}`);
+            }
+
+            return json.message;
+        }
+
+        function toNumber(val) {
+            const n = parseFloat(val);
+            return isNaN(n) ? 0 : n;
+        }
+
+        const app = PetiteVue.createApp({
+            $delimiters: ['[[', ']]'],
+
+            loading: false,
+            errorMsg: '',
+            records: [],
+
+            filters: {
+                sol_id: '',
+                scheme_code: '',
+                agent_code: '',
+                agent_operative_account: ''
+            },
+
+            filterOptions: {
+                sol_list: [],
+                scheme_list: [],
+                agent_list: []
+            },
+
+            normalizedOptions: {
+                sol_id: [],
+                scheme_code: [],
+                agent_code: []
+            },
+
+            autocomplete: {
+                sol_id: { query: '', open: false },
+                scheme_code: { query: '', open: false },
+                agent_code: { query: '', open: false }
+            },
+
+            pagination: {
+                page: 1,
+                pageSize: 10,
+                total: 0
+            },
+
+            // summary: {
+            //     total_records: 0,
+            //     total_eligible: 0,
+            //     total_commission: 0,
+            //     total_tds: 0,
+            //     total_security_deposit: 0,
+            //     total_collection: 0
+            // },
+
+            summary: {
+                total_records: 0,
+                total_collection: 0,
+                total_eligible: 0,
+                total_commission: 0,
+                total_tds: 0,
+                total_security_deposit: 0,
+                total_netpay: 0
+            },
+
+            // displayValues: {
+            //     total_records: 0,
+            //     total_eligible: 0,
+            //     total_commission: 0,
+            //     total_tds: 0,
+            //     total_security_deposit: 0,
+            //     total_collection: 0
+            // },
+
+            displayValues: {
+                total_records: 0,
+                total_collection: 0,
+                total_eligible: 0,
+                total_commission: 0,
+                total_tds: 0,
+                total_security_deposit: 0,
+                total_netpay: 0
+            },
+
+            // statCards: [
+            //     {
+            //         key: 'total_records',
+            //         label: 'Total Records',
+            //         icon: '#',
+            //         prefix: '',
+            //         color: 'linear-gradient(135deg,#6366f1,#8b5cf6)'
+            //     },
+            //     {
+            //         key: 'total_collection',
+            //         label: 'Total Collection',
+            //         icon: '₹',
+            //         prefix: '₹',
+            //         color: 'linear-gradient(135deg,#0ea5e9,#22d3ee)'
+            //     },
+            //     {
+            //         key: 'total_eligible',
+            //         label: 'Eligible Amount',
+            //         icon: '₹',
+            //         prefix: '₹',
+            //         color: 'linear-gradient(135deg,#f59e0b,#f97316)'
+            //     },
+            //     {
+            //         key: 'total_commission',
+            //         label: 'Commission Amount',
+            //         icon: '₹',
+            //         prefix: '₹',
+            //         color: 'linear-gradient(135deg,#10b981,#14b8a6)'
+            //     },
+            //     {
+            //         key: 'total_security_deposit',
+            //         label: 'Security Deposit',
+            //         icon: '₹',
+            //         prefix: '₹',
+            //         color: 'linear-gradient(135deg,#ec4899,#f43f5e)'
+            //     }
+            // ],
+
+            statCards: [
+                {
+                    key: 'total_records',
+                    label: 'Total Records',
+                    icon: '#',
+                    prefix: '',
+                    color: 'linear-gradient(135deg,#6366f1,#8b5cf6)'
+                },
+                {
+                    key: 'total_collection',
+                    label: 'Total Collection',
+                    icon: '₹',
+                    prefix: '₹',
+                    color: 'linear-gradient(135deg,#0ea5e9,#22d3ee)'
+                },
+                {
+                    key: 'total_eligible',
+                    label: 'Eligible Amount',
+                    icon: '₹',
+                    prefix: '₹',
+                    color: 'linear-gradient(135deg,#f59e0b,#f97316)'
+                },
+                {
+                    key: 'total_commission',
+                    label: 'Commission Amount',
+                    icon: '₹',
+                    prefix: '₹',
+                    color: 'linear-gradient(135deg,#10b981,#14b8a6)'
+                },
+                {
+                    key: 'total_security_deposit',
+                    label: 'Security Deposit',
+                    icon: '₹',
+                    prefix: '₹',
+                    color: 'linear-gradient(135deg,#ec4899,#f43f5e)'
+                },
+                {
+                    key: 'total_netpay',
+                    label: 'Net Pay',
+                    icon: '₹',
+                    prefix: '₹',
+                    color: 'linear-gradient(135deg,#2563eb,#7c3aed)'
+                }
+            ],
+
+            searchTimer: null,
+
+            selectedRecords: {},
+            showPayDialog: false,
+            payProcessing: false,
+            payError: '',
+
+            get selectedCount() {
+                return Object.keys(this.selectedRecords).length;
+            },
+
+            get selectedTotalNetPay() {
+                return Object.values(this.selectedRecords)
+                    .reduce((sum, row) => sum + toNumber(row.net_pay), 0);
+            },
+
+            get isPageAllSelected() {
+                return this.records.length > 0 &&
+                    this.records.every(row => !!this.selectedRecords[row.agent_code]);
+            },
+
+            get totalPages() {
+                return Math.max(
+                    1,
+                    Math.ceil(this.pagination.total / this.pagination.pageSize)
+                );
+            },
+
+            get pageStart() {
+                return this.pagination.total === 0
+                    ? 0
+                    : (this.pagination.page - 1) * this.pagination.pageSize + 1;
+            },
+
+            get pageEnd() {
+                return Math.min(
+                    this.pagination.page * this.pagination.pageSize,
+                    this.pagination.total
+                );
+            },
+
+            get activeFilterChips() {
+                const chips = [];
+
+                if (this.filters.sol_id) {
+                    const option = this.normalizedOptions.sol_id.find(
+                        item => String(item.value) === String(this.filters.sol_id)
+                    );
+
+                    chips.push({
+                        key: 'sol_id',
+                        label: 'SOL: ' + (option ? option.label : this.filters.sol_id)
+                    });
+                }
+
+                if (this.filters.scheme_code) {
+                    chips.push({
+                        key: 'scheme_code',
+                        label: 'Scheme: ' + this.filters.scheme_code
+                    });
+                }
+
+                if (this.filters.agent_code) {
+                    chips.push({
+                        key: 'agent_code',
+                        label: 'Agent: ' + this.filters.agent_code
+                    });
+                }
+
+                if (this.filters.agent_operative_account) {
+                    chips.push({
+                        key: 'agent_operative_account',
+                        label: 'Account: ' + this.filters.agent_operative_account
+                    });
+                }
+
+                return chips;
+            },
+
+            isRowSelected(agentCode) {
+                return !!this.selectedRecords[agentCode];
+            },
+
+            toggleRow(row) {
+                if (this.selectedRecords[row.agent_code]) {
+                    delete this.selectedRecords[row.agent_code];
+                } else {
+                    this.selectedRecords[row.agent_code] = row;
+                }
+            },
+
+            toggleSelectAllPage() {
+                const allSelected = this.isPageAllSelected;
+
+                this.records.forEach(row => {
+                    if (allSelected) {
+                        delete this.selectedRecords[row.agent_code];
+                    } else {
+                        this.selectedRecords[row.agent_code] = row;
+                    }
+                });
+            },
+
+            openPayDialog() {
+                if (this.selectedCount === 0) return;
+                this.payError = '';
+                this.showPayDialog = true;
+            },
+
+            closePayDialog() {
+                if (this.payProcessing) return;
+                this.showPayDialog = false;
+            },
+
+            async confirmPayment() {
+                this.payProcessing = true;
+                this.payError = '';
+
+                try {
+                    const agentCodes = Object.keys(this.selectedRecords);
+
+                    const res = await fetch(
+                        '/api/method/banking_api.www.commission.run_commission_payment',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...apiHeaders()
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                agent_codes: agentCodes,
+                                filters: this.buildFilters()
+                            })
+                        }
+                    );
+
+                    const json = await res.json().catch(() => ({}));
+
+                    if (!res.ok) {
+                        const detail = json._server_messages || json.exc || json.message || res.statusText;
+                        throw new Error(detail);
+                    }
+
+                    this.showPayDialog = false;
+                    this.selectedRecords = {};
+                    this.errorMsg = '';
+
+                    await this.fetchRecords(false);
+                } catch (error) {
+                    console.error('Payment run failed', error);
+                    this.payError = error.message || 'Payment run failed. Please try again.';
+                } finally {
+                    this.payProcessing = false;
+                }
+            },
+
+            getMatches(type) {
+                const query = (this.autocomplete[type].query || '').toLowerCase().trim();
+                const list = this.normalizedOptions[type] || [];
+
+                if (!query) {
+                    return list.slice(0, 50);
+                }
+
+                return list
+                    .filter(option => String(option.label).toLowerCase().includes(query))
+                    .slice(0, 50);
+            },
+
+            onAutocompleteInput(type) {
+                this.autocomplete[type].open = true;
+
+                if (!this.autocomplete[type].query && this.filters[type]) {
+                    this.filters[type] = '';
+                    this.fetchRecords(true);
+                }
+            },
+
+            onAutocompleteFocus(type) {
+                this.autocomplete[type].open = true;
+            },
+
+            onAutocompleteBlur(type) {
+                setTimeout(() => {
+                    this.autocomplete[type].open = false;
+                }, 150);
+            },
+
+            selectOption(type, option) {
+                this.filters[type] = option.value;
+                this.autocomplete[type].query = option.label;
+                this.autocomplete[type].open = false;
+                this.fetchRecords(true);
+            },
+
+            clearAutocomplete(type) {
+                this.autocomplete[type].query = '';
+                this.filters[type] = '';
+                this.autocomplete[type].open = true;
+                this.fetchRecords(true);
+            },
+
+            buildFilters() {
+                const filters = [];
+
+                if (this.filters.sol_id) {
+                    filters.push(['sol_id', '=', this.filters.sol_id]);
+                }
+
+                if (this.filters.scheme_code) {
+                    filters.push(['scheme_code', '=', this.filters.scheme_code]);
+                }
+
+                if (this.filters.agent_code) {
+                    filters.push(['agent_code', '=', this.filters.agent_code]);
+                }
+
+                if (this.filters.agent_operative_account) {
+                    filters.push([
+                        'agent_operative_account',
+                        'like',
+                        this.filters.agent_operative_account
+                    ]);
+                }
+
+                return filters;
+            },
+
+            async fetchRecords(resetPage) {
+                if (resetPage) {
+                    this.pagination.page = 1;
+                }
+
+                this.loading = true;
+                this.errorMsg = '';
+
+                try {
+                    const filters = this.buildFilters();
+
+                    const [listRes, countRes] = await Promise.all([
+                        apiGet(CONFIG.groupedMethod, {
+                            filters: JSON.stringify(filters),
+                            limit_start: (this.pagination.page - 1) * this.pagination.pageSize,
+                            limit_page_length: this.pagination.pageSize
+                        }),
+                        apiGet(CONFIG.groupedCountMethod, {
+                            filters: JSON.stringify(filters)
+                        })
+                    ]);
+
+                    this.records = listRes || [];
+                    this.pagination.total = countRes || 0;
+
+                    await this.fetchSummary(filters);
+                } catch (error) {
+                    console.error('Failed to load commission data', error);
+                    this.errorMsg = error.message || 'Failed to load records.';
+                    this.records = [];
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            async fetchSummary(filters) {
+                try {
+                    const response = await apiGet(CONFIG.summaryMethod, {
+                        filters: JSON.stringify(filters)
+                    });
+
+                    this.summary = Object.assign(this.summary, response);
+                } catch (error) {
+                    console.warn('Summary API failed', error);
+
+                    // this.summary.total_records = this.pagination.total;
+                    // this.summary.total_collection = this.records.reduce(
+                    //     (sum, row) => sum + toNumber(row.total_collection), 0
+                    // );
+                    // this.summary.total_eligible = this.records.reduce(
+                    //     (sum, row) => sum + toNumber(row.total_eligible_amount), 0
+                    // );
+                    // this.summary.total_commission = this.records.reduce(
+                    //     (sum, row) => sum + toNumber(row.total_commission), 0
+                    // );
+                    // this.summary.total_tds = this.records.reduce(
+                    //     (sum, row) => sum + toNumber(row.tds), 0
+                    // );
+                    // this.summary.total_security_deposit = this.records.reduce(
+                    //     (sum, row) => sum + toNumber(row.security_deposit), 0
+                    // );
+
+                    this.summary.total_records = this.pagination.total;
+                    this.summary.total_collection = this.records.reduce(
+                        (sum, row) => sum + toNumber(row.total_collection), 0
+                    );
+                    this.summary.total_eligible = this.records.reduce(
+                        (sum, row) => sum + toNumber(row.total_eligible_amount), 0
+                    );
+                    this.summary.total_commission = this.records.reduce(
+                        (sum, row) => sum + toNumber(row.total_commission), 0
+                    );
+                    this.summary.total_tds = this.records.reduce(
+                        (sum, row) => sum + toNumber(row.tds), 0
+                    );
+                    this.summary.total_security_deposit = this.records.reduce(
+                        (sum, row) => sum + toNumber(row.security_deposit), 0
+                    );
+                    this.summary.total_netpay = this.records.reduce(
+                        (sum, row) => sum + toNumber(row.net_pay), 0
+                    );
+                }
+
+                this.animateCounters();
+            },
+
+            async fetchFilterOptions() {
+                try {
+                    const response = await apiGet(CONFIG.filterOptionsMethod, {});
+                    this.filterOptions = Object.assign(this.filterOptions, response);
+
+                    this.normalizedOptions.sol_id = this.filterOptions.sol_list || [];
+                    this.normalizedOptions.scheme_code = (this.filterOptions.scheme_list || []).map(
+                        value => ({ value: value, label: String(value) })
+                    );
+                    this.normalizedOptions.agent_code = (this.filterOptions.agent_list || []).map(
+                        value => ({ value: value, label: String(value) })
+                    );
+                } catch (error) {
+                    console.warn('Filter options API failed', error);
+                }
+            },
+
+            animateCounters() {
+                const duration = 700;
+                const start = performance.now();
+                const from = Object.assign({}, this.displayValues);
+                const to = this.summary;
+
+                const step = now => {
+                    const progress = Math.min((now - start) / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+
+                    Object.keys(to).forEach(key => {
+                        this.displayValues[key] =
+                            from[key] + (to[key] - from[key]) * eased;
+                    });
+
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    }
+                };
+
+                requestAnimationFrame(step);
+            },
+
+            onSearchInput() {
+                clearTimeout(this.searchTimer);
+                this.searchTimer = setTimeout(() => this.fetchRecords(true), 400);
+            },
+
+            goToPage(page) {
+                if (page < 1 || page > this.totalPages) return;
+
+                this.pagination.page = page;
+                this.fetchRecords(false);
+
+                document.querySelector('.table-card')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            },
+
+            clearFilter(key) {
+                this.filters[key] = '';
+
+                if (this.autocomplete[key]) {
+                    this.autocomplete[key].query = '';
+                }
+
+                this.fetchRecords(true);
+            },
+
+            resetFilters() {
+                this.filters = {
+                    sol_id: '',
+                    scheme_code: '',
+                    agent_code: '',
+                    agent_operative_account: ''
+                };
+
+                Object.keys(this.autocomplete).forEach(key => {
+                    this.autocomplete[key].query = '';
+                    this.autocomplete[key].open = false;
+                });
+
+                this.fetchRecords(true);
+            },
+
+            refreshAll() {
+                this.fetchFilterOptions();
+                this.fetchRecords(false);
+            },
+
+            formatNumber(value) {
+                return Math.round(value || 0).toLocaleString('en-IN');
+            },
+
+            formatCurrency(value) {
+                if (value === null || value === undefined || value === '') {
+                    return '—';
+                }
+
+                return '₹' + toNumber(value).toLocaleString('en-IN', {
+                    maximumFractionDigits: 2
+                });
+            },
+
+            init() {
+                this.fetchFilterOptions();
+                this.fetchRecords(true);
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+
+</html>

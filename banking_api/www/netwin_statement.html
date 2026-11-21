@@ -5,6 +5,8 @@
 		<title>Transaction Statement</title>
 
 		<link rel="stylesheet" href="/assets/frappe/css/bootstrap.css" />
+		<!-- Flatpickr CSS -->
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 		<style>
 			body {
@@ -41,6 +43,12 @@
 				padding: 36px 30px 26px 30px;
 
 				box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
+
+				transition: transform 0.3s ease, box-shadow 0.3s ease;
+			}
+
+			.container:hover {
+				box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
 			}
 
 			.logo {
@@ -167,6 +175,19 @@
 
 			.btn-primary:hover {
 				background-color: #028079;
+				transform: translateY(-1px);
+				box-shadow: 0 4px 12px rgba(0, 103, 104, 0.2);
+			}
+
+			.btn-primary:active {
+				transform: translateY(0);
+			}
+
+			.btn-primary:disabled {
+				background-color: #ccc;
+				cursor: not-allowed;
+				transform: none;
+				box-shadow: none;
 			}
 
 			.alert {
@@ -354,6 +375,132 @@
 					gap: 10px;
 				}
 			}
+
+			/* Results table styling */
+			.results-container {
+				margin: 30px auto;
+				max-width: 1100px;
+				background: white;
+				border-radius: 14px;
+				padding: 20px;
+				box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
+				display: none;
+				overflow-x: auto;
+			}
+
+			.results-table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 14px;
+			}
+
+			.results-table th,
+			.results-table td {
+				padding: 12px;
+				text-align: left;
+				border-bottom: 1px solid #eee;
+			}
+
+			.results-table th {
+				background-color: #f8f9fa;
+				color: #006768;
+				font-weight: 600;
+				white-space: nowrap;
+			}
+
+			.results-table tr:hover {
+				background-color: #f1f3f5;
+			}
+
+			.btn-secondary {
+				background-color: #006768;
+				color: white;
+				border: none;
+				padding: 12px 20px;
+				border-radius: 7px;
+				font-weight: 600;
+				cursor: pointer;
+				font-size: 16px;
+				transition: background 0.3s;
+				flex: 1;
+			}
+
+			.btn-secondary:hover {
+				background-color: #028079;
+			}
+
+			.button-group {
+				display: flex;
+				gap: 10px;
+				margin-top: 20px;
+			}
+
+			/* Flatpickr Custom Green Theme */
+			.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, 
+			.flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, 
+			.flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, 
+			.flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, 
+			.flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, 
+			.flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonthDay, 
+			.flatpickr-day.startRange.prevMonthDay, .flatpickr-day.endRange.prevMonthDay, 
+			.flatpickr-day.selected.nextMonthDay, .flatpickr-day.startRange.nextMonthDay, 
+			.flatpickr-day.endRange.nextMonthDay {
+				background: #006768;
+				border-color: #006768;
+			}
+			.flatpickr-months .flatpickr-month {
+				background: #006768;
+				color: #fff;
+				fill: #fff;
+			}
+			.flatpickr-current-month .flatpickr-monthDropdown-months:hover {
+				background: #028079;
+			}
+			.flatpickr-calendar {
+				border: 1px solid #006768;
+			}
+
+			/* Side-by-Side Layout */
+			.main-wrapper {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				width: 100%;
+				transition: all 0.4s ease;
+				max-width: 1400px;
+				margin: 0 auto;
+			}
+
+			.main-wrapper.side-by-side {
+				flex-direction: row;
+				align-items: flex-start;
+				justify-content: center;
+				gap: 20px;
+				padding: 0 20px;
+			}
+
+			.main-wrapper.side-by-side .container {
+				margin: 30px 0;
+				flex: 0 0 450px;
+			}
+
+			.main-wrapper.side-by-side .results-container {
+				margin: 30px 0;
+				flex: 1;
+				display: block; /* Ensure it shows up */
+			}
+
+			@media (max-width: 1100px) {
+				.main-wrapper.side-by-side {
+					flex-direction: column;
+					align-items: center;
+				}
+				.main-wrapper.side-by-side .container,
+				.main-wrapper.side-by-side .results-container {
+					width: 100%;
+					max-width: 620px;
+				}
+			}
 		</style>
 	</head>
 
@@ -364,456 +511,456 @@
 			<div>Netwin Banking Statement Portal</div>
 		</header>
 
-		<div class="container">
-			<div
-				style="
-					color: #d35400;
+		<div class="main-wrapper" id="main-layout-wrapper">
+			<div class="container">
+				<div
+					style="
+						color: #d35400;
 
-					text-align: center;
+						text-align: center;
 
-					font-weight: 500;
+						font-weight: 500;
 
-					font-size: 14px;
-				"
-			>
-				<!-- Portal valid till December 6, 2024 only. -->
-			</div>
-
-			<h1>Transaction Statement</h1>
-
-			<form id="statement-form" novalidate>
-				<div class="form-row">
-					<div class="form-group">
-						<label for="ac_no" class="form-label">Account No</label>
-
-						<input
-							type="text"
-							class="form-control"
-							id="ac_no"
-							placeholder="Enter Account No"
-							required
-							autofocus
-						/>
-
-						<span class="error-hint" id="err-ac_no"></span>
-					</div>
-
-					<div class="form-group">
-						<label for="ac_code" class="form-label">GL Code</label>
-
-						<input
-							type="text"
-							class="form-control"
-							id="ac_code"
-							placeholder="Enter GL Code"
-							required
-						/>
-
-						<span class="error-hint" id="err-ac_code"></span>
-					</div>
+						font-size: 14px;
+					"
+				>
+					<!-- Portal valid till December 6, 2024 only. -->
 				</div>
 
-				<div class="form-row">
-					<div class="form-group">
-						<label for="branch_code" class="form-label">Branch Code</label>
+				<h1>Transaction Statement</h1>
 
-						<input
-							type="text"
-							class="form-control"
-							id="branch_code"
-							placeholder="Enter Branch Code"
-							required
-						/>
+				<form id="statement-form" autocomplete="off" novalidate>
+					<div class="form-row">
+						<div class="form-group">
+							<label for="ac_no" class="form-label">Account No</label>
 
-						<span class="error-hint" id="err-branch_code"></span>
+							<input
+								type="text"
+								class="form-control"
+								id="ac_no"
+								placeholder="Enter Account No"
+								required
+								autofocus
+								inputmode="numeric"
+								oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+							/>
+
+							<span class="error-hint" id="err-ac_no"></span>
+						</div>
+
+						<div class="form-group">
+							<label for="ac_code" class="form-label">GL Code</label>
+
+							<input
+								type="text"
+								class="form-control"
+								id="ac_code"
+								placeholder="Enter GL Code"
+								required
+							/>
+
+							<span class="error-hint" id="err-ac_code"></span>
+						</div>
 					</div>
 
-					<div class="form-group">
-						<label for="start_date" class="form-label">Start Date</label>
+					<div class="form-row">
+						<div class="form-group">
+							<label for="branch_code" class="form-label">Branch Code</label>
 
-						<input type="date" class="form-control" id="start_date" required />
+							<input
+								type="text"
+								class="form-control"
+								id="branch_code"
+								placeholder="Enter Branch Code"
+								required
+							/>
 
-						<span class="error-hint" id="err-start_date"></span>
+							<span class="error-hint" id="err-branch_code"></span>
+						</div>
 					</div>
 
-					<div class="form-group">
-						<label for="end_date" class="form-label">End Date</label>
+					<div class="form-row">
+						<div class="form-group">
+							<label for="start_date" class="form-label">Start Date</label>
 
-						<input type="date" class="form-control" id="end_date" required />
+							<input type="text" class="form-control" id="start_date" placeholder="DD/MM/YYYY" required />
 
-						<span class="error-hint" id="err-end_date"></span>
+							<span class="error-hint" id="err-start_date"></span>
+						</div>
+
+						<div class="form-group">
+							<label for="end_date" class="form-label">End Date</label>
+
+							<input type="text" class="form-control" id="end_date" placeholder="DD/MM/YYYY" required />
+
+							<span class="error-hint" id="err-end_date"></span>
+						</div>
 					</div>
-				</div>
 
-				<button type="submit" class="btn-primary">⬇ Download Statement</button>
-			</form>
+					<div class="button-group">
+						<button type="button" class="btn-primary" id="btn-pdf" onclick="handleDownload('pdf')">
+							📄 Download PDF
+						</button>
+						<button type="button" class="btn-primary" id="btn-csv" style="background-color: #28a745;" onclick="handleDownload('csv')">
+							📊 Download CSV
+						</button>
+					</div>
+				</form>
 
-			<div class="loader" id="loader"><span></span><span></span><span></span></div>
+				<div class="loader" id="loader"><span></span><span></span><span></span></div>
 
-			<div id="alert-container" class="alert"></div>
-		</div>
-
-		<!-- Format Selection Modal -->
-
-		<div class="modal-overlay" id="format-modal">
-			<div class="modal-content">
-				<div class="modal-title">Select Export Format</div>
-
-				<div class="modal-buttons">
-					<button class="btn-option" onclick="handleDownload('pdf')">
-						📄 Download as PDF
-					</button>
-
-					<button class="btn-option" onclick="handleDownload('csv')">
-						📊 Download as CSV
-					</button>
-				</div>
-
-				<button class="btn-cancel" onclick="closeModal()">Cancel</button>
+				<div id="alert-container" class="alert"></div>
 			</div>
 		</div>
 
 		{% else %} {% include "/templates/not-found.html" %} {% endif %}
 
-		<!-- 
-    <script>
-
-        // Util for showing/hiding loader
-
-        function setLoading(isLoading) {
-
-            document.getElementById("loader").style.display = isLoading
-
-                ? "block"
-
-                : "none";
-
-        }
-
-
-
-        // Util for showing feedback alert
-
-        function showAlert(message, type) {
-
-            const alertContainer = document.getElementById("alert-container");
-
-            alertContainer.textContent = message;
-
-            alertContainer.className = "alert " + type;
-
-            alertContainer.style.display = "block";
-
-            setTimeout(() => (alertContainer.style.display = "none"), 6000);
-
-            alertContainer.scrollIntoView({ behavior: "smooth" });
-
-        }
-
-
-
-        // Helper: highlight fields if error
-
-        function showFieldError(fieldName, msg) {
-
-            const input = document.getElementById(fieldName);
-
-            const errHint = document.getElementById("err-" + fieldName);
-
-            if (input && errHint) {
-
-                input.classList.add("error");
-
-                errHint.textContent = msg;
-
-                errHint.classList.add("active");
-
-            }
-
-        }
-
-        // Remove highlight from all fields
-
-        function clearFieldErrors() {
-
-            ["ac_no", "ac_code", "branch_code", "start_date", "end_date"].forEach(
-
-                (f) => {
-
-                    document.getElementById(f).classList.remove("error");
-
-                    const eh = document.getElementById("err-" + f);
-
-                    eh.textContent = "";
-
-                    eh.classList.remove("active");
-
-                }
-
-            );
-
-        }
-
-
-
-        // Example: Fetch branch code auto-fill on page load
-
-        async function fetchBranchCode() {
-
-            try {
-
-                const response = await fetch(
-
-                    "/api/method/share_holder_management.share_holder_management.netwin.netwin"
-
-                );
-
-                if (response.ok) {
-
-                    const data = await response.json();
-
-                    const branchCode = data.message;
-
-                    if (branchCode && branchCode !== "All") {
-
-                        const branchCodeField = document.getElementById("branch_code");
-
-                        branchCodeField.value = branchCode;
-
-                        branchCodeField.readOnly = true;
-
-                    }
-
-                }
-
-            } catch (_) { }
-
-        }
-
-        window.addEventListener("load", fetchBranchCode);
-
-
-
-        // Modal Handlers
-
-        function openModal() {
-
-            document.getElementById("format-modal").style.display = "flex";
-
-        }
-
-        function closeModal() {
-
-            document.getElementById("format-modal").style.display = "none";
-
-        }
-
-
-
-        // Core: Form submission logic with advanced error handling
-
-        document
-
-            .getElementById("statement-form")
-
-            .addEventListener("submit", async (event) => {
-
-                event.preventDefault();
-
-                clearFieldErrors();
-
-
-
-                // Validate first before showing modal
-
-                const acNo = document.getElementById("ac_no").value.trim();
-
-                const acCode = document.getElementById("ac_code").value.trim();
-
-                const branchCode = document.getElementById("branch_code").value.trim();
-
-                const startDate = document.getElementById("start_date").value;
-
-                const endDate = document.getElementById("end_date").value;
-
-
-
-                let clientErrors = {};
-
-                if (!acNo) clientErrors["ac_no"] = "Account number is required.";
-
-                if (!acCode) clientErrors["ac_code"] = "GL Code is required.";
-
-                if (!branchCode) clientErrors["branch_code"] = "Branch Code is required.";
-
-                if (!startDate) clientErrors["start_date"] = "Start date is required.";
-
-                if (!endDate) clientErrors["end_date"] = "End date is required.";
-
-
-
-                if (Object.keys(clientErrors).length) {
-
-                    Object.entries(clientErrors).forEach(([field, msg]) =>
-
-                        showFieldError(field, msg)
-
-                    );
-
-                    showAlert("Please correct the errors and try again.", "error");
-
-                    return;
-
-                }
-
-
-
-                openModal();
-
-            });
-
-
-
-        async function handleDownload(format) {
-
-            closeModal();
-
-            setLoading(true);
-
-
-
-            const submitButton = document.querySelector(".btn-primary");
-
-            submitButton.disabled = true;
-
-
-
-            // Collect form data
-
-            const acNo = document.getElementById("ac_no").value.trim();
-
-            const acCode = document.getElementById("ac_code").value.trim().toUpperCase();
-
-            const branchCode = document.getElementById("branch_code").value.trim().toUpperCase();
-
-            const startDate = document.getElementById("start_date").value;
-
-            const endDate = document.getElementById("end_date").value;
-
-
-
-            // API request
-
-            try {
-
-                const response = await fetch(
-
-                    "/api/method/share_holder_management.share_holder_management.share_api.test_db",
-
-                    {
-
-                        method: "POST",
-
-                        headers: { "Content-Type": "application/json" },
-
-                        body: JSON.stringify({
-
-                            branch_code: branchCode,
-
-                            ac_code: acCode,
-
-                            ac_no: acNo,
-
-                            start_date: startDate,
-
-                            end_date: endDate,
-
-                            export_format: format,
-
-                        }),
-
-                    }
-
-                );
-
-
-
-                if (response.ok) {
-
-                    // Success: Download File
-
-                    const blob = await response.blob();
-
-                    const url = window.URL.createObjectURL(blob);
-
-                    const a = document.createElement("a");
-
-                    a.href = url;
-
-                    a.download = `Transaction_Statement_${acNo}.${format}`;
-
-                    document.body.appendChild(a);
-
-                    a.click();
-
-                    document.body.removeChild(a);
-
-                    showAlert(
-
-                        `Transaction statement (${format.toUpperCase()}) downloaded successfully! ✅`,
-
-                        "success"
-
-                    );
-
-                } else {
-
-                    let errorMessage = "An error occurred. Please check your data.";
-
-                    let errorContent;
-
-                    try {
-
-                        errorContent = await response.clone().json();
-
-                        if (errorContent.message) {
-
-                            errorMessage = errorContent.message;
-
-                        }
-
-                    } catch {
-
-                        errorContent = await response.clone().text();
-
-                        errorMessage = errorContent;
-
-                    }
-
-                    showAlert(errorMessage, "error");
-
-                }
-
-            } catch (error) {
-
-                showAlert("Network error. Please try again.", "error");
-
-            } finally {
-
-                setLoading(false);
-
-                submitButton.disabled = false;
-
-            }
-
-        }
-
-    </script> -->
-
+		<!-- Flatpickr JS -->
+		<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+		<script>
+			window.csrf_token = "{{ frappe.session.csrf_token }}";
+
+			const GL_CODES = [
+				{ code: "B101", name: "RECURRING DEPOSIT PLAN2" },
+				{ code: "B102", name: "FIXED DEPOSIT PLAN 2" },
+				{ code: "B103", name: "SECURITY DEPOSITS" },
+				{ code: "B104", name: "RECURRING DEPOSIT PLAN1" },
+				{ code: "K201", name: "ADVANCES TO EMPLOYEES" },
+				{ code: "K102", name: "PERSONAL LOAN" },
+				{ code: "K103", name: "STAFF LOAN ACCOUNT" },
+				{ code: "K203", name: "ADVANCES  TO BRANCH OPENING" },
+				{ code: "K104", name: "GROUP LOAN" },
+				{ code: "K105", name: "TARAN LOAN" },
+				{ code: "K206", name: "OTHER ADVANCES" },
+				{ code: "K107", name: "GROUP TARAN" },
+				{ code: "K108", name: "LOAN AGAINST FD" },
+				{ code: "K210", name: "GOAT LOAN ISSUE" },
+				{ code: "R106", name: "PROCESSING FEES" },
+				{ code: "X101", name: "OFFICE MAINTENANCE" },
+				{ code: "X105", name: "STAFF SALARY EXPENSE" },
+				{ code: "X113", name: "AGENT COMMISSION PAID" },
+				{ code: "X116", name: "MISC EXPENSES" },
+				{ code: "X117", name: "OFFICE RENT A\\C" },
+				{ code: "Y103", name: "INTEREST PAID - RECURRING DEPOSIT" },
+				{ code: "AGNT", name: "AGENT" },
+				{ code: "SAV", name: "SAVING DEPOSIT" },
+				{ code: "DAM", name: "DAMDUPPAT DEPOSIT AC" },
+				{ code: "FD", name: "MONTHLY INCOME SCHEME DEPOSIT" },
+				{ code: "PERLON", name: "PERSONAL LOAN OF SALARY" },
+				{ code: "RD", name: "RECURRING DEPOSIT" },
+				{ code: "SKBG", name: "SAHAYOG KISAN BACHAT GAT" },
+				{ code: "B108", name: "CURRENT ACCOUNT" },
+				{ code: "K109", name: "SALARY LOAN" },
+				{ code: "INV", name: "NON OF USE" },
+				{ code: "B107", name: "DAILY DEPOSIT" },
+				{ code: "DLYLO", name: "TARAN AGAINST DAILY DEPOSIT" },
+				{ code: "INDLO", name: "INDIVIDUAL LOAN" },
+				{ code: "DD", name: "DAILY DEPOSIT" },
+				{ code: "K106", name: "C.C.LIMIT" },
+				{ code: "K202", name: "MOBILE ADVANCE" },
+				{ code: "LFD", name: "LOCKER SECURITY DEPOSIT" },
+				{ code: "K110", name: "TERM LOAN" },
+				{ code: "FD3", name: "FIXED DEPOSITS PLAN 3" },
+				{ code: "K111", name: "DATTAK GRAM LOAN" },
+				{ code: "SHLINK", name: "SHARE LINKAGE ACCOUNT" },
+				{ code: "B105", name: "AGENT SECURITY DEPOSIT" },
+				{ code: "PF", name: "EMPLOYEE PROVIDENT FUND" },
+				{ code: "SWF", name: "STAFF WELFARE FUND" },
+				{ code: "PT", name: "EMPLOYEE PROFESSIONAL TAX" },
+				{ code: "ITS", name: "INCOME TAX SALARY (92B)" },
+				{ code: "INVADM", name: "INVESTMENT IN AADHAR MULTISTATE" },
+				{ code: "B109", name: "RETIREMENT FUTURE FUND" },
+				{ code: "SH", name: "SHARE ACCOUNT" },
+				{ code: "K205", name: "PURPOSE ADVANCE A/C" },
+				{ code: "PL", name: "PROFIT & LOSS" },
+				{ code: "B110", name: "AGENT SECURITY A/C" },
+				{ code: "AGNSUS", name: "AGENT SUSPENSE A/C" },
+				{ code: "EMSAAD", name: "EMPLOYEES SALARY ADVANCE" },
+				{ code: "K112", name: "SMALL BUSINESS LOAN" },
+				{ code: "MOBAPP", name: "MOBILE APP" },
+				{ code: "BACHTL", name: "JOINT LIABILITIES LOAN" },
+				{ code: "VL", name: "VEHICLE LOAN" },
+				{ code: "USEVL", name: "USE TWO WHEELER LOAN" },
+				{ code: "EMPINS", name: "EMPLOYEES INSURANCE" },
+				{ code: "VLGSA", name: "NOT USE (VEHICAL LOAN GUARANTOR SAVINGS)" },
+				{ code: "JLLEXE", name: "JLL EXECUTIVE" },
+				{ code: "TAVL", name: "TRADING ADVANCE VEHICAL LOAN" },
+				{ code: "BACSAV", name: "JLL SAVING A/C" },
+				{ code: "HSLO", name: "HOSPITAL AND SCHOOL STAFF LOAN" },
+				{ code: "VLMIS", name: "VEHICLE LOAN MISCELLANEOUS" },
+				{ code: "INVESA", name: "INVESTMENT IN ESAF SMALL FINANCE BANK" },
+				{ code: "EHOLO", name: "EMPLOYEES HOME LOAN" },
+				{ code: "BDE", name: "BUSINESS DEVELOPMENT EXECUTIVE" },
+				{ code: "UNT", name: "UNTRACEABLE" },
+				{ code: "VL21", name: "SEASON SCHEME VEHICLE LOAN 21" },
+				{ code: "SILSAV", name: "SILVER SAVING AC" },
+				{ code: "FD4", name: "FIXED DEPOSIT PLAN 4" },
+				{ code: "PURPO", name: "PURPOSE ADVANCE ACCOUNTS" },
+				{ code: "CUGOLD", name: "CURRENT GOLD ACCOUNT" },
+				{ code: "CUWEAL", name: "CURRENT WEALTH ACCOUNT" },
+				{ code: "SAVSIL", name: "SAVING SILVER ACCOUNT" },
+				{ code: "INVBOB", name: "INVESTMENT IN BANK OF BARODA" },
+				{ code: "EVL", name: "ELECTRIC VEHICLE LOAN" },
+				{ code: "SWEES", name: "SAHAYOG WOMAN E.E.SCHEME" },
+				{ code: "EMPRLO", name: "EMPLOYEES PERSONAL LOAN" },
+				{ code: "LWF", name: "LABOUR WELFARE FUND EMPLOYEE" },
+				{ code: "DDLOAN", name: "DAILY DEPOSIT LOAN" },
+				{ code: "BRNET", name: "BR NET JOINT LIABILITY LOAN" },
+				{ code: "HOSCLO", name: "STAFF OF HOSPITAL AND SCHOOL LOAN" },
+				{ code: "DDGIFT", name: "DAILY DEPOSIT GIFT" },
+				{ code: "JLLSUS", name: "JLL EXECUTIVE SUSPENSE AC" },
+				{ code: "INDRD", name: "INDIAN BANK RD Ac 7393401276" },
+				{ code: "BLLOAN", name: "BUSINESS LOAN ACCOUNT" },
+				{ code: "INVCEB", name: "INVESTMENT IN CENTRAL BANK OF INDIA" },
+				{ code: "VL23", name: "VEHICAL LOAN INT 2023" },
+				{ code: "INVSGB", name: "INVESTMENT IN SAHAYOG GRAMIN BIGAR SHETT" },
+				{ code: "INVJNP", name: "INVESTMENT IN JANHIT NAGRI SAH PAT SANSTHA" },
+				{ code: "EMINRE", name: "EMPLOYEE INSURANCE REIMBURSMENT" },
+				{ code: "MOBAIL", name: "MOBAILE LOAN" },
+				{ code: "EVLSS", name: "EVL SPECIAL SCHEME 10.99" },
+				{ code: "VL24", name: "VL SPECIAL SCHEME 24" },
+				{ code: "SAVSCH", name: "SAVING SCHOOL" },
+				{ code: "INVYUB", name: "INVESTMENT IN THE YAVATMAL URBAN CO OP BANK" },
+				{ code: "BSD", name: "BUILDING SECURITY DEPOSIT" },
+				{ code: "INVPNB", name: "INVESTMENT IN PANJAB NATIONAL BANK" },
+				{ code: "JLLRD", name: "JOINT LIABILITY RECURRING DEPOSIT" },
+				{ code: "JLLSA", name: "JOINT LIABILITY SAVING ACCOUNT" },
+				{ code: "INVHDF", name: "INVESTMENT IN HDFC BANK" },
+				{ code: "FDL60", name: "FD TARAN 60 PERCENT" },
+				{ code: "FDL70", name: "FD TARAN 70 PERCENT" },
+				{ code: "DAML50", name: "DAMDUPPAT TARAN 50" },
+				{ code: "DAMTL6", name: "DAMDUPPAT TARAN 60 PERCENT" },
+				{ code: "DAMTL7", name: "DAMDUPPAT TARAN 70 PERCENT" },
+				{ code: "DAMTL8", name: "DAMDUPPAT TARAN 80 PERCENT" },
+				{ code: "DAMOD", name: "DAMDUPPAT OVER DRAFT" },
+				{ code: "FDL50", name: "FD TARAN 50 PERSENT" },
+				{ code: "TASSIL", name: "TASC SAVING SILVER" },
+				{ code: "TASCUW", name: "TASC CURRENT WEALTH" },
+				{ code: "ESIC", name: "ESIC PAYABLE" },
+				{ code: "NPS", name: "NATIONAL PENSION SCHEME" },
+				{ code: "ADUSCH", name: "EDUCATION SCHIME" }
+			];
+
+			function createSearchableDropdown(container, inputField, data, keyProp, nameProp) {
+				const dropdown = document.createElement("div");
+				dropdown.className = "dropdown-menu";
+				dropdown.style.display = "none";
+				dropdown.style.position = "absolute";
+				dropdown.style.width = "100%";
+				dropdown.style.maxHeight = "250px";
+				dropdown.style.overflowY = "auto";
+				dropdown.style.background = "white";
+				dropdown.style.border = "1px solid #006768";
+				dropdown.style.zIndex = "1000";
+				dropdown.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)";
+				dropdown.style.borderRadius = "0 0 7px 7px";
+
+				function renderOptions(filter = "") {
+					dropdown.innerHTML = "";
+					const search = (filter || "").toLowerCase();
+
+					data.filter(item => {
+						const code = (item[keyProp] || "").toString().toLowerCase();
+						const name = (item[nameProp] || "").toString().toLowerCase();
+						return code.includes(search) || name.includes(search);
+					}).forEach(item => {
+						const div = document.createElement("div");
+						div.style.padding = "10px 12px";
+						div.style.cursor = "pointer";
+						div.style.borderBottom = "1px solid #f0f0f0";
+						div.innerHTML = `<strong>${item[keyProp]}</strong> - <span style="font-size: 0.85em; color: #555;">${item[nameProp]}</span>`;
+
+						div.onmouseover = () => div.style.background = "#f0f7f7";
+						div.onmouseout = () => div.style.background = "white";
+
+						div.onclick = () => {
+							inputField.value = item[keyProp];
+							dropdown.style.display = "none";
+						};
+
+						dropdown.appendChild(div);
+					});
+				}
+
+				renderOptions();
+				container.appendChild(dropdown);
+
+				inputField.onfocus = () => {
+					dropdown.style.display = "block";
+					renderOptions(inputField.value);
+				};
+				inputField.oninput = () => {
+					dropdown.style.display = "block";
+					renderOptions(inputField.value);
+				};
+
+				document.addEventListener("click", (e) => {
+					if (!container.contains(e.target)) dropdown.style.display = "none";
+				});
+			}
+
+			window.addEventListener("load", async () => {
+				// Initialize GL Code Dropdown
+				const acCodeField = document.getElementById("ac_code");
+				const acCodeGroup = acCodeField.closest(".form-group");
+				createSearchableDropdown(acCodeGroup, acCodeField, GL_CODES, "code", "name");
+
+				console.log("Page load listener fired.");
+
+				const branchField = document.getElementById("branch_code");
+				if (!branchField) {
+					console.log("Branch field not found.");
+					return;
+				}
+				const branchGroup = branchField.closest(".form-group");
+
+				// Fetch context via native fetch
+				console.log("Fetching context via native fetch...");
+				try {
+					const response = await fetch("/api/method/banking_api.api.get_user_context", {
+						method: "GET",
+						headers: { Accept: "application/json" },
+					});
+
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+
+					const res = await response.json();
+					const context = res.message;
+					if (!context) {
+						throw new Error("API returned no message content");
+					}
+
+					const currentUser = context.user;
+					const employee = context.employee;
+					const branches = context.branches;
+					const userBranch = context.user_branch;
+
+					// ✅ 1. Check if branches is valid array
+					if (!Array.isArray(branches)) {
+						console.error("Branches is not an array:", branches);
+						return; // stop execution to avoid crash
+					}
+
+					// ✅ 2. Log invalid records
+					console.log(
+						"Invalid branch records:",
+						branches.filter((b) => !b || !b.branch_code),
+					);
+
+					console.log("Current User Detail:", currentUser);
+					console.log("Employee Data:", employee);
+					console.log("Sahayog Branches Data:", branches);
+
+					function createDropdown(container, branchField, branches) {
+						const dropdown = document.createElement("div");
+						dropdown.className = "dropdown-menu";
+						dropdown.style.display = "none";
+						dropdown.style.position = "absolute";
+						dropdown.style.width = "100%";
+						dropdown.style.maxHeight = "200px";
+						dropdown.style.overflowY = "auto";
+						dropdown.style.background = "white";
+						dropdown.style.border = "1px solid #ccc";
+						dropdown.style.zIndex = "1000";
+
+						function renderOptions(filter = "") {
+							dropdown.innerHTML = "";
+							const search = (filter || "").toLowerCase();
+
+							branches
+								.filter((b) => {
+									if (!b || !b.branch_code) return false;
+									if (typeof b.branch_code !== "string") return false;
+
+									return b.branch_code.toLowerCase().includes(search);
+								})
+								.forEach((b) => {
+									const item = document.createElement("div");
+									item.textContent = b.branch_code;
+									item.style.padding = "8px";
+									item.style.cursor = "pointer";
+
+									item.onclick = () => {
+										branchField.value = b.branch_code;
+										dropdown.style.display = "none";
+									};
+
+									dropdown.appendChild(item);
+								});
+						}
+
+						renderOptions();
+						container.appendChild(dropdown);
+
+						branchField.onclick = () => (dropdown.style.display = "block");
+						branchField.oninput = () => {
+							dropdown.style.display = "block";
+							renderOptions(branchField.value);
+						};
+
+						document.addEventListener("click", (e) => {
+							if (!container.contains(e.target)) dropdown.style.display = "none";
+						});
+					}
+
+					const isAdmin = currentUser === "Administrator";
+
+					if (isAdmin) {
+						// ✅ ALWAYS allow admin
+						branchField.value = "";
+						branchField.readOnly = false;
+						createSearchableDropdown(branchGroup, branchField, branches, "branch_code", "branch");
+					} else if (employee) {
+						const isChecked = !!employee.netwin_statement;
+
+						if (isChecked) {
+							branchField.value = "";
+							branchField.readOnly = false;
+							createSearchableDropdown(branchGroup, branchField, branches, "branch_code", "branch");
+						} else {
+							if (userBranch) {
+								branchField.value = userBranch;
+								branchField.readOnly = true;
+							}
+						}
+					} else {
+						console.log(
+							"Netwin Statement Status: No Employee record found for this user",
+						);
+					}
+				} catch (e) {
+					console.error("Fetch API Call Failed:", e);
+				}
+
+				// Re-initialize Flatpickr (fixing the overwrite)
+				const startPicker = flatpickr("#start_date", {
+					dateFormat: "d/m/Y",
+					allowInput: true,
+					defaultDate: "01/01/2014",
+					onChange: function(selectedDates, dateStr, instance) {
+						endPicker.set('minDate', dateStr);
+					}
+				});
+				const endPicker = flatpickr("#end_date", {
+					dateFormat: "d/m/Y",
+					allowInput: true,
+					defaultDate: "09/12/2024",
+					onChange: function(selectedDates, dateStr, instance) {
+						startPicker.set('maxDate', dateStr);
+					}
+				});
+			});
+
+		</script>
 		<script>
 			// Util for showing/hiding loader
 			function setLoading(isLoading) {
-				document.getElementById("loader").style.display = isLoading ? "block" : "none";
+				const loader = document.getElementById("loader");
+				if (!loader) return;
+				loader.style.display = isLoading ? "block" : "none";
 			}
 
 			// Util for showing feedback alert
@@ -823,7 +970,6 @@
 				alertContainer.className = "alert " + type;
 				alertContainer.style.display = "block";
 				setTimeout(() => (alertContainer.style.display = "none"), 6000);
-				alertContainer.scrollIntoView({ behavior: "smooth" });
 			}
 
 			// Helper: highlight fields if error
@@ -847,26 +993,21 @@
 				});
 			}
 
-			// Modal Handlers
-			function openModal() {
-				document.getElementById("format-modal").style.display = "flex";
-			}
-			function closeModal() {
-				document.getElementById("format-modal").style.display = "none";
-			}
-
-			// Core: Form submission logic with advanced error handling
-			document.getElementById("statement-form").addEventListener("submit", async (event) => {
-				event.preventDefault();
+			// Core: Download logic with validation
+			async function handleDownload(format) {
 				clearFieldErrors();
 
-				// Validate first before showing modal
+				// Collect form data
 				const acNo = document.getElementById("ac_no").value.trim();
-				const acCode = document.getElementById("ac_code").value.trim();
-				const branchCode = document.getElementById("branch_code").value.trim();
+				const acCode = document.getElementById("ac_code").value.trim().toUpperCase();
+				const branchCode = document
+					.getElementById("branch_code")
+					.value.trim()
+					.toUpperCase();
 				const startDate = document.getElementById("start_date").value;
 				const endDate = document.getElementById("end_date").value;
 
+				// Client side validation
 				let clientErrors = {};
 				if (!acNo) clientErrors["ac_no"] = "Account number is required.";
 				if (!acCode) clientErrors["ac_code"] = "GL Code is required.";
@@ -882,25 +1023,11 @@
 					return;
 				}
 
-				openModal();
-			});
-
-			async function handleDownload(format) {
-				closeModal();
 				setLoading(true);
-
-				const submitButton = document.querySelector(".btn-primary");
-				submitButton.disabled = true;
-
-				// Collect form data
-				const acNo = document.getElementById("ac_no").value.trim();
-				const acCode = document.getElementById("ac_code").value.trim().toUpperCase();
-				const branchCode = document
-					.getElementById("branch_code")
-					.value.trim()
-					.toUpperCase();
-				const startDate = document.getElementById("start_date").value;
-				const endDate = document.getElementById("end_date").value;
+				const btnPdf = document.getElementById("btn-pdf");
+				const btnCsv = document.getElementById("btn-csv");
+				btnPdf.disabled = true;
+				btnCsv.disabled = true;
 
 				// API request
 				try {
@@ -908,7 +1035,10 @@
 						"/api/method/banking_api.api.download_netwin_statement",
 						{
 							method: "POST",
-							headers: { "Content-Type": "application/json" },
+							headers: {
+								"Content-Type": "application/json",
+								"X-Frappe-CSRF-Token": window.csrf_token,
+							},
 							body: JSON.stringify({
 								branch_code: branchCode,
 								ac_code: acCode,
@@ -952,9 +1082,17 @@
 					showAlert("Network error. Please try again.", "error");
 				} finally {
 					setLoading(false);
-					submitButton.disabled = false;
+					btnPdf.disabled = false;
+					btnCsv.disabled = false;
 				}
 			}
+
+			// Handle Enter key on form
+			document.getElementById("statement-form").addEventListener("submit", (e) => {
+				e.preventDefault();
+				handleDownload('pdf'); // Default to PDF on enter
+			});
+
 		</script>
 	</body>
 </html>

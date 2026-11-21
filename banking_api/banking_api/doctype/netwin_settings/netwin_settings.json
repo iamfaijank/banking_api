@@ -8,6 +8,7 @@
   "api_base_url",
   "api_key",
   "api_secret",
+  "oracle_client_path",
   "host",
   "username",
   "password",
@@ -29,6 +30,12 @@
    "fieldname": "api_secret",
    "fieldtype": "Password",
    "label": "API Secret"
+  },
+  {
+   "fieldname": "oracle_client_path",
+   "fieldtype": "Data",
+   "label": "Oracle Client Path",
+   "description": "Path to Oracle Instant Client (e.g., /home/frappe/oracle/instantclient_21_13)"
   },
   {
    "fieldname": "host",

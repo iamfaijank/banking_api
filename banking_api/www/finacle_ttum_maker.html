@@ -1,0 +1,224 @@
+{% extends "templates/web.html" %}
+
+{% block title %}Finacle TTUM Maker{% endblock %}
+
+{% block page_content %}
+<div class="ttum-page">
+    <div class="ttum-card">
+        <div class="ttum-header">
+            <h1>Finacle TTUM Maker</h1>
+            <p class="ttum-subtitle">
+                Upload Excel file and convert it into Finacle TTUM TXT files.
+            </p>
+        </div>
+
+        <div class="ttum-form">
+            <div class="form-group">
+                <label for="excelFile">Upload Excel File</label>
+                <input type="file" id="excelFile" accept=".xlsx,.xls,.xlsb,.csv,.ods" class="form-control">
+                <small class="help-text">
+                    Excel header row must contain: Account Number, Sol ID, Amount, Narration.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="debitAccount">Debit Account Number</label>
+                <input type="text" id="debitAccount" class="form-control" inputmode="numeric" maxlength="15"
+                    minlength="4" pattern="[0-9]{4,15}" title="Debit account number must be 4 to 15 digits only"
+                    autocomplete="off" placeholder="Enter debit account number" required>
+                <small class="help-text">
+                    Only digits allowed, minimum 4 digits and maximum 15 digits. Debit Sol ID will be taken from first 4
+                    digits.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="recordsPerFile">Records per TXT File</label>
+                <input type="number" id="recordsPerFile" class="form-control" min="2" step="1" value="1000"
+                    inputmode="numeric">
+                <small class="help-text">
+                    Includes 1 debit record. Example: 1000 means 999 credit rows + 1 debit row.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <button type="button" id="processBtn" class="btn btn-primary">
+                    Generate TTUM TXT
+                </button>
+            </div>
+        </div>
+
+        <div id="statusBox" class="status-box"></div>
+
+        <div class="ttum-info">
+            <h3>Excel Format</h3>
+            <ul>
+                <li>Row 1 must contain headers.</li>
+                <li>Headers: <strong>Account Number</strong>, <strong>Sol ID</strong>, <strong>Amount</strong>,
+                    <strong>Narration</strong>.
+                </li>
+                <li>Data starts from row 2.</li>
+                <li>All uploaded rows will be treated as credit entries.</li>
+                <li>One debit entry will be added per generated file using the entered debit account number.</li>
+                <li>Debit Sol ID will be the first 4 digits of the entered debit account number.</li>
+            </ul>
+        </div>
+
+        <div class="ttum-info mt-3">
+            <h3>TTUM Line Example</h3>
+            <pre class="ttum-sample">12001830010001 INR1120    D            44.00postage charges towards sendin</pre>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ttum-page {
+        padding: 24px 0 40px;
+    }
+
+    .ttum-card {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .ttum-header {
+        margin-bottom: 24px;
+    }
+
+    .ttum-header h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .ttum-subtitle {
+        margin: 0;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .ttum-form {
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .form-control {
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #111827;
+        background: #fff;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .help-text {
+        display: block;
+        margin-top: 6px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .btn.btn-primary {
+        min-width: 180px;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-weight: 600;
+    }
+
+    .status-box {
+        min-height: 48px;
+        margin-top: 12px;
+        margin-bottom: 24px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: #f3f4f6;
+        color: #111827;
+        white-space: pre-wrap;
+        border: 1px solid #e5e7eb;
+    }
+
+    .ttum-info {
+        padding: 18px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fafafa;
+        margin-top: 18px;
+    }
+
+    .ttum-info h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .ttum-info ul {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    .ttum-info li {
+        margin-bottom: 6px;
+        color: #374151;
+    }
+
+    .ttum-sample {
+        margin: 0;
+        padding: 12px;
+        border-radius: 8px;
+        background: #111827;
+        color: #f9fafb;
+        overflow-x: auto;
+        font-size: 13px;
+    }
+
+    .mt-3 {
+        margin-top: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .ttum-card {
+            padding: 18px;
+        }
+
+        .ttum-header h1 {
+            font-size: 22px;
+        }
+
+        .btn.btn-primary {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block script %}
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="/finacle_ttum_maker.js"></script>
+{% endblock %}

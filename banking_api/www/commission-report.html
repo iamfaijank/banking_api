@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Commission Report Download</title>
+    <link rel="stylesheet" href="./commission-report.css">
+</head>
+
+<body>
+    <main class="page">
+        <section class="report-card">
+            <div class="report-header">
+                <!-- <div class="header-icon">CR</div> -->
+                <div>
+                    <h1>Commission Report</h1>
+                    <p>Choose the date range and optional filters, then download the report.</p>
+                </div>
+            </div>
+
+            <form id="commission-report-form" class="report-form">
+                <!-- <div class="section-label">Report Type</div> -->
+
+                <div class="form-group full-width">
+                    <label for="report_type">Report Type <span>*</span></label>
+                    <select id="report_type" name="report_type" class="report-type-select" required>
+                        <option value="product_wise_summary">Product Wise Summary</option>
+                        <option value="agent_wise_summary">Agent Wise Summary</option>
+                        <option value="commission_detailed_report" selected>Commission Detailed Report</option>
+                    </select>
+                </div>
+                <div class="section-label">Report Period</div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="from_date">From Date <span>*</span></label>
+                        <div class="date-input-wrap">
+                            <!-- <input type="text" id="from_date" name="from_date" placeholder="DD-MM-YYYY" required> -->
+                            <input type="date" id="from_date" name="from_date" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="to_date">To Date <span>*</span></label>
+                        <div class="date-input-wrap">
+                            <!-- <input type="text" id="to_date" name="to_date" placeholder="DD-MM-YYYY" required> -->
+                            <input type="date" id="to_date" name="to_date" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-label filters-label">Optional Filters</div>
+
+                <div class="filter-grid">
+                    <div class="form-group full-width">
+                        <label for="sol_id_search">SOL ID</label>
+                        <div class="multi-select" data-filter="sol_id">
+                            <div class="selected-values" id="sol_id_selected">
+                                <span class="placeholder">All SOL IDs</span>
+                            </div>
+
+                            <button type="button" class="dropdown-toggle" data-toggle="sol_id"
+                                aria-label="Select SOL IDs">
+                                <span>⌄</span>
+                            </button>
+
+                            <div class="dropdown-panel" id="sol_id_panel" hidden>
+                                <input type="search" id="sol_id_search" class="option-search"
+                                    placeholder="Search SOL ID..." autocomplete="off">
+                                <div class="dropdown-actions">
+                                    <button type="button" data-select-all="sol_id">Select all</button>
+                                    <button type="button" data-clear-all="sol_id">Clear</button>
+                                </div>
+                                <div class="option-list" id="sol_id_options">
+                                    <div class="loading-options">Loading SOL IDs...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="sol_id" name="sol_id">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="agent_code_search">Agent Code</label>
+                        <div class="multi-select" data-filter="agent_code">
+                            <div class="selected-values" id="agent_code_selected">
+                                <span class="placeholder">All agent codes</span>
+                            </div>
+
+                            <button type="button" class="dropdown-toggle" data-toggle="agent_code"
+                                aria-label="Select agent codes">
+                                <span>⌄</span>
+                            </button>
+
+                            <div class="dropdown-panel" id="agent_code_panel" hidden>
+                                <input type="search" id="agent_code_search" class="option-search"
+                                    placeholder="Search agent code..." autocomplete="off">
+                                <div class="dropdown-actions">
+                                    <button type="button" data-select-all="agent_code">Select all</button>
+                                    <button type="button" data-clear-all="agent_code">Clear</button>
+                                </div>
+                                <div class="option-list" id="agent_code_options">
+                                    <div class="loading-options">Loading agent codes...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="agent_code" name="agent_code">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="scheme_code_search">Scheme Code</label>
+                        <div class="multi-select" data-filter="scheme_code">
+                            <div class="selected-values" id="scheme_code_selected">
+                                <span class="placeholder">All scheme codes</span>
+                            </div>
+
+                            <button type="button" class="dropdown-toggle" data-toggle="scheme_code"
+                                aria-label="Select scheme codes">
+                                <span>⌄</span>
+                            </button>
+
+                            <div class="dropdown-panel" id="scheme_code_panel" hidden>
+                                <input type="search" id="scheme_code_search" class="option-search"
+                                    placeholder="Search scheme code..." autocomplete="off">
+                                <div class="dropdown-actions">
+                                    <button type="button" data-select-all="scheme_code">Select all</button>
+                                    <button type="button" data-clear-all="scheme_code">Clear</button>
+                                </div>
+                                <div class="option-list" id="scheme_code_options">
+                                    <div class="loading-options">Loading scheme codes...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="scheme_code" name="scheme_code">
+                    </div>
+                </div>
+
+                <div id="error-message" class="error-message" hidden></div>
+
+                <button type="submit" id="download-btn" class="download-btn" disabled>
+                    <span>Download Report</span>
+                    <!-- <span class="download-arrow">↓</span> -->
+                </button>
+            </form>
+
+            <!-- Download progress popup -->
+            <div id="progress-modal" class="progress-modal" hidden>
+                <div class="progress-popup" role="dialog" aria-modal="true" aria-labelledby="progress-text">
+                    <div class="progress-spinner" id="progress-spinner"></div>
+                    <div id="progress-section" class="progress-section">
+                        <div class="progress-info">
+                            <span id="progress-text">Preparing report...</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div id="progress-track" class="progress-track" role="progressbar" aria-valuemin="0"
+                            aria-valuemax="100" aria-valuenow="0">
+                            <div id="progress-bar" class="progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const filterState = {
+            sol_id: {
+                values: [],
+                selected: new Set()
+            },
+            agent_code: {
+                values: [],
+                selected: new Set()
+            },
+            scheme_code: {
+                values: [],
+                selected: new Set()
+            }
+        };
+
+        // Map report type to its download API method
+        // Later, change the method names for product/agent wise summary here
+        const REPORT_TYPE_METHODS = {
+            product_wise_summary: "banking_api.www.commission-report.download_product_wise_summary",
+            agent_wise_summary: "banking_api.www.commission-report.download_agent_wise_summary",
+            commission_detailed_report: "banking_api.www.commission-report.download_commission_report"
+        };
+
+        const form = document.getElementById("commission-report-form");
+        const downloadBtn = document.getElementById("download-btn");
+        const progressModal = document.getElementById("progress-modal");
+        const progressSection = document.getElementById("progress-section");
+        const progressBar = document.getElementById("progress-bar");
+        const progressText = document.getElementById("progress-text");
+        const progressPercent = document.getElementById("progress-percent");
+        const progressTrack = document.getElementById("progress-track");
+        const progressSpinner = document.getElementById("progress-spinner");
+        const errorMessage = document.getElementById("error-message");
+
+        let progressTimer = null;
+
+        function parseErrorMessage(errData, fallback = "Failed to process request.") {
+            if (!errData) return fallback;
+
+            if (typeof errData === "string") {
+                try {
+                    const parsed = JSON.parse(errData);
+                    return parseErrorMessage(parsed, fallback);
+                } catch (e) { }
+
+                if (errData.includes("Traceback (most recent call last):")) {
+                    const lines = errData.trim().split("\n");
+                    const lastLine = lines[lines.length - 1];
+                    if (lastLine.includes(":")) {
+                        return lastLine.split(":").slice(1).join(":").trim();
+                    }
+                    return lastLine.trim();
+                }
+
+                const doc = new DOMParser().parseFromString(errData, "text/html");
+                const text = doc.body.textContent || "";
+                if (text && !errData.includes("<html")) {
+                    return text.trim();
+                }
+                return errData.trim();
+            }
+
+            if (Array.isArray(errData)) {
+                for (const item of errData) {
+                    const parsed = parseErrorMessage(item, "");
+                    if (parsed) return parsed;
+                }
+            }
+
+            if (typeof errData === "object") {
+                if (errData._server_messages) {
+                    try {
+                        const msgs = typeof errData._server_messages === "string"
+                            ? JSON.parse(errData._server_messages)
+                            : errData._server_messages;
+                        const msgObj = typeof msgs[0] === "string" ? JSON.parse(msgs[0]) : msgs[0];
+                        if (msgObj && msgObj.message) return parseErrorMessage(msgObj.message, fallback);
+                    } catch (e) { }
+                }
+
+                if (errData.message) return parseErrorMessage(errData.message, fallback);
+                if (errData.exc) return parseErrorMessage(errData.exc, fallback);
+                if (errData.exception) return parseErrorMessage(errData.exception, fallback);
+                if (errData.error) return parseErrorMessage(errData.error, fallback);
+            }
+
+            return fallback;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = parseErrorMessage(message, "Failed to download report. Please try again.");
+            errorMessage.hidden = false;
+        }
+
+        function clearError() {
+            errorMessage.textContent = "";
+            errorMessage.hidden = true;
+        }
+
+        function updateProgress(percent, text) {
+            percent = Math.max(0, Math.min(100, Math.round(percent)));
+            progressBar.style.width = `${percent}%`;
+            progressPercent.textContent = `${percent}%`;
+            progressText.textContent = text;
+            progressTrack.setAttribute("aria-valuenow", String(percent));
+        }
+
+        function showProgressPopup() {
+            progressSpinner.classList.remove("done");
+            progressModal.hidden = false;
+            document.body.style.overflow = "hidden";
+        }
+
+        function hideProgressPopup() {
+            if (progressTimer) {
+                clearInterval(progressTimer);
+                progressTimer = null;
+            }
+            progressModal.hidden = true;
+            document.body.style.overflow = "";
+        }
+
+        // Fake incremental progress while the server generates the file
+        // (real byte-level progress isn't available for a single CSV response).
+        function startFakeProgress() {
+            let percent = 5;
+            updateProgress(percent, "Preparing report...");
+
+            if (progressTimer) clearInterval(progressTimer);
+
+            progressTimer = setInterval(() => {
+                if (percent < 30) percent += 4;
+                else if (percent < 60) percent += 2;
+                else if (percent < 90) percent += 1;
+                else return; // hold at 90% until the file arrives
+
+                if (percent <= 30) updateProgress(percent, "Preparing report...");
+                else if (percent <= 70) updateProgress(percent, "Generating report...");
+                else updateProgress(percent, "Finalizing download...");
+            }, 200);
+        }
+
+        function getSelectedValues(type) {
+            return Array.from(filterState[type].selected);
+        }
+
+        function updateHiddenInput(type) {
+            document.getElementById(type).value = getSelectedValues(type).join(",");
+        }
+
+        function updateSelectedDisplay(type) {
+            const container = document.getElementById(`${type}_selected`);
+            const selectedValues = getSelectedValues(type);
+
+            container.innerHTML = "";
+
+            if (!selectedValues.length) {
+                const placeholder = document.createElement("span");
+                placeholder.className = "placeholder";
+
+                const labels = {
+                    sol_id: "All SOL IDs",
+                    agent_code: "All agent codes",
+                    scheme_code: "All scheme codes"
+                };
+
+                placeholder.textContent = labels[type];
+                container.appendChild(placeholder);
+                return;
+            }
+
+            selectedValues.forEach(value => {
+                const tag = document.createElement("span");
+                tag.className = "selection-tag";
+
+                const text = document.createElement("span");
+                text.textContent = value;
+
+                const removeBtn = document.createElement("button");
+                removeBtn.type = "button";
+                removeBtn.className = "tag-remove";
+                removeBtn.innerHTML = "×";
+                removeBtn.setAttribute("aria-label", `Remove ${value}`);
+
+                removeBtn.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    filterState[type].selected.delete(value);
+                    updateHiddenInput(type);
+                    updateSelectedDisplay(type);
+                    renderOptions(type, document.getElementById(`${type}_search`).value);
+                });
+
+                tag.appendChild(text);
+                tag.appendChild(removeBtn);
+                container.appendChild(tag);
+            });
+        }
+
+
+        function renderOptions(type, searchText = "") {
+            const optionList = document.getElementById(`${type}_options`);
+            const query = searchText.trim().toLowerCase();
+
+            const matchingValues = filterState[type].values.filter(value =>
+                value.toLowerCase().includes(query)
+            );
+
+            optionList.innerHTML = "";
+
+            if (!matchingValues.length) {
+                optionList.innerHTML = '<div class="empty-options">No matching values found.</div>';
+                return;
+            }
+
+            matchingValues.forEach(value => {
+                const label = document.createElement("div");
+                label.className = "option-row";
+                label.style.cursor = "pointer";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = value;
+                checkbox.checked = filterState[type].selected.has(value);
+                checkbox.style.pointerEvents = "none";
+
+                checkbox.addEventListener("change", function () {
+                    if (checkbox.checked) {
+                        filterState[type].selected.add(value);
+                    } else {
+                        filterState[type].selected.delete(value);
+                    }
+
+                    updateHiddenInput(type);
+                    updateSelectedDisplay(type);
+                });
+
+                const text = document.createElement("span");
+                text.textContent = value;
+                text.style.flex = "1";
+
+                label.appendChild(checkbox);
+                label.appendChild(text);
+
+                // Click anywhere on the row toggles selection
+                label.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event("change"));
+                });
+
+                optionList.appendChild(label);
+            });
+        }
+
+        function closeAllDropdowns(exceptType = null) {
+            ["sol_id", "agent_code", "scheme_code"].forEach(type => {
+                if (type !== exceptType) {
+                    document.getElementById(`${type}_panel`).hidden = true;
+                }
+            });
+        }
+
+
+        function setupMultiSelect(type) {
+            const multiSelect = document.querySelector(`.multi-select[data-filter="${type}"]`);
+            const toggle = document.querySelector(`[data-toggle="${type}"]`);
+            const panel = document.getElementById(`${type}_panel`);
+            const searchInput = document.getElementById(`${type}_search`);
+
+            // Click anywhere on the multi-select field opens dropdown
+            multiSelect.addEventListener("click", function (event) {
+                // Don't open if clicking on already selected tag's remove button
+                if (event.target.classList.contains("tag-remove")) {
+                    return;
+                }
+
+                const willOpen = panel.hidden;
+                closeAllDropdowns(type);
+                panel.hidden = !willOpen;
+
+                if (willOpen) {
+                    searchInput.focus();
+                    searchInput.select();
+                    renderOptions(type, searchInput.value);
+                }
+            });
+
+            toggle.addEventListener("click", function (event) {
+                event.stopPropagation();
+                const willOpen = panel.hidden;
+                closeAllDropdowns(type);
+                panel.hidden = !willOpen;
+
+                if (willOpen) {
+                    searchInput.focus();
+                    searchInput.select();
+                    renderOptions(type, searchInput.value);
+                }
+            });
+
+            searchInput.addEventListener("click", function (event) {
+                event.stopPropagation();
+            });
+
+            searchInput.addEventListener("input", function () {
+                renderOptions(type, searchInput.value);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener("click", function (event) {
+                if (!multiSelect.contains(event.target)) {
+                    panel.hidden = true;
+                    searchInput.value = "";
+                    renderOptions(type, "");
+                }
+            });
+
+            document.querySelector(`[data-select-all="${type}"]`)
+                .addEventListener("click", function () {
+                    filterState[type].values.forEach(value => {
+                        filterState[type].selected.add(value);
+                    });
+
+                    updateHiddenInput(type);
+                    updateSelectedDisplay(type);
+                    renderOptions(type, searchInput.value);
+                });
+
+            document.querySelector(`[data-clear-all="${type}"]`)
+                .addEventListener("click", function () {
+                    filterState[type].selected.clear();
+
+                    updateHiddenInput(type);
+                    updateSelectedDisplay(type);
+                    renderOptions(type, searchInput.value);
+                });
+        }
+        async function apiCall(method, args = {}) {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+                || getCookie("csrf_token")
+                || getCookie("X-Frappe-CSRF-Token");
+
+            const queryString = new URLSearchParams(args).toString();
+            const url = queryString ? `/api/method/${method}?${queryString}` : `/api/method/${method}`;
+
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Frappe-CSRF-Token": csrfToken
+                },
+                credentials: "same-origin"
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(parseErrorMessage(result, "API call failed"));
+            }
+
+            return result.message;
+        }
+
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : null;
+        }
+
+        function parseDDMMYYYY(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split("-");
+            if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return null;
+        }
+
+        function setupDateInput(inputId) {
+            const input = document.getElementById(inputId);
+
+            input.addEventListener("input", function () {
+                let value = input.value.replace(/\D/g, "");
+
+                if (value.length > 8) {
+                    value = value.slice(0, 8);
+                }
+
+                if (value.length >= 5) {
+                    value = `${value.slice(0, 2)}-${value.slice(2, 4)}-${value.slice(4)}`;
+                } else if (value.length >= 3) {
+                    value = `${value.slice(0, 2)}-${value.slice(2)}`;
+                }
+
+                input.value = value;
+            });
+
+            input.addEventListener("blur", function () {
+                const value = input.value;
+                if (value && /^\d{2}-\d{2}-\d{4}$/.test(value)) {
+                    const [day, month, year] = value.split("-").map(Number);
+                    const date = new Date(year, month - 1, day);
+
+                    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+                        input.value = "";
+                        showError("Invalid date. Please use DD-MM-YYYY format.");
+                    }
+                }
+            });
+        }
+
+        async function loadFilterOptions() {
+            try {
+                clearError();
+                downloadBtn.disabled = true;
+
+                const result = await apiCall(
+                    "banking_api.www.commission-report.get_commission_report_options"
+                );
+                const options = result || {};
+
+                filterState.sol_id.values = Array.isArray(options.sol_ids)
+                    ? options.sol_ids
+                    : [];
+
+                filterState.agent_code.values = Array.isArray(options.agent_codes)
+                    ? options.agent_codes
+                    : [];
+
+                filterState.scheme_code.values = Array.isArray(options.scheme_codes)
+                    ? options.scheme_codes
+                    : [];
+
+                ["sol_id", "agent_code", "scheme_code"].forEach(type => {
+                    updateHiddenInput(type);
+                    updateSelectedDisplay(type);
+                    renderOptions(type);
+                });
+
+                downloadBtn.disabled = false;
+            } catch (error) {
+                console.error("Unable to load Commission report filters:", error);
+
+                showError(
+                    "Could not load SOL ID, Agent Code, and Scheme Code values. Please refresh the page."
+                );
+            }
+        }
+
+        document.addEventListener("click", function (event) {
+            if (!event.target.closest(".multi-select")) {
+                closeAllDropdowns();
+            }
+        });
+
+        // setupDateInput("from_date");
+        // setupDateInput("to_date");
+
+        ["sol_id", "agent_code", "scheme_code"].forEach(setupMultiSelect);
+
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            clearError();
+
+            const fromDate = document.getElementById("from_date").value;
+            const toDate = document.getElementById("to_date").value;
+
+            if (!fromDate || !toDate) {
+                showError("Please select both From Date and To Date.");
+                return;
+            }
+
+            // Convert YYYY-MM-DD to DD-MM-YYYY for backend
+            const fromParts = fromDate.split("-");
+            const toParts = toDate.split("-");
+            const fromDateDDMMYYYY = `${fromParts[2]}-${fromParts[1]}-${fromParts[0]}`;
+            const toDateDDMMYYYY = `${toParts[2]}-${toParts[1]}-${toParts[0]}`;
+
+            if (fromDate > toDate) {
+                showError("From Date cannot be later than To Date.");
+                return;
+            }
+
+            const params = new URLSearchParams({
+                from_date: fromDateDDMMYYYY,
+                to_date: toDateDDMMYYYY,
+                sol_id: document.getElementById("sol_id").value,
+                agent_code: document.getElementById("agent_code").value,
+                scheme_code: document.getElementById("scheme_code").value
+            });
+
+            // const downloadUrl =
+            //     "/api/method/banking_api.www.commission-report.download_commission_report?"
+            //     + params.toString();
+
+            const reportType = document.getElementById("report_type").value;
+            const downloadMethod = REPORT_TYPE_METHODS[reportType] || REPORT_TYPE_METHODS.commission_detailed_report;
+
+            const downloadUrl =
+                "/api/method/" + downloadMethod + "?"
+                + params.toString();
+
+            downloadBtn.disabled = true;
+            showProgressPopup();
+            startFakeProgress();
+
+            try {
+                const response = await fetch(downloadUrl, {
+                    method: "GET",
+                    credentials: "same-origin"
+                });
+
+                const contentType = response.headers.get("Content-Type") || "";
+
+                if (!response.ok) {
+                    let errPayload = "Failed to generate report. Please try again.";
+                    try {
+                        if (contentType.includes("application/json")) {
+                            errPayload = await response.json();
+                        } else {
+                            errPayload = await response.text();
+                        }
+                    } catch (e) { /* keep default message */ }
+                    throw new Error(parseErrorMessage(errPayload, "Failed to generate report. Please try again."));
+                }
+
+                // Frappe may return JSON error with 200 status — detect it.
+                if (contentType.includes("application/json")) {
+                    const data = await response.json();
+                    throw new Error(parseErrorMessage(data, "Failed to generate report."));
+                }
+
+                const blob = await response.blob();
+                if (!blob.size) {
+                    throw new Error("Report is empty for the selected filters.");
+                }
+
+                updateProgress(100, "Download ready.");
+                progressSpinner.classList.add("done");
+
+                // Trigger browser download from the received file.
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = blobUrl;
+                a.download = `commission_report_${fromDateDDMMYYYY.replaceAll("-", "")}_to_${toDateDDMMYYYY.replaceAll("-", "")}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 5000);
+
+                // Briefly show 100% then hide the popup.
+                setTimeout(() => {
+                    hideProgressPopup();
+                    updateProgress(0, "Preparing report...");
+                }, 600);
+            } catch (error) {
+                console.error("Download failed:", error);
+                hideProgressPopup();
+                updateProgress(0, "Preparing report...");
+                showError(error.message || "Failed to download report. Please try again.");
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        });
+
+        loadFilterOptions();
+    </script>
+</body>
+
+</html>

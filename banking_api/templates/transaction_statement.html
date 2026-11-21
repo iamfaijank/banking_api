@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Transaction Statement - {{ ac_no }}</title>
+    <style>
+        @page {
+            margin: 1cm;
+            size: A4;
+        }
+        body {
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            color: #333;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+            font-size: 11px;
+        }
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #006768;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        .logo-cell {
+            width: 50%;
+            vertical-align: middle;
+        }
+        .bank-info-cell {
+            width: 50%;
+            text-align: right;
+            vertical-align: middle;
+            color: #006768;
+        }
+        .bank-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .statement-title {
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            font-size: 14px;
+            font-weight: bold;
+            color: #006768;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .info-section {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .info-table td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+            width: 140px;
+        }
+        .value {
+            color: #000;
+        }
+        .summary-box {
+            width: 100%;
+            margin-bottom: 20px;
+            border: 1px solid #006768;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .summary-header {
+            background-color: #006768;
+            color: white;
+            padding: 5px 10px;
+            font-weight: bold;
+        }
+        .summary-content {
+            padding: 10px;
+            display: table;
+            width: 100%;
+        }
+        .summary-item {
+            display: table-cell;
+            width: 25%;
+            text-align: center;
+            border-right: 1px solid #eee;
+        }
+        .summary-item:last-child {
+            border-right: none;
+        }
+        .summary-label {
+            font-size: 9px;
+            color: #666;
+            display: block;
+        }
+        .summary-value {
+            font-size: 12px;
+            font-weight: bold;
+            color: #006768;
+        }
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .transaction-table th {
+            background-color: #006768;
+            color: white;
+            padding: 8px 5px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #004d4e;
+        }
+        .transaction-table td {
+            padding: 7px 5px;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .amount-debit { color: #d9534f; }
+        .amount-credit { color: #5cb85c; }
+        .font-bold { font-weight: bold; }
+        
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 9px;
+            color: #888;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Bank Details -->
+        <table class="header-table">
+            <tr>
+                <td class="logo-cell">
+                    <img src="/assets/banking_api/images/sahayog_logo_2025.png" alt="Sahayog Bank Logo" style="max-height: 70px;">
+                </td>
+                <td class="bank-info-cell">
+                    <p>Branch: {{ branch_name }} ({{ branch_code }})</p>
+                    <p>Generated: {{ frappe.utils.now_datetime().strftime('%d-%m-%Y %H:%M') }}</p>
+                </td>
+            </tr>
+        </table>
+
+        <div class="statement-title">Account Transaction Statement</div>
+
+        <!-- Customer & Account Details -->
+        <div class="info-section">
+            <table class="info-table">
+                <tr>
+                    <td style="width: 55%;">
+                        <table class="info-table">
+                            <tr><td class="label">Customer Name:</td><td class="value font-bold">{{ customer_info.name or '-' }}</td></tr>
+                            <tr><td class="label">Address:</td><td class="value">{{ customer_info.address or '-' }}, {{ customer_info.city or '-' }}</td></tr>
+                            <tr><td class="label">Mobile No:</td><td class="value">{{ customer_info.telephone or '-' }}</td></tr>
+                            <tr><td class="label">Aadhar No:</td><td class="value">{{ customer_info.aadhar or '-' }}</td></tr>
+                        </table>
+                    </td>
+                    <td style="width: 45%;">
+                        <table class="info-table">
+                            <tr><td class="label">Account Number:</td><td class="value font-bold">{{ ac_no }}</td></tr>
+                            <tr><td class="label">Account Type:</td><td class="value">{{ ac_name }}</td></tr>
+                            <tr><td class="label">Currency:</td><td class="value">INR</td></tr>
+                            <tr><td class="label">Statement Period:</td><td class="value">{{ start_date }} to {{ end_date }}</td></tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="summary-box">
+            <div class="summary-header">Account Summary</div>
+            <div class="summary-content">
+                <div class="summary-item">
+                    <span class="summary-label">Opening Balance</span>
+                    <span class="summary-value">{{ "{:,.2f}".format(opening_balance|default(0)|float) }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Total Debits</span>
+                    <span class="summary-value amount-debit">
+                        {% set total_debit = transactions | map(attribute='debit') | map('float') | sum %}
+                        {{ "{:,.2f}".format(total_debit or 0) }}
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Total Credits</span>
+                    <span class="summary-value amount-credit">
+                        {% set total_credit = transactions | map(attribute='credit') | map('float') | sum %}
+                        {{ "{:,.2f}".format(total_credit or 0) }}
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Closing Balance</span>
+                    <span class="summary-value">
+                        {% if transactions %}
+                            {{ "{:,.2f}".format(transactions[-1].balance|default(0)|float) }}
+                        {% else %}
+                            {{ "{:,.2f}".format(opening_balance|default(0)|float) }}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Table -->
+        <table class="transaction-table">
+            <thead>
+                <tr>
+                    <th style="width: 12%;">Date</th>
+                    <th style="width: 38%;">Transaction Remarks</th>
+                    <th style="width: 10%;" class="text-center">Doc No.</th>
+                    <th style="width: 12%;" class="text-right">Withdrawal (Dr)</th>
+                    <th style="width: 12%;" class="text-right">Deposit (Cr)</th>
+                    <th style="width: 16%;" class="text-right">Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Opening Balance Row -->
+                <tr style="background-color: #f8f9fa; font-weight: bold;">
+                    <td>{{ start_date }}</td>
+                    <td>OPENING BALANCE</td>
+                    <td class="text-center">-</td>
+                    <td class="text-right">-</td>
+                    <td class="text-right">-</td>
+                    <td class="text-right">{{ "{:,.2f}".format(opening_balance|default(0)|float) }}</td>
+                </tr>
+                
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.transaction_date }}</td>
+                    <td style="font-size: 10px;">{{ transaction.description or '-' }}</td>
+                    <td class="text-center">{{ transaction.doc_no if transaction.doc_no and transaction.doc_no != 'None' else '-' }}</td>
+                    <td class="text-right amount-debit">
+                        {{ "{:,.2f}".format(transaction.debit|float) if transaction.debit and transaction.debit|float > 0 else '-' }}
+                    </td>
+                    <td class="text-right amount-credit">
+                        {{ "{:,.2f}".format(transaction.credit|float) if transaction.credit and transaction.credit|float > 0 else '-' }}
+                    </td>
+                    <td class="text-right font-bold">
+                        {{ "{:,.2f}".format(transaction.balance|default(0)|float) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <p>This is a computer generated statement and does not require a signature.</p>
+            <p>End of Statement</p>
+        </div>
+    </div>
+</body>
+</html>

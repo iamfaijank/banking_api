@@ -5,6 +5,15 @@ app_description = "Banking API"
 app_email = "talibsheikh16@gmail.com"
 app_license = "mit"
 
+# Fixtures
+# ------------------
+fixtures = [
+    {
+        "dt": "Email Template",
+        "filters": [["name", "=", "Finacle EDR Sync Summary"]],
+    }
+]
+
 # Apps
 # ------------------
 
@@ -145,6 +154,14 @@ app_license = "mit"
 # 	}
 # }
 
+doc_events = {
+    "Share Application": {
+        "after_insert": "banking_api.www.share_tracker.publish_share_tracker_update",
+        "on_update": "banking_api.www.share_tracker.publish_share_tracker_update",
+        "on_trash": "banking_api.www.share_tracker.publish_share_tracker_update"
+    }
+}
+
 # Scheduled Tasks
 # ---------------
 
@@ -165,6 +182,55 @@ app_license = "mit"
 # 		"banking_api.tasks.monthly"
 # 	],
 # }
+
+scheduler_events = {
+    # run share application sync and database integration hourly sync
+    "hourly": [
+        "banking_api.banking_api.doctype.share_application_settings.share_application_settings.run_share_application_sync_manual",
+        "banking_api.banking_api.doctype.database_integration.database_integration.execute_hourly_sync"
+    ],
+    "daily": [
+        "banking_api.banking_api.doctype.database_integration.database_integration.execute_daily_sync",
+        "banking_api.banking_api.doctype.commission.commission.mark_due_deferred_commissions"
+    ],
+
+    "cron": {
+        # Daily Commission auto-fetch at
+        # "0 2 * * *": [
+        #     "banking_api.banking_api.doctype.commission.commission.fetch_and_create_commission"
+        # ],
+
+        # "30 2 * * *": [
+        #     "banking_api.banking_api.doctype.commission.commission.calculate_commission_for_all"
+        # ],
+
+        # sync employees to finacle every night at 2 AM
+        # "0 2 * * *": [
+        #     "banking_api.finacle_sync.sync_employees_to_finacle"
+        # ],
+
+        # run share application sync and payment
+        "0 11,14,17 * * 1-6": [
+            "banking_api.banking_api.doctype.share_application_settings.share_application_settings.run_bulk_share_application_payment"
+        ],
+
+        # retry share application payment
+        "0 10,16 * * 1-6": [
+            "banking_api.banking_api.doctype.share_application_settings.share_application_settings.retry_share_application_payment"
+        ],
+
+        # "30 10 * * *": [
+        #     "banking_api.banking_api.doctype.commission.commission.fetch_and_create_commission"
+        # ],
+
+
+        # "0 11 * * *": [
+        #     "banking_api.banking_api.doctype.commission.commission.calculate_commission_for_all"
+        # ]
+
+
+    }
+}
 
 # Testing
 # -------
@@ -246,4 +312,3 @@ app_license = "mit"
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

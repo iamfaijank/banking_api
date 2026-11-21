@@ -1,0 +1,281 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "creation": "2026-07-27 16:25:41.544093",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "date",
+  "agent_code",
+  "agent_operative_account",
+  "deposit_amount",
+  "tenure_months",
+  "sol_id",
+  "scheme_code",
+  "group_name",
+  "demand",
+  "pan_card",
+  "remarks",
+  "agent_total_eligible_collection",
+  "tds",
+  "netpay",
+  "pan_status",
+  "deduction",
+  "column_break_ajmr",
+  "agent_name",
+  "customer_account_name",
+  "customer_account_number",
+  "account_opening_date",
+  "tenure_days",
+  "sol_description",
+  "scheme_description",
+  "collection",
+  "eligible_amount",
+  "commission_amount",
+  "security_deposit",
+  "cif",
+  "agent_security_account",
+  "agent_saving_account",
+  "final_net_pay",
+  "section_break_vlms",
+  "commission_items"
+ ],
+ "fields": [
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Date",
+   "search_index": 1
+  },
+  {
+   "fieldname": "agent_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Agent Code",
+   "options": "Agent",
+   "search_index": 1
+  },
+  {
+   "fieldname": "agent_name",
+   "fieldtype": "Data",
+   "label": "Agent Name",
+   "search_index": 1
+  },
+  {
+   "fetch_from": "agent_code.agent_operative_account",
+   "fieldname": "agent_operative_account",
+   "fieldtype": "Data",
+   "label": "Agent Operative Account",
+   "search_index": 1
+  },
+  {
+   "fieldname": "customer_account_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer Account Number",
+   "search_index": 1
+  },
+  {
+   "fieldname": "tenure_months",
+   "fieldtype": "Int",
+   "label": "Tenure Months",
+   "search_index": 1
+  },
+  {
+   "fieldname": "tenure_days",
+   "fieldtype": "Int",
+   "label": "Tenure Days",
+   "search_index": 1
+  },
+  {
+   "fieldname": "sol_id",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "SOL ID",
+   "search_index": 1
+  },
+  {
+   "fieldname": "sol_description",
+   "fieldtype": "Data",
+   "label": "Sol Description",
+   "search_index": 1
+  },
+  {
+   "fieldname": "scheme_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Scheme Code",
+   "options": "Product",
+   "search_index": 1
+  },
+  {
+   "fieldname": "scheme_description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Scheme Description",
+   "search_index": 1
+  },
+  {
+   "fieldname": "collection",
+   "fieldtype": "Int",
+   "label": "Collection",
+   "search_index": 1
+  },
+  {
+   "fieldname": "demand",
+   "fieldtype": "Int",
+   "label": "Demand",
+   "search_index": 1
+  },
+  {
+   "fieldname": "pan_card",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "PAN Card",
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_ajmr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "commission_amount",
+   "fieldtype": "Data",
+   "label": "Commission Amount"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "account_opening_date",
+   "fieldtype": "Date",
+   "label": "Account Opening Date"
+  },
+  {
+   "fieldname": "eligible_amount",
+   "fieldtype": "Data",
+   "label": "Eligible Amount"
+  },
+  {
+   "fieldname": "agent_total_eligible_collection",
+   "fieldtype": "Data",
+   "label": "Agent Total Eligible Collection"
+  },
+  {
+   "fieldname": "tds",
+   "fieldtype": "Data",
+   "label": "TDS"
+  },
+  {
+   "fieldname": "security_deposit",
+   "fieldtype": "Data",
+   "label": "Security Deposit"
+  },
+  {
+   "fieldname": "netpay",
+   "fieldtype": "Data",
+   "label": "Netpay"
+  },
+  {
+   "fetch_from": "agent_code.cif",
+   "fieldname": "cif",
+   "fieldtype": "Data",
+   "label": "CIF"
+  },
+  {
+   "fetch_from": "agent_code.agent_security_account",
+   "fieldname": "agent_security_account",
+   "fieldtype": "Data",
+   "label": "Agent Security Account"
+  },
+  {
+   "default": "0",
+   "fetch_from": "agent_code.pan_status",
+   "fieldname": "pan_status",
+   "fieldtype": "Data",
+   "label": "PAN Status"
+  },
+  {
+   "fieldname": "customer_account_name",
+   "fieldtype": "Data",
+   "label": "Customer Account Name",
+   "search_index": 1
+  },
+  {
+   "fieldname": "deposit_amount",
+   "fieldtype": "Int",
+   "label": "Deposit Amount",
+   "search_index": 1
+  },
+  {
+   "fieldname": "section_break_vlms",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "commission_items",
+   "fieldtype": "Table",
+   "label": "Commission Items",
+   "options": "Commission Item"
+  },
+  {
+   "fieldname": "deduction",
+   "fieldtype": "Int",
+   "label": "Deduction"
+  },
+  {
+   "fieldname": "final_net_pay",
+   "fieldtype": "Data",
+   "label": "Final Net Pay"
+  },
+  {
+   "fetch_from": "agent_code.agent_saving_account",
+   "fieldname": "agent_saving_account",
+   "fieldtype": "Data",
+   "label": "Agent Saving Account"
+  },
+  {
+   "fieldname": "group_name",
+   "fieldtype": "Data",
+   "label": "Group Name"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-05 12:00:02.832146",
+ "modified_by": "Administrator",
+ "module": "Banking Api",
+ "name": "Commission",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "agent_code",
+ "track_changes": 1
+}

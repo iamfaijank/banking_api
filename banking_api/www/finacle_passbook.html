@@ -1,0 +1,930 @@
+{% extends "templates/web.html" %}
+{% set no_header = True %}
+{% set no_footer = True %}
+{% set hide_navbar = True %}
+{% set full_width = True %}
+
+{% block title %}Account Ledger Inquiry{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block header %}{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block style %}
+{{ super() }}
+<style>
+	html, body {
+		height: 100%;
+		overflow: hidden !important;
+	}
+
+	[data-path="/finacle_passbook"] .navbar,
+	[data-path="/finacle_passbook"] .page-breadcrumbs,
+	[data-path="/finacle_passbook"] .page-header-wrapper,
+	[data-path="/finacle_passbook"] .page-footer,
+	[data-path="/finacle_passbook"] header,
+	[data-path="/finacle_passbook"] .web-footer {
+		display: none !important;
+	}
+
+	[data-path="/finacle_passbook"] .page-content-wrapper,
+	[data-path="/finacle_passbook"] .page_content,
+	[data-path="/finacle_passbook"] main,
+	[data-path="/finacle_passbook"] .container,
+	[data-path="/finacle_passbook"] .web-page,
+	[data-path="/finacle_passbook"] section.page_content,
+	[data-path="/finacle_passbook"] .layout-main-section-wrapper,
+	[data-path="/finacle_passbook"] .layout-main-section {
+		width: 100% !important;
+		max-width: none !important;
+		padding: 0 !important;
+		margin: 0 !important;
+		background: #ffffff !important;
+		height: 100% !important;
+		min-height: 0 !important;
+		overflow: hidden !important;
+	}
+
+	body[data-path="/finacle_passbook"] {
+		margin: 0;
+		background: #fff;
+		font-family: Arial, Tahoma, sans-serif;
+		color: #000;
+		overflow: hidden !important;
+	}
+
+	#ledger-screen {
+		height: 100%;
+		overflow: hidden;
+	}
+
+	.finacle-screen {
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		background: #fff;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	/* Browser chrome (mock) */
+	.browser-bar {
+		background: #f3f3f3;
+		border-bottom: 1px solid #d0d0d0;
+		font-size: 12px;
+	}
+	.browser-address-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 4px 8px;
+		border-bottom: 1px solid #d9d9d9;
+		background: #fff;
+	}
+	.browser-not-secure {
+		color: #c62828;
+		font-size: 12px;
+		white-space: nowrap;
+	}
+	.browser-url {
+		flex: 1;
+		border: 1px solid #cfcfcf;
+		border-radius: 2px;
+		padding: 2px 6px;
+		font-size: 12px;
+		color: #333;
+		background: #fff;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.ie-notice {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 4px 8px;
+		font-size: 12px;
+		color: #333;
+		background: #f7f7f7;
+	}
+	.ie-notice .ie-text { flex: 1; }
+	.ie-notice .ie-open {
+		background: #0078d4;
+		color: #fff;
+		border: 1px solid #006cbd;
+		padding: 2px 8px;
+		font-size: 12px;
+		cursor: default;
+	}
+	.ie-notice .ie-learn { color: #0066cc; text-decoration: underline; cursor: default; }
+	.ie-notice .ie-close { margin-left: 4px; color: #666; font-size: 14px; }
+
+	/* User info toolbar */
+	.user-toolbar {
+		display: flex;
+		align-items: center;
+		background: #f2f2f2;
+		border-bottom: 1px solid #d0d0d0;
+		font-size: 11px;
+		color: #222;
+		padding: 2px 6px;
+		min-height: 22px;
+	}
+	.user-toolbar .ut-item {
+		padding: 0 8px;
+		white-space: nowrap;
+	}
+	.user-toolbar .ut-sep {
+		width: 1px;
+		height: 14px;
+		background: #cfcfcf;
+	}
+	.user-toolbar .ut-spacer { flex: 1; }
+	.user-toolbar .ut-icon {
+		padding: 0 6px;
+		color: #555;
+		font-size: 12px;
+		line-height: 1;
+	}
+	.user-toolbar .ut-dd::after { content: " \25BE"; font-size: 10px; color: #555; }
+
+	/* App header */
+	.app-header {
+		display: flex;
+		align-items: center;
+		background: #b9d7ea;
+		padding: 4px 8px;
+		border-bottom: 1px solid #9ec3da;
+		min-height: 38px;
+	}
+	.logo-sahayog {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.05;
+		color: #0b5c8a;
+		font-weight: bold;
+		margin-right: 16px;
+	}
+	.logo-sahayog .brand { font-size: 20px; letter-spacing: 0.5px; }
+	.logo-sahayog .tagline { font-size: 8px; font-weight: normal; color: #1d6f9f; }
+	.header-right {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.header-search {
+		display: flex;
+		align-items: center;
+		background: #fff;
+		border: 1px solid #9fc2d8;
+		height: 22px;
+		padding: 0 4px;
+		font-size: 11px;
+		color: #666;
+		min-width: 180px;
+	}
+	.header-search .placeholder { flex: 1; color: #777; }
+	.header-search input {
+		flex: 1;
+		border: none;
+		outline: none;
+		font-size: 11px;
+		font-family: Arial, Tahoma, sans-serif;
+		color: #333;
+		background: transparent;
+		padding: 0;
+		margin: 0;
+		min-width: 0;
+	}
+	.header-search input::placeholder { color: #777; }
+	.header-search .sicon { color: #666; font-size: 12px; cursor: pointer; user-select: none; }
+	.logo-finacle {
+		font-size: 18px;
+		font-weight: bold;
+		color: #003399;
+		font-family: Tahoma, Arial, sans-serif;
+		white-space: nowrap;
+	}
+	.logo-finacle span { color: #e53935; font-size: 12px; vertical-align: super; font-weight: normal; }
+	.star-icon { color: #808080; font-size: 16px; padding-left: 4px; }
+	.star-icon.connected { color: #1b5e20; }
+	.star-icon.disconnected { color: #808080; }
+
+	/* Navigation menu */
+	.nav-menu {
+		display: flex;
+		align-items: center;
+		gap: 0;
+		background: #fff;
+		border-bottom: 1px solid #cfdde8;
+		padding: 2px 4px;
+		font-size: 11px;
+	}
+	.nav-back {
+		color: #0066cc;
+		padding: 2px 6px;
+		font-size: 12px;
+	}
+	.nav-item {
+		color: #0066cc;
+		background: #fff;
+		border: 1px solid #7fb3d5;
+		padding: 1px 6px;
+		margin-right: 2px;
+		line-height: 1.4;
+		white-space: nowrap;
+	}
+	.nav-meta {
+		color: #333;
+		padding: 0 8px;
+		white-space: nowrap;
+	}
+
+	/* Content */
+	.main-content {
+		padding: 0;
+		background: #fff;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
+	}
+	.page-heading {
+		font-size: 13px;
+		font-weight: bold;
+		color: #000;
+		margin: 2px 0 4px 0;
+		padding-left: 0;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.info-panel {
+		margin-left: 0;
+		margin-right: 0;
+		border: 1px solid #a9a9a9;
+		background: #fff;
+		position: relative;
+		padding: 4px 6px 2px 6px;
+		box-sizing: border-box;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
+	}
+	.help-icon {
+		position: absolute;
+		top: 3px;
+		right: 4px;
+		width: 14px;
+		height: 14px;
+		border: 1px solid #888;
+		border-radius: 50%;
+		font-size: 10px;
+		color: #555;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: #fff;
+		line-height: 1;
+	}
+
+	.acct-grid {
+		display: flex;
+		gap: 24px;
+		padding-right: 18px;
+	}
+	.acct-col { flex: 1; }
+	.acct-row {
+		display: flex;
+		font-size: 11px;
+		line-height: 1.35;
+		margin: 0;
+	}
+	.acct-label {
+		font-weight: bold;
+		color: #000;
+		min-width: 150px;
+		white-space: nowrap;
+	}
+	.acct-value {
+		font-weight: normal;
+		color: #000;
+	}
+
+	.pagination {
+		text-align: right;
+		font-size: 11px;
+		color: #333;
+		padding: 2px 2px 1px 0;
+		margin-top: 2px;
+	}
+
+	.ledger-table-wrap {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	.ledger-table {
+		width: 100%;
+		border-collapse: collapse;
+		table-layout: fixed;
+		font-size: 10px;
+		margin-top: 1px;
+	}
+	.ledger-table th,
+	.ledger-table td {
+		border: 1px solid #b5b5b5;
+		padding: 1px 3px;
+		line-height: 1.25;
+		vertical-align: middle;
+	}
+	.ledger-table th {
+		background: #d9d9d9;
+		color: #333;
+		font-weight: bold;
+		text-align: left;
+		position: sticky;
+		top: 0;
+		z-index: 2;
+	}
+	.ledger-table tbody tr:nth-child(odd) { background: #ffffff; }
+	.ledger-table tbody tr:nth-child(even) { background: #f2f2f2; }
+	.ledger-table .col-icon { width: 22px; text-align: center; }
+	.ledger-table .col-txndt { width: 95px; }
+	.ledger-table .col-valdt { width: 95px; }
+	.ledger-table .col-inst { width: 85px; }
+	.ledger-table .col-part { width: auto; }
+	.ledger-table .col-ccy { width: 40px; text-align: center; }
+	.ledger-table .col-dr { width: 95px; text-align: right; }
+	.ledger-table .col-cr { width: 95px; text-align: right; }
+	.ledger-table .col-bal { width: 95px; text-align: right; }
+	.ledger-table td.num { text-align: right; }
+	.ledger-table td.ccy { text-align: center; }
+	.rec-icon {
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		border: 1px solid #666;
+		background: #eee;
+		vertical-align: middle;
+	}
+	.ledger-table tbody tr:hover td {
+		background: #0066cc;
+		color: #fff;
+	}
+
+	.download-wrap {
+		margin-left: 0;
+		margin-top: 4px;
+	}
+	.download-btn {
+		font-size: 11px;
+		font-family: Arial, Tahoma, sans-serif;
+		color: #000;
+		background: #f5f5f5;
+		border: 1px solid #888;
+		padding: 1px 10px;
+		border-radius: 0;
+		min-width: 36px;
+		line-height: 1.4;
+		cursor: pointer;
+	}
+
+
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div id="ledger-screen">
+<div class="finacle-screen">
+	<!-- SAHAYOG application header -->
+	<div class="app-header">
+		<div class="logo-sahayog">
+			<div class="brand">SAHAYOG</div>
+			<div class="tagline">Empowering People</div>
+		</div>
+		<div class="header-right">
+			<div class="header-search">
+				<input type="text" id="keyword-input" placeholder="Enter keyword" />
+				<span class="sicon" id="keyword-search" title="Search">&#128269;</span>
+			</div>
+			<div class="logo-finacle">Finacle</div>
+			<div class="star-icon disconnected" id="db-star">&#9734;</div>
+		</div>
+	</div>
+
+	<div class="main-content">
+		<div class="page-heading"><span>Account Ledger Inquiry</span><button type="button" class="download-btn" id="download-btn">Download</button></div>
+
+		<div class="info-panel">
+			<div class="help-icon">?</div>
+
+			<div class="acct-grid">
+				<div class="acct-col">
+					<div class="acct-row"><span class="acct-label">A/c. ID</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">A/c. Status</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">A/c. Open Date</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">GL Subhead</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">Opening Bal.</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">Closing Bal.</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">Funds in Clg.</span><span class="acct-value"></span></div>
+				</div>
+				<div class="acct-col">
+					<div class="acct-row"><span class="acct-label">A/c. Status Date</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">A/c. Close Date</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">A/c. Type</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">Available Amt.</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">Effective Available Amt.</span><span class="acct-value"></span></div>
+					<div class="acct-row"><span class="acct-label">Float Bal.</span><span class="acct-value"></span></div>
+				</div>
+			</div>
+
+			<div class="ledger-table-wrap">
+				<table class="ledger-table">
+					<thead>
+						<tr>
+							<th class="col-icon"></th>
+							<th class="col-txndt">Transaction Date</th>
+							<th class="col-valdt">Value Date</th>
+							<th class="col-inst">Instrument No</th>
+							<th class="col-part">Particulars</th>
+							<th class="col-ccy">CCY</th>
+							<th class="col-dr">Debit Amt.</th>
+							<th class="col-cr">Credit Amt.</th>
+							<th class="col-bal">Bal.</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+	var dbConnected = false;
+	var dbCheckInFlight = false;
+	var dbCheckCallbacks = [];
+	var ledgerData = null;
+
+	function updateDbStar(connected) {
+		var star = document.getElementById('db-star');
+		if (!star) return;
+		star.className = 'star-icon ' + (connected ? 'connected' : 'disconnected');
+	}
+
+	function setDbStatus(state, message) {
+		var el = document.getElementById('db-status');
+		if (el) {
+			el.className = 'search-status ' + (state || '');
+			el.textContent = message || '';
+		}
+		if (state === 'connected') {
+			updateDbStar(true);
+		} else if (state === 'failed') {
+			updateDbStar(false);
+		}
+	}
+
+	function setStatusMessage(message, state) {
+		var el = document.getElementById('db-status');
+		if (!el) return;
+		el.className = 'search-status ' + (state || '');
+		el.textContent = message || '';
+	}
+
+	function formatAmount(val) {
+		if (val === null || val === undefined || val === '') return '';
+		var num = Number(val);
+		if (isNaN(num)) return String(val);
+		return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+	}
+
+	function cleanAccountNumber(val) {
+		if (val === null || val === undefined) return '';
+		return String(val).replace(/^="?|"?$/g, '').trim();
+	}
+
+	function renderLedgerData(accountId) {
+		if (!ledgerData) return;
+
+		var rows = ledgerData.data || [];
+		var summary = ledgerData.account_summary || {};
+
+		var summaryMap = {
+			'A/c. ID': summary.ac_id || '',
+			'A/c. Status': summary.ac_status || '',
+			'A/c. Open Date': summary.ac_open_date || '',
+			'GL Subhead': summary.gl_subhead || '',
+			'Opening Bal.': summary.opening_bal || '',
+			'Closing Bal.': summary.closing_bal || '',
+			'Funds in Clg.': summary.funds_in_clg || '',
+			'A/c. Status Date': summary.ac_status_date || '',
+			'A/c. Close Date': summary.ac_close_date || '',
+			'A/c. Type': summary.ac_type || '',
+			'Available Amt.': summary.available_amt || '',
+			'Effective Available Amt.': summary.effective_available_amt || '',
+			'Float Bal.': summary.float_bal || ''
+		};
+
+		if (!summaryMap['A/c. ID'] && rows.length) {
+			var first = rows[0] || {};
+			var acctNo = cleanAccountNumber(first['ACCOUNT NUMBER'] || accountId);
+			var custName = first['CUSTOMER NAME'] || '';
+			summaryMap['A/c. ID'] = [acctNo, custName].filter(Boolean).join('  ');
+		} else if (!summaryMap['A/c. ID'] && accountId) {
+			summaryMap['A/c. ID'] = cleanAccountNumber(accountId);
+		}
+
+		document.querySelectorAll('.acct-grid .acct-row').forEach(function (row) {
+			var labelEl = row.querySelector('.acct-label');
+			var valueEl = row.querySelector('.acct-value');
+			if (!labelEl || !valueEl) return;
+			var label = (labelEl.textContent || '').trim();
+			if (Object.prototype.hasOwnProperty.call(summaryMap, label)) {
+				valueEl.textContent = summaryMap[label] || '';
+			}
+		});
+
+		var tbody = document.querySelector('.ledger-table tbody');
+		if (!tbody) return;
+		tbody.innerHTML = '';
+
+		rows.forEach(function (row, idx) {
+			var tr = document.createElement('tr');
+			var dr = Number(row['TRANSACTION DEBIT AMOUNT'] || 0);
+			var cr = Number(row['TRANSACTION CREDIT AMOUNT'] || 0);
+			var bal = row['BALANCE'];
+			var balText = bal === null || bal === undefined || bal === '' ? '' : (formatAmount(bal) + 'CR.');
+
+			function td(className, text) {
+				var cell = document.createElement('td');
+				if (className) cell.className = className;
+				cell.textContent = text == null ? '' : String(text);
+				return cell;
+			}
+
+			var iconTd = document.createElement('td');
+			iconTd.className = 'col-icon';
+			var icon = document.createElement('span');
+			icon.className = 'rec-icon';
+			iconTd.appendChild(icon);
+
+			tr.appendChild(iconTd);
+			tr.appendChild(td('', row['GL DATE'] || ''));
+			tr.appendChild(td('', row['GL DATE'] || ''));
+			tr.appendChild(td('', row['INSTRUMENT NUMBER'] || ''));
+			tr.appendChild(td('', row['PARTICULARS'] || ''));
+			tr.appendChild(td('ccy', 'INR'));
+			tr.appendChild(td('num', dr ? formatAmount(dr) : ''));
+			tr.appendChild(td('num', cr ? formatAmount(cr) : ''));
+			tr.appendChild(td('num', balText));
+
+			tbody.appendChild(tr);
+		});
+	}
+
+	function fetchAccountLedger(accountId) {
+		var method = 'banking_api.www.finacle_passbook.get_account_ledger';
+
+		function handleResponse(res) {
+			res = res || {};
+			if (res.status === 'success') {
+				ledgerData = res;
+				renderLedgerData(accountId);
+				updateDbStar(true);
+				setStatusMessage('', '');
+			} else {
+				updateDbStar(false);
+				setStatusMessage(res.message || 'Unable to fetch account ledger data.', 'failed');
+			}
+		}
+
+		function handleError(err) {
+			var msg = 'Unable to fetch account ledger data.';
+			if (err && err.message) msg = err.message;
+			updateDbStar(dbConnected);
+			setStatusMessage(msg, 'failed');
+		}
+
+		if (window.frappe && typeof frappe.call === 'function') {
+			frappe.call({
+				method: method,
+				args: { account_id: accountId },
+				callback: function (r) {
+					handleResponse(r.message || {});
+				},
+				error: function (r) {
+					var msg = 'Unable to fetch account ledger data.';
+					try {
+						if (r && r._server_messages) {
+							var sm = JSON.parse(r._server_messages);
+							if (sm && sm.length) {
+								var parsed = JSON.parse(sm[0]);
+								msg = (parsed && parsed.message) || msg;
+							}
+						} else if (r && r.message) {
+							msg = r.message;
+						} else if (r && r.responseJSON && r.responseJSON._server_messages) {
+							var sm2 = JSON.parse(r.responseJSON._server_messages);
+							if (sm2 && sm2.length) {
+								var parsed2 = JSON.parse(sm2[0]);
+								msg = (parsed2 && parsed2.message) || msg;
+							}
+						}
+					} catch (e) {}
+					updateDbStar(dbConnected);
+					setStatusMessage(msg, 'failed');
+				}
+			});
+			return;
+		}
+
+		var headers = {
+			'Accept': 'application/json',
+			'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+			'X-Frappe-CMD': method
+		};
+		var token = (window.frappe && frappe.csrf_token) || window.csrf_token;
+		if (token) {
+			headers['X-Frappe-CSRF-Token'] = token;
+		}
+
+		fetch('/api/method/' + method, {
+			method: 'POST',
+			headers: headers,
+			credentials: 'same-origin',
+			body: 'account_id=' + encodeURIComponent(accountId)
+		})
+			.then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+			.then(function (result) {
+				var data = result.data || {};
+				if (!result.ok || data.exc) {
+					var msg = 'Unable to fetch account ledger data.';
+					try {
+						if (data._server_messages) {
+							var sm = JSON.parse(data._server_messages);
+							if (sm && sm.length) {
+								var parsed = JSON.parse(sm[0]);
+								msg = (parsed && parsed.message) || msg;
+							}
+						} else if (data.exception) {
+							msg = data.exception;
+						}
+					} catch (e) {}
+					updateDbStar(dbConnected);
+					setStatusMessage(msg, 'failed');
+					return;
+				}
+				handleResponse(data.message || {});
+			})
+			.catch(handleError);
+	}
+
+	function testDbConnection(callback) {
+		if (dbCheckInFlight) {
+			if (typeof callback === 'function') dbCheckCallbacks.push(callback);
+			return;
+		}
+		dbCheckInFlight = true;
+		if (typeof callback === 'function') dbCheckCallbacks.push(callback);
+		dbConnected = false;
+		updateDbStar(false);
+		setStatusMessage('', '');
+
+		var method = 'banking_api.www.finacle_passbook.check_finacle_migration_connection';
+
+		function finish(res) {
+			res = res || {};
+			if (res.status === 'success') {
+				dbConnected = true;
+				updateDbStar(true);
+				setStatusMessage('', '');
+			} else {
+				dbConnected = false;
+				updateDbStar(false);
+				setStatusMessage('', '');
+			}
+			dbCheckInFlight = false;
+			var cbs = dbCheckCallbacks.slice();
+			dbCheckCallbacks = [];
+			cbs.forEach(function (cb) { try { cb(dbConnected, res); } catch (e) {} });
+		}
+
+		function handleError() {
+			dbConnected = false;
+			dbCheckInFlight = false;
+			updateDbStar(false);
+			setStatusMessage('', '');
+			var cbs = dbCheckCallbacks.slice();
+			dbCheckCallbacks = [];
+			cbs.forEach(function (cb) { try { cb(false, {}); } catch (e) {} });
+		}
+
+		if (window.frappe && typeof frappe.call === 'function') {
+			frappe.call({
+				method: method,
+				callback: function (r) {
+					finish(r.message || {});
+				},
+				error: handleError
+			});
+			return;
+		}
+
+		var headers = {
+			'Accept': 'application/json',
+			'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+			'X-Frappe-CMD': method
+		};
+		var token = (window.frappe && frappe.csrf_token) || window.csrf_token;
+		if (token) {
+			headers['X-Frappe-CSRF-Token'] = token;
+		}
+
+		fetch('/api/method/' + method, {
+			method: 'POST',
+			headers: headers,
+			credentials: 'same-origin',
+			body: ''
+		})
+			.then(function (r) { return r.json(); })
+			.then(function (data) { finish(data.message || {}); })
+			.catch(handleError);
+	}
+
+	function showLedger() {
+		var input = document.getElementById('keyword-input');
+		if (!input || !input.value.trim()) {
+			if (input) input.focus();
+			return;
+		}
+		var keyword = input.value.trim();
+
+		function doFetch() {
+			if (!dbConnected) {
+				updateDbStar(false);
+				setStatusMessage('', '');
+				return;
+			}
+			setStatusMessage('Fetching account ledger...', 'checking');
+			fetchAccountLedger(keyword);
+		}
+
+		if (!dbConnected) {
+			testDbConnection(function (ok) {
+				if (ok) doFetch();
+			});
+			return;
+		}
+
+		doFetch();
+	}
+
+	function fmtDateDDMMYY(val) {
+		if (!val) return '';
+		var s = String(val).trim();
+		if (s.length === 10 && s[2] === '-' && s[5] === '-') {
+			return s.substring(0, 6) + s.substring(8);
+		}
+		return s;
+	}
+
+	function fmtAmt(val) {
+		if (val === null || val === undefined || val === '') return '';
+		var num = Number(val);
+		if (isNaN(num) || num === 0) return '';
+		return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+	}
+
+	function fmtBal(val) {
+		if (val === null || val === undefined || val === '') return '';
+		var num = Number(val);
+		if (isNaN(num)) return String(val);
+		if (Math.abs(num) < 0.005) return '0.00';
+		return Math.abs(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'Cr';
+	}
+
+	function downloadLedger() {
+		var input = document.getElementById('keyword-input');
+		var accountId = input && input.value ? input.value.trim() : (ledgerData && ledgerData.account_id) || '';
+		if (!accountId) {
+			setStatusMessage('Enter keyword to download.', 'failed');
+			if (input) input.focus();
+			return;
+		}
+
+		if (!ledgerData || !ledgerData.data || !ledgerData.data.length) {
+			setStatusMessage('No data to download.', 'failed');
+			return;
+		}
+
+		if (!window.jspdf || !window.jspdf.jsPDF) {
+			setStatusMessage('PDF library not loaded. Please try again.', 'failed');
+			return;
+		}
+
+		try {
+			var jsPDF = window.jspdf.jsPDF;
+			var doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+			var head = [['Date', 'Particular', 'Cheque No.', 'Debit', 'Credit', 'Balance']];
+			var body = (ledgerData.data || []).map(function (row) {
+				var dr = Number(row['TRANSACTION DEBIT AMOUNT'] || 0);
+				var cr = Number(row['TRANSACTION CREDIT AMOUNT'] || 0);
+				return [
+					fmtDateDDMMYY(row['GL DATE'] || ''),
+					(row['PARTICULARS'] || '').toString(),
+					(row['INSTRUMENT NUMBER'] || '').toString(),
+					dr ? fmtAmt(dr) : '',
+					cr ? fmtAmt(cr) : '',
+					fmtBal(row['BALANCE'])
+				];
+			});
+
+			doc.autoTable({
+				head: head,
+				body: body,
+				startY: 40,
+				theme: 'plain',
+				tableWidth: doc.internal.pageSize.getWidth() - 56,
+				styles: {
+					font: 'helvetica',
+					fontSize: 9,
+					cellPadding: { top: 2, right: 4, bottom: 2, left: 2 },
+					textColor: 0,
+					lineColor: 0,
+					lineWidth: 0,
+					overflow: 'linebreak',
+					valign: 'top'
+				},
+				headStyles: {
+					fontStyle: 'bold',
+					textColor: 0,
+					valign: 'middle'
+				},
+				columnStyles: {
+					0: { cellWidth: 55, halign: 'left' },   // Date
+					1: { cellWidth: 215, halign: 'left' },  // Particular
+					2: { cellWidth: 65, halign: 'left' },   // Cheque No.
+					3: { cellWidth: 68, halign: 'right' },  // Debit
+					4: { cellWidth: 68, halign: 'right' },  // Credit
+					5: { cellWidth: 68, halign: 'right' }   // Balance
+				},
+				didParseCell: function (data) {
+					if (data.column.index >= 3) {
+						data.cell.styles.halign = 'right';
+					}
+				},
+				margin: { left: 28, right: 28 }
+			});
+
+			var safeId = String(cleanAccountNumber(ledgerData.account_id || accountId) || accountId).replace(/[^a-zA-Z0-9_-]/g, '_');
+			doc.save(safeId + ' HPBP.pdf');
+			setStatusMessage('', '');
+		} catch (e) {
+			setStatusMessage('Unable to generate PDF.', 'failed');
+		}
+	}
+
+	document.addEventListener('DOMContentLoaded', function () {
+		var input = document.getElementById('keyword-input');
+		var searchBtn = document.getElementById('keyword-search');
+		var downloadBtn = document.getElementById('download-btn');
+		var tbody = document.querySelector('.ledger-table tbody');
+
+		if (tbody) {
+			tbody.innerHTML = '';
+		}
+		if (input) {
+			input.value = '';
+			input.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter') {
+					showLedger();
+				}
+			});
+		}
+		if (searchBtn) {
+			searchBtn.addEventListener('click', showLedger);
+		}
+		if (downloadBtn) {
+			downloadBtn.addEventListener('click', downloadLedger);
+		}
+
+		testDbConnection();
+	});
+</script>
+{% endblock %}

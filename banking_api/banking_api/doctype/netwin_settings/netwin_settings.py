@@ -10,9 +10,20 @@ class NetwinSettings(Document):
 	@frappe.whitelist()
 	def test_connection(self):
 		try:
-			import cx_Oracle
+			import oracledb
 		except ImportError:
-			frappe.throw(_("`cx_Oracle` is not installed on this server."))
+			frappe.throw(_("`oracledb` is not installed on this server."))
+
+		client_path = self.oracle_client_path
+		try:
+			if client_path:
+				oracledb.init_oracle_client(lib_dir=client_path)
+			else:
+				oracledb.init_oracle_client()
+		except oracledb.ProgrammingError:
+			pass  # Already initialized
+		except Exception as e:
+			frappe.msgprint(_("Warning: Could not initialize Oracle Client for Thick mode. Error: {0}").format(str(e)))
 
 		username = self.username
 		password = self.get_password("password")
@@ -24,14 +35,14 @@ class NetwinSettings(Document):
 			frappe.throw(_("Please fill all fields before testing the connection."))
 
 		try:
-			dsn = cx_Oracle.makedsn(host, port, service_name=sid)
-			connection = cx_Oracle.connect(user=username, password=password, dsn=dsn)
+			dsn = oracledb.makedsn(host, port, service_name=sid)
+			connection = oracledb.connect(user=username, password=password, dsn=dsn)
 			connection.close()
 			return {
 				"status": "success",
 				"message": _("Connection successful."),
 			}
-		except cx_Oracle.DatabaseError as exc:
+		except oracledb.DatabaseError as exc:
 			error = exc.args[0] if exc.args else exc
 			message = getattr(error, "message", str(error))
 			return {

@@ -1,0 +1,184 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:aadhar",
+ "creation": "2026-10-10 12:07:26.862095",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "search_section",
+  "aadhar",
+  "column_break_count",
+  "total_cif_count",
+  "column_break_wyxm",
+  "status",
+  "column_break_cif_status",
+  "cif_status",
+  "section_break_fnvz",
+  "merge_widget",
+  "cif_details"
+ ],
+ "fields": [
+  {
+   "fieldname": "search_section",
+   "fieldtype": "Section Break",
+   "label": "CIF Identification"
+  },
+  {
+   "fieldname": "aadhar",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Aadhar",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_count",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_cif_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total CIF Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_fnvz",
+   "fieldtype": "Section Break",
+   "label": "CIF Merge & Deduplication"
+  },
+  {
+   "fieldname": "merge_widget",
+   "fieldtype": "HTML"
+  },
+  {
+   "fieldname": "cif_details",
+   "fieldtype": "Table",
+   "label": "CIF Details",
+   "options": "CIF Details"
+  },
+  {
+   "fieldname": "column_break_wyxm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nInactive",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_cif_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "cif_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "CIF Status",
+   "options": "Draft\nPending Verification\nApproved\nRejected\nNo Action Needed",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "hide_toolbar": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-15 17:48:59.857199",
+ "modified_by": "Administrator",
+ "module": "Banking Api",
+ "name": "CIF Merge",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CIF Maker",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CIF Checker",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "Green",
+   "title": "Active"
+  },
+  {
+   "color": "Red",
+   "title": "Inactive"
+  },
+  {
+   "color": "Gray",
+   "title": "Draft"
+  },
+  {
+   "color": "Orange",
+   "title": "Pending Verification"
+  },
+  {
+   "color": "Green",
+   "title": "Approved"
+  },
+  {
+   "color": "Red",
+   "title": "Rejected"
+  },
+  {
+   "color": "Blue",
+   "title": "No Action Needed"
+  }
+ ]
+}

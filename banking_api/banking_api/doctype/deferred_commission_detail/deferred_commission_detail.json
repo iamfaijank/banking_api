@@ -1,0 +1,109 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-09-02 16:06:55.313844",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "due_date",
+  "eligible_amount",
+  "status",
+  "payment_reference",
+  "security_deposit",
+  "remarks",
+  "year_no",
+  "column_break_avtt",
+  "commission_rate",
+  "gross_commission",
+  "paid_on",
+  "tds",
+  "netpay"
+ ],
+ "fields": [
+  {
+   "fieldname": "year_no",
+   "fieldtype": "Int",
+   "label": "Year No"
+  },
+  {
+   "fieldname": "commission_rate",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "% Commission Rate"
+  },
+  {
+   "fieldname": "eligible_amount",
+   "fieldtype": "Currency",
+   "label": "\u20b9 Eligible Amount"
+  },
+  {
+   "fieldname": "gross_commission",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "\u20b9 Gross Commission"
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Due Date"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "\nPending\nDue\nPaid\nSkipped"
+  },
+  {
+   "fieldname": "paid_on",
+   "fieldtype": "Date",
+   "label": "Paid On"
+  },
+  {
+   "fieldname": "payment_reference",
+   "fieldtype": "Data",
+   "label": "Payment Reference"
+  },
+  {
+   "fieldname": "tds",
+   "fieldtype": "Currency",
+   "label": "\u20b9 TDS"
+  },
+  {
+   "fieldname": "security_deposit",
+   "fieldtype": "Currency",
+   "label": "\u20b9 Security Deposit"
+  },
+  {
+   "fieldname": "netpay",
+   "fieldtype": "Currency",
+   "label": "\u20b9 Netpay"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "column_break_avtt",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-08 10:42:40.960623",
+ "modified_by": "Administrator",
+ "module": "Banking Api",
+ "name": "Deferred Commission Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
