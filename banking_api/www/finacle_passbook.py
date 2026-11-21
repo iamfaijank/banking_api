@@ -713,6 +713,42 @@ def get_statement_download_data(account_id):
 
 		closure_voucher = _safe_fetchall_dicts(cursor, CLOSURE_VOUCHER_QUERY, (account_id,))
 
+		# Agent details (best-effort: TD/RD master tables + agent master)
+		agent_code = ""
+		agent_name = ""
+		if gam_acid:
+			agent_row = _safe_fetchone_dict(cursor, """
+				SELECT agent_code
+				FROM tbaadm.tam
+				WHERE acid = %s AND agent_code IS NOT NULL AND TRIM(agent_code) <> ''
+				LIMIT 1
+			""", (gam_acid,))
+			agent_code = (agent_row.get("agent_code") or "").strip()
+			if not agent_code:
+				agent_row = _safe_fetchone_dict(cursor, """
+					SELECT agent_code
+					FROM tbaadm.td_acct_master_table
+					WHERE acid = %s AND agent_code IS NOT NULL AND TRIM(agent_code) <> ''
+					LIMIT 1
+				""", (gam_acid,))
+				agent_code = (agent_row.get("agent_code") or "").strip()
+		if agent_code:
+			agt = _safe_fetchone_dict(cursor, """
+				SELECT agent_name
+				FROM tbaadm.agt
+				WHERE agent_code = %s
+				LIMIT 1
+			""", (agent_code,))
+			agent_name = (agt.get("agent_name") or "").strip()
+			if not agent_name:
+				agt = _safe_fetchone_dict(cursor, """
+					SELECT agent_name
+					FROM tbaadm.agent_master_table
+					WHERE agent_code = %s
+					LIMIT 1
+				""", (agent_code,))
+				agent_name = (agt.get("agent_name") or "").strip()
+
 		# derive values
 		def fmt_dt(v):
 			return _format_date_display(v)
@@ -760,8 +796,8 @@ def get_statement_download_data(account_id):
 			"mop": mop,
 			"ifsc_code": "ICIC0000104",
 			"e_transaction_no": f"SAHG{_clean_acct(gam.get('foracid') or account_id)}",
-			"agent_code": "",
-			"agent_name": "",
+			"agent_code": agent_code,
+			"agent_name": agent_name,
 			"closure_voucher": closure_voucher,
 		}
 	except Exception:
