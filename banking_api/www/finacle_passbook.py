@@ -517,8 +517,21 @@ def _apply_penalty_recovery_split(data):
 				out.append(row)
 				continue
 
+			deduction_row = dict(row)
+			deduction_row["PARTICULARS"] = f"CLS Amt incl ex Int{deducted:.2f}"
+			deduction_row["INSTRUMENT NUMBER"] = ""
+			deduction_row["PENALTY RECOVERED"] = 0
+			deduction_row["BALANCE"] = 0
+			if dr > 0:
+				deduction_row["TRANSACTION DEBIT AMOUNT"] = deducted
+				deduction_row["TRANSACTION CREDIT AMOUNT"] = 0
+			else:
+				deduction_row["TRANSACTION CREDIT AMOUNT"] = deducted
+				deduction_row["TRANSACTION DEBIT AMOUNT"] = 0
+
 			closure_row["PENALTY RECOVERED"] = 0
-			# Show penalty recovery first, then closure proceeds row with original amount unchanged
+			# Show deduction row above penalty row, then closure proceeds row with original amount unchanged
+			out.append(deduction_row)
 			out.append(penalty_row)
 			out.append(closure_row)
 		else:
