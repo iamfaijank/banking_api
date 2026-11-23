@@ -530,10 +530,12 @@ def _apply_penalty_recovery_split(data):
 				deduction_row["TRANSACTION DEBIT AMOUNT"] = 0
 
 			closure_row["PENALTY RECOVERED"] = 0
-			# Show deduction row above penalty row, then closure proceeds row with original amount unchanged
+			# Show deduction row above penalty row, then penalty row.
+			# Original "Closure proceeds credited to..." row is intentionally hidden for now;
+			# keep closure_row available/commented for future use if needed.
 			out.append(deduction_row)
 			out.append(penalty_row)
-			out.append(closure_row)
+			# out.append(closure_row)
 		else:
 			out.append(row)
 
