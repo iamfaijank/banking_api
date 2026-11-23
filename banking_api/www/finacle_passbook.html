@@ -410,6 +410,17 @@
 		background-size: 400% 100%;
 		animation: skeleton-shimmer 1.2s ease-in-out infinite;
 	}
+	.skeleton-row.blank .skeleton-cell {
+		background: #ececec;
+		animation: none;
+	}
+	.no-data-cell {
+		text-align: center;
+		padding: 24px 10px !important;
+		color: #666;
+		font-size: 12px;
+		background: #fff !important;
+	}
 	@keyframes skeleton-shimmer {
 		0% { background-position: 100% 0; }
 		100% { background-position: 0 0; }
@@ -619,6 +630,11 @@
 		if (!tbody) return;
 		tbody.innerHTML = '';
 
+		if (!rows.length) {
+			renderNoData();
+			return;
+		}
+
 		rows.forEach(function (row, idx) {
 			var tr = document.createElement('tr');
 			var dr = Number(row['TRANSACTION DEBIT AMOUNT'] || 0);
@@ -676,6 +692,19 @@
 		}
 	}
 
+	function renderNoData() {
+		var tbody = document.querySelector('.ledger-table tbody');
+		if (!tbody) return;
+		tbody.innerHTML = '';
+		var tr = document.createElement('tr');
+		var td = document.createElement('td');
+		td.colSpan = 8;
+		td.className = 'no-data-cell';
+		td.textContent = 'No Data Available';
+		tr.appendChild(td);
+		tbody.appendChild(tr);
+	}
+
 	function fetchAccountLedger(accountId) {
 		var method = 'banking_api.www.finacle_passbook.get_account_ledger';
 
@@ -688,6 +717,7 @@
 				updateDbStar(true);
 				setStatusMessage('', '');
 			} else {
+				renderNoData();
 				updateDbStar(false);
 				setStatusMessage(res.message || 'Unable to fetch account ledger data.', 'failed');
 			}
@@ -697,6 +727,7 @@
 			var msg = 'Unable to fetch account ledger data.';
 			if (err && err.message) msg = err.message;
 			setTableLoading(false);
+			renderNoData();
 			updateDbStar(dbConnected);
 			setStatusMessage(msg, 'failed');
 		}
@@ -728,6 +759,7 @@
 						}
 					} catch (e) {}
 					setTableLoading(false);
+					renderNoData();
 					updateDbStar(dbConnected);
 					setStatusMessage(msg, 'failed');
 				}
@@ -768,6 +800,7 @@
 						}
 					} catch (e) {}
 					setTableLoading(false);
+					renderNoData();
 					updateDbStar(dbConnected);
 					setStatusMessage(msg, 'failed');
 					return;
@@ -862,6 +895,7 @@
 				updateDbStar(false);
 				setStatusMessage('', '');
 				setTableLoading(false);
+				renderNoData();
 				return;
 			}
 			setStatusMessage('Fetching account ledger...', 'checking');
@@ -1108,7 +1142,7 @@
 		var tbody = document.querySelector('.ledger-table tbody');
 
 		if (tbody) {
-			tbody.innerHTML = '';
+			renderNoData();
 		}
 		if (input) {
 			input.value = '';
