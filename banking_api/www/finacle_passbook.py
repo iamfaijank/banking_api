@@ -5,18 +5,82 @@ from frappe.utils.pdf import get_pdf
 
 ACCOUNT_LEDGER_QUERY = """WITH params AS (
     SELECT
-        DATE '2025-11-11' AS start_date,   -- <-- Start Date
-        DATE '2026-11-12' AS end_date,     -- <-- End Date
+        DATE '2025-11-11' AS start_date,   -- 👈 [CHANGE 1]: Statement Start Date
+        DATE '2026-11-12' AS end_date,     -- 👈 [CHANGE 2]: Statement End Date
         g.acid,
         g.foracid,
         g.acct_name,
-        g.acct_opn_date
+        g.cif_id,
+        g.sol_id,
+        s.sol_desc                                                  AS branch_name,
+        gsp.schm_desc                                               AS nature_of_account,
+        g.acct_opn_date,
+        t.maturity_date,
+        -- TAM se Penalty Details (Closure row par match karne ke liye)
+        t.penalty_recovered                                         AS tam_penalty_recovered,
+        CAST(t.lchg_time AS DATE)                                   AS tam_lchg_date,
+        g.nom_available_flg                                         AS nominee_reg,
+        ant.nom_name                                                AS nominee_name,
+        -- Joint Account Flag
+        CASE
+            WHEN rp.acct_poa_as_rec_type = 'J' THEN 'Y'
+            ELSE 'N'
+        END                                                         AS joint_account,
+        rp.acct_poa_as_rec_type                                     AS joint_rec_type,
+        g.mode_of_oper_code                                         AS mop,
+        'ICIC0000104'                                               AS ifsc_code,
+        'SAHG' || TRIM(g.foracid)                                   AS e_transaction_no,
+        d.rm_id                                                     AS agent_code,
+        get_agt.emp_name                                            AS agent_name,
+        cp.phoneno                                                  AS mobile_no,
+        TRIM(CONCAT_WS(' ', a_cust.address_line1, a_cust.address_line2, a_cust.address_line3, a_cust.city, a_cust.state, a_cust.zip)) AS customer_address
     FROM tbaadm.gam g
-    WHERE g.foracid IN (%s)
+    -- 1. Branch Details
+    LEFT JOIN tbaadm.sol s
+        ON g.sol_id = s.sol_id
+    -- 2. Nature of Account (Scheme Description)
+    LEFT JOIN tbaadm.gsp gsp
+        ON g.schm_code = gsp.schm_code
+    -- 3. Maturity Date & Penalty Details (Term Deposit / RD Master)
+    LEFT JOIN tbaadm.tam t
+        ON g.acid = t.acid
+    -- 4. Nominee Details (Safely getting 1st nominee to prevent duplicate rows)
+    LEFT JOIN (
+        SELECT acid, nom_name, ROW_NUMBER() OVER (PARTITION BY acid ORDER BY nom_srl_num) AS rn
+        FROM tbaadm.ant
+        WHERE del_flg = 'N'
+    ) ant ON g.acid = ant.acid AND ant.rn = 1
+    -- 5. Agent Code (Safely getting latest mapped agent)
+    LEFT JOIN (
+        SELECT account_number, rm_id, ROW_NUMBER() OVER (PARTITION BY account_number ORDER BY rm_start_date DESC) AS rn
+        FROM custom.dsamap
+        WHERE COALESCE(del_flg, 'N') != 'Y'
+    ) d ON g.foracid = d.account_number AND d.rn = 1
+    -- 6. Agent Name from Employee Master
+    LEFT JOIN tbaadm.get get_agt
+        ON d.rm_id = get_agt.emp_id
+    -- 7. Mobile Number from CRM
+    LEFT JOIN (
+        SELECT phone_b2kid, phoneno, ROW_NUMBER() OVER (PARTITION BY phone_b2kid ORDER BY CASE WHEN preferredflag = 'Y' THEN 1 ELSE 2 END) AS rn
+        FROM crmuser.cphone
+    ) cp ON g.cif_id = cp.phone_b2kid AND cp.rn = 1
+    -- 8. Customer Address from CRM
+    LEFT JOIN (
+        SELECT orgkey, address_line1, address_line2, address_line3, city, state, zip,
+               ROW_NUMBER() OVER (PARTITION BY orgkey ORDER BY CASE WHEN preferredaddress = 'Y' THEN 1 ELSE 2 END) AS rn
+        FROM crmuser.address
+    ) a_cust ON g.cif_id = a_cust.orgkey AND a_cust.rn = 1
+    -- 9. Joint Account Flag from crm_related_parties (rp)
+    LEFT JOIN (
+        SELECT foracid, acct_poa_as_rec_type,
+               ROW_NUMBER() OVER (PARTITION BY foracid ORDER BY CASE WHEN acct_poa_as_rec_type = 'J' THEN 1 ELSE 2 END) AS rn
+        FROM tbaadm.crm_related_parties
+    ) rp ON g.foracid = rp.foracid AND rp.rn = 1
+    WHERE g.foracid IN (%s)   -- 👈 [CHANGE 3]: Apna Account Number Dalein
       AND g.entity_cre_flg = 'Y'
 ),
 all_txns AS (
-    -- 1. Historical Posted Transactions (HTD)
+    -- 1. Historical Posted Transactions (HTD - Purane Din Ke Transactions)
     SELECT
         h.acid,
         h.tran_date,
@@ -39,7 +103,7 @@ all_txns AS (
       AND h.pstd_flg = 'Y'
       AND h.del_flg = 'N'
     UNION ALL
-    -- 2. Today's Live Transactions (DTD)
+    -- 2. Today's Live Transactions (DTD - Aaj Ke Live Transactions)
     SELECT
         d.acid,
         d.tran_date,
@@ -63,17 +127,38 @@ all_txns AS (
       AND d.del_flg = 'N'
 )
 SELECT
-    '="' || TRIM(p.foracid) || '"'                              AS "ACCOUNT NUMBER",                                           
-    p.acct_name                                                 AS "CUSTOMER NAME",
-    TO_CHAR(h.tran_date,'DD-MM-YYYY')                            AS "GL DATE",
-    h.tran_particular                                           AS "PARTICULARS",
-  --  TRIM(h.tran_id)                                             AS "TRAN ID",
-  --  TRIM(h.ref_num)                                             AS "REF NO",
-    TRIM(h.instrmnt_num)                                        AS "INSTRUMENT NUMBER",
-    h.tran_particular                                           AS "PARTICULARS",
-    CASE WHEN h.part_tran_type = 'D' THEN h.tran_amt ELSE 0 END AS "TRANSACTION DEBIT AMOUNT",
-    CASE WHEN h.part_tran_type = 'C' THEN h.tran_amt ELSE 0 END AS "TRANSACTION CREDIT AMOUNT",
---   h.crncy_code                                                AS "CRNCY CODE",
+    -- Header / Statement Information
+    '="' || TRIM(p.foracid) || '"'                                AS "ACCOUNT NUMBER",                                           
+    p.acct_name                                                   AS "CUSTOMER NAME",
+    p.cif_id                                                      AS "CUSTOMER ID",
+    p.sol_id                                                      AS "BRANCH CODE",
+    p.branch_name                                                 AS "BRANCH NAME",
+    p.nature_of_account                                           AS "NATURE OF ACCOUNT",
+    TO_CHAR(p.acct_opn_date, 'DD-MM-YYYY')                        AS "A/C OPEN DATE",
+    TO_CHAR(p.maturity_date, 'DD-MM-YYYY')                        AS "MATURITY DATE",
+    p.nominee_reg                                                 AS "NOMINEE REG",
+    p.nominee_name                                                AS "NOMINEE NAME",
+    p.joint_account                                               AS "JOINT ACCOUNT",
+    p.mop                                                         AS "MOP",
+    p.ifsc_code                                                   AS "IFSC CODE",
+    p.e_transaction_no                                            AS "E-TRANSACTION NO",
+    p.agent_code                                                  AS "AGENT CODE",
+    p.agent_name                                                  AS "AGENT NAME",
+    p.mobile_no                                                   AS "MOBILE NO",
+    p.customer_address                                            AS "ADDRESS",
+    -- Transaction Details (HTD + DTD)
+    TO_CHAR(h.tran_date, 'DD-MM-YYYY')                           AS "GL DATE",
+    h.tran_particular                                             AS "PARTICULARS",
+    TRIM(h.instrmnt_num)                                          AS "INSTRUMENT NUMBER",
+    CASE WHEN h.part_tran_type = 'D' THEN h.tran_amt ELSE 0 END   AS "TRANSACTION DEBIT AMOUNT",
+    CASE WHEN h.part_tran_type = 'C' THEN h.tran_amt ELSE 0 END   AS "TRANSACTION CREDIT AMOUNT",  
+    -- ⭐ PENALTY RECOVERED (CREDIT AMOUNT ke theek baad, sirf Closure proceeds aur matching lchg_time par)
+    CASE
+        WHEN h.tran_particular LIKE '%%Closure proceeds credited to%%'
+         AND CAST(h.tran_date AS DATE) = p.tam_lchg_date
+        THEN COALESCE(p.tam_penalty_recovered, 0)
+        ELSE 0
+    END                                                           AS "PENALTY RECOVERED",  
     ABS(
         h.acct_balance +
         CASE
@@ -81,8 +166,7 @@ SELECT
             WHEN h.part_tran_type = 'D' THEN -h.tran_amt
             ELSE 0
         END
-    )                                                           AS "BALANCE"
---   h.tran_rmks                                                 AS "REMARKS"
+    )                                                             AS "BALANCE"
 FROM params p
 JOIN all_txns h ON p.acid = h.acid
 ORDER BY
@@ -385,6 +469,65 @@ def _fetch_account_summary(cursor, account_id, ledger_data):
 	return summary
 
 
+def _apply_penalty_recovery_split(data):
+	"""Split closure-proceeds row into penalty recovery + deducted closure amount when penalty > 0."""
+	if not data:
+		return data
+
+	out = []
+	for row in data:
+		particulars = (row.get("PARTICULARS") or "")
+		try:
+			penalty = float(row.get("PENALTY RECOVERED") or 0)
+		except Exception:
+			penalty = 0.0
+
+		if "Closure proceeds credited to" in particulars and penalty > 0:
+			try:
+				dr = float(row.get("TRANSACTION DEBIT AMOUNT") or 0)
+			except Exception:
+				dr = 0.0
+			try:
+				cr = float(row.get("TRANSACTION CREDIT AMOUNT") or 0)
+			except Exception:
+				cr = 0.0
+			try:
+				bal = float(row.get("BALANCE") or 0)
+			except Exception:
+				bal = 0.0
+
+			adjusted = dict(row)
+			penalty_row = dict(row)
+			penalty_row["PARTICULARS"] = "Penalty Recovered"
+			penalty_row["INSTRUMENT NUMBER"] = ""
+			penalty_row["PENALTY RECOVERED"] = 0
+
+			if dr > 0 and dr >= penalty:
+				adjusted["TRANSACTION DEBIT AMOUNT"] = dr - penalty
+				penalty_row["TRANSACTION DEBIT AMOUNT"] = penalty
+				penalty_row["TRANSACTION CREDIT AMOUNT"] = 0
+				# original row balance is after debit dr; before dr it was bal+dr (for debit reducing balance style in this query?).
+				# Query computes BALANCE as ABS(acct_balance + effect) - keep simple: penalty happens before closure transfer.
+				penalty_row["BALANCE"] = bal + (dr - penalty)
+			elif cr > 0 and cr >= penalty:
+				adjusted["TRANSACTION CREDIT AMOUNT"] = cr - penalty
+				penalty_row["TRANSACTION CREDIT AMOUNT"] = penalty
+				penalty_row["TRANSACTION DEBIT AMOUNT"] = 0
+				penalty_row["BALANCE"] = abs(bal - (cr - penalty))
+			else:
+				out.append(row)
+				continue
+
+			adjusted["PENALTY RECOVERED"] = 0
+			# User asked: "show 2 row one with penicality recovery then the didcuted amount only"
+			out.append(penalty_row)
+			out.append(adjusted)
+		else:
+			out.append(row)
+
+	return out
+
+
 def _fetch_account_ledger_data(account_id):
 	account_id = (account_id or "").strip()
 	if not account_id:
@@ -401,6 +544,7 @@ def _fetch_account_ledger_data(account_id):
 		columns = [desc[0] for desc in cursor.description] if cursor.description else []
 		rows = cursor.fetchall() or []
 		data = [dict(zip(columns, row)) for row in rows]
+		data = _apply_penalty_recovery_split(data)
 
 		account_summary = {}
 		try:
@@ -586,7 +730,7 @@ FROM tbaadm.gam g_rd
 JOIN tbaadm.htd h_rd 
     ON g_rd.acid = h_rd.acid 
    AND h_rd.part_tran_type = 'D'
-   AND h_rd.tran_particular LIKE '%Closure proceeds%'
+   AND h_rd.tran_particular LIKE '%%Closure proceeds%%'
 -- Usi voucher ke baaki saare Legs
 JOIN tbaadm.htd h 
     ON h_rd.tran_id = h.tran_id 
