@@ -498,18 +498,21 @@ def _apply_penalty_recovery_split(data):
 
 			closure_row = dict(row)
 			penalty_row = dict(row)
-			penalty_row["PARTICULARS"] = "Penalty Recovered"
 			penalty_row["INSTRUMENT NUMBER"] = ""
 			penalty_row["PENALTY RECOVERED"] = 0
 
 			if dr > 0:
+				deducted = dr - penalty
+				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{deducted:.2f}"
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = 0
-				penalty_row["BALANCE"] = dr - penalty
+				penalty_row["BALANCE"] = deducted
 			elif cr > 0:
+				deducted = cr - penalty
+				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{deducted:.2f}"
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = 0
-				penalty_row["BALANCE"] = cr - penalty
+				penalty_row["BALANCE"] = deducted
 			else:
 				out.append(row)
 				continue
