@@ -503,13 +503,13 @@ def _apply_penalty_recovery_split(data):
 
 			if dr > 0:
 				deducted = dr - penalty
-				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{deducted:.2f}"
+				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{penalty:.2f}"
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = 0
 				penalty_row["BALANCE"] = deducted
 			elif cr > 0:
 				deducted = cr - penalty
-				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{deducted:.2f}"
+				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{penalty:.2f}"
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = 0
 				penalty_row["BALANCE"] = deducted
