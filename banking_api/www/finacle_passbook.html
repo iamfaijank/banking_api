@@ -471,7 +471,7 @@
 		</div>
 		<div class="header-right">
 			<div class="header-search">
-				<input type="text" id="keyword-input" placeholder="Enter account no" />
+				<input type="text" id="keyword-input" placeholder="Enter Account Number" />
 				<span class="sicon" id="keyword-search" title="Search">&#128269;</span>
 			</div>
 			<div class="logo-finacle">Finacle</div>
@@ -1030,7 +1030,7 @@
 		var input = document.getElementById('keyword-input');
 		var accountId = input && input.value ? input.value.trim() : (ledgerData && ledgerData.account_id) || '';
 		if (!accountId) {
-			setStatusMessage('Enter account no to download.', 'failed');
+			setStatusMessage('Enter Account Number to download.', 'failed');
 			if (input) input.focus();
 			return;
 		}
