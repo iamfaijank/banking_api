@@ -430,6 +430,33 @@
 		min-width: 36px;
 		line-height: 1.4;
 		cursor: pointer;
+		position: relative;
+		overflow: hidden;
+	}
+	.download-btn:disabled {
+		cursor: default;
+		opacity: 0.85;
+	}
+	.download-btn .btn-progress {
+		display: none;
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		height: 2px;
+		width: 100%;
+		background: #e6eef5;
+		overflow: hidden;
+	}
+	.download-btn.loading .btn-progress { display: block; }
+	.download-btn .btn-progress::after {
+		content: "";
+		position: absolute;
+		left: -40%;
+		top: 0;
+		height: 100%;
+		width: 40%;
+		background: #4a90c8;
+		animation: loading-slide 1s linear infinite;
 	}
 
 
@@ -456,7 +483,7 @@
 	</div>
 
 	<div class="main-content">
-		<div class="page-heading"><span>Account Ledger Inquiry</span><button type="button" class="download-btn" id="download-btn">Download</button></div>
+		<div class="page-heading"><span>Account Ledger Inquiry</span><button type="button" class="download-btn" id="download-btn"><span class="btn-label">Download</span><span class="btn-progress"></span></button></div>
 
 		<div class="info-panel">
 			<div class="help-icon">?</div>
@@ -1022,7 +1049,8 @@
 		}
 
 		setStatusMessage('Generating PDF...', 'checking');
-		setLoadingBar(true);
+		var downloadBtn = document.getElementById('download-btn');
+		if (downloadBtn) { downloadBtn.classList.add('loading'); downloadBtn.disabled = true; }
 
 		var method = 'banking_api.www.finacle_passbook.get_statement_download_data';
 
@@ -1036,7 +1064,7 @@
 			} catch (e) {
 				setStatusMessage('Unable to generate PDF.', 'failed');
 			} finally {
-				setLoadingBar(false);
+				if (downloadBtn) { downloadBtn.classList.remove('loading'); downloadBtn.disabled = false; }
 			}
 		}
 
@@ -1048,7 +1076,7 @@
 				error: function () {
 					try { buildStatementPdf(ledgerData, accountId); setStatusMessage('', ''); }
 					catch (e) { setStatusMessage('Unable to generate PDF.', 'failed'); }
-					finally { setLoadingBar(false); }
+					finally { if (downloadBtn) { downloadBtn.classList.remove('loading'); downloadBtn.disabled = false; } }
 				}
 			});
 			return;
@@ -1072,7 +1100,7 @@
 			.catch(function () {
 				try { buildStatementPdf(ledgerData, accountId); setStatusMessage('', ''); }
 				catch (e) { setStatusMessage('Unable to generate PDF.', 'failed'); }
-				finally { setLoadingBar(false); }
+				finally { if (downloadBtn) { downloadBtn.classList.remove('loading'); downloadBtn.disabled = false; } }
 			});
 	}
 
