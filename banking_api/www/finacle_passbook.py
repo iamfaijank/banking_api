@@ -503,13 +503,13 @@ def _apply_penalty_recovery_split(data):
 
 			if dr > 0:
 				deducted = dr - penalty
-				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{deducted:.2f}"
+				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{penalty:.2f}"
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = 0
 				penalty_row["BALANCE"] = deducted
 			elif cr > 0:
 				deducted = cr - penalty
-				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{deducted:.2f}"
+				penalty_row["PARTICULARS"] = f"CLS Amt incl ex Int{penalty:.2f}"
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = 0
 				penalty_row["BALANCE"] = deducted
@@ -517,8 +517,13 @@ def _apply_penalty_recovery_split(data):
 				out.append(row)
 				continue
 
+			acct_no = str(row.get("ACCOUNT NUMBER") or "").strip()
+			if acct_no.startswith('="') and acct_no.endswith('"'):
+				acct_no = acct_no[2:-1]
+			acct_no = acct_no.strip()
+
 			deduction_row = dict(row)
-			deduction_row["PARTICULARS"] = f"CLS Amt incl ex Int{deducted:.2f}"
+			deduction_row["PARTICULARS"] = f"{acct_no} : Closure Proceeds"
 			deduction_row["INSTRUMENT NUMBER"] = ""
 			deduction_row["PENALTY RECOVERED"] = 0
 			deduction_row["BALANCE"] = 0
