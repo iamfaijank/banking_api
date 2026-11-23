@@ -437,26 +437,23 @@
 		cursor: default;
 		opacity: 0.85;
 	}
+	.download-btn .btn-label { display: inline; }
 	.download-btn .btn-progress {
 		display: none;
-		position: absolute;
-		left: 0;
-		bottom: 0;
-		height: 2px;
-		width: 100%;
-		background: #e6eef5;
-		overflow: hidden;
+		width: 48px;
+		height: 8px;
+		vertical-align: middle;
+		background-image: radial-gradient(circle, #555 1.5px, transparent 1.5px);
+		background-size: 8px 8px;
+		background-position: 0 center;
+		animation: btn-dots 0.8s linear infinite;
 	}
-	.download-btn.loading .btn-progress { display: block; }
-	.download-btn .btn-progress::after {
-		content: "";
-		position: absolute;
-		left: -40%;
-		top: 0;
-		height: 100%;
-		width: 40%;
-		background: #4a90c8;
-		animation: loading-slide 1s linear infinite;
+	.download-btn.loading .btn-label { display: none; }
+	.download-btn.loading .btn-progress { display: inline-block; }
+	@keyframes btn-dots {
+		0% { background-position: 0 center; opacity: 0.4; }
+		50% { opacity: 1; }
+		100% { background-position: 8px center; opacity: 0.4; }
 	}
 
 
