@@ -496,32 +496,28 @@ def _apply_penalty_recovery_split(data):
 			except Exception:
 				bal = 0.0
 
-			adjusted = dict(row)
+			closure_row = dict(row)
 			penalty_row = dict(row)
 			penalty_row["PARTICULARS"] = "Penalty Recovered"
 			penalty_row["INSTRUMENT NUMBER"] = ""
 			penalty_row["PENALTY RECOVERED"] = 0
 
-			if dr > 0 and dr >= penalty:
-				adjusted["TRANSACTION DEBIT AMOUNT"] = dr - penalty
+			if dr > 0:
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = 0
-				# original row balance is after debit dr; before dr it was bal+dr (for debit reducing balance style in this query?).
-				# Query computes BALANCE as ABS(acct_balance + effect) - keep simple: penalty happens before closure transfer.
-				penalty_row["BALANCE"] = bal + (dr - penalty)
-			elif cr > 0 and cr >= penalty:
-				adjusted["TRANSACTION CREDIT AMOUNT"] = cr - penalty
+				penalty_row["BALANCE"] = bal + dr
+			elif cr > 0:
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = 0
-				penalty_row["BALANCE"] = abs(bal - (cr - penalty))
+				penalty_row["BALANCE"] = abs(bal - cr)
 			else:
 				out.append(row)
 				continue
 
-			adjusted["PENALTY RECOVERED"] = 0
-			# User asked: "show 2 row one with penicality recovery then the didcuted amount only"
+			closure_row["PENALTY RECOVERED"] = 0
+			# Show penalty recovery first, then closure proceeds row with original amount unchanged
 			out.append(penalty_row)
-			out.append(adjusted)
+			out.append(closure_row)
 		else:
 			out.append(row)
 
