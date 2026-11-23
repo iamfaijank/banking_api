@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "DBR-.##",
+ "creation": "2026-08-20 17:24:25.055329",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "database_integration",
+  "source_database",
+  "destination_database",
+  "column_break_info",
+  "status",
+  "execution_datetime",
+  "records_count",
+  "sync_from",
+  "sync_to",
+  "payload_section",
+  "synced_payload",
+  "error_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "database_integration",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Database Integration",
+   "options": "Database Integration",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_database",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Source Database",
+   "options": "Database Configuration"
+  },
+  {
+   "fieldname": "destination_database",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Destination Database",
+   "options": "Database Configuration"
+  },
+  {
+   "fieldname": "column_break_info",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "\nPending\nSuccess\nFailed"
+  },
+  {
+   "fieldname": "execution_datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Execution Datetime"
+  },
+  {
+   "fieldname": "records_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Records Count"
+  },
+  {
+   "fieldname": "sync_from",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Sync From"
+  },
+  {
+   "fieldname": "sync_to",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Sync To"
+  },
+  {
+   "fieldname": "payload_section",
+   "fieldtype": "Section Break",
+   "label": "Sync Payload & Details"
+  },
+  {
+   "description": "JSON payload listing all synced records with Sr No.",
+   "fieldname": "synced_payload",
+   "fieldtype": "Code",
+   "label": "Synced Data Payload",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "error_log",
+   "fieldtype": "Small Text",
+   "label": "Error Log / Message"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-08-20 18:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Banking Api",
+ "name": "Database Request",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

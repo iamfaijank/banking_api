@@ -1,0 +1,259 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-10-13 15:18:53.801730",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "commission_report_tab",
+  "section_break_commission_records",
+  "commission_records_html",
+  "details_tab",
+  "section_break_mncs",
+  "naming_series",
+  "amended_from",
+  "commission_reference_section",
+  "commission",
+  "payment_year",
+  "source_deferred_detail",
+  "agent_operative_account",
+  "column_break_xlxm",
+  "payment_type",
+  "due_date",
+  "agent_code",
+  "agent_saving_account",
+  "agent_scheme_section",
+  "gross_commission",
+  "security_deposit_amount",
+  "netpay_amount",
+  "column_break_fawj",
+  "tds_amount",
+  "deduction_amount",
+  "final_netpay",
+  "payment_status_section",
+  "payment_status",
+  "payment_initiated_on",
+  "paid_on",
+  "transaction_id",
+  "retry_count",
+  "failure_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_mncs",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Commission Payment",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "default": "CP-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "CP-.YYYY.-.#####"
+  },
+  {
+   "fieldname": "commission_reference_section",
+   "fieldtype": "Section Break",
+   "label": "Commission Reference"
+  },
+  {
+   "fieldname": "commission",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Commission",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_type",
+   "fieldtype": "Select",
+   "label": "Payment Type",
+   "options": "\nNormal\nDeferred",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_deferred_detail",
+   "fieldtype": "Data",
+   "label": "Source Deferred Detail",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_xlxm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "agent_scheme_section",
+   "fieldtype": "Section Break",
+   "label": "Commission Breakdown"
+  },
+  {
+   "fieldname": "payment_year",
+   "fieldtype": "Int",
+   "label": "Payment Year",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "gross_commission",
+   "fieldtype": "Currency",
+   "label": "Gross Commission"
+  },
+  {
+   "fieldname": "tds_amount",
+   "fieldtype": "Currency",
+   "label": "TDS"
+  },
+  {
+   "fieldname": "security_deposit_amount",
+   "fieldtype": "Currency",
+   "label": "Security Deposit"
+  },
+  {
+   "fieldname": "deduction_amount",
+   "fieldtype": "Currency",
+   "label": "Deduction"
+  },
+  {
+   "fieldname": "final_netpay",
+   "fieldtype": "Currency",
+   "label": "Final Net Pay"
+  },
+  {
+   "fieldname": "netpay_amount",
+   "fieldtype": "Currency",
+   "label": "Net Pay"
+  },
+  {
+   "fieldname": "column_break_fawj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "label": "Payment Status",
+   "options": "\nPending\nDue\nProcessing\nPaid\nFailed\nCancelled\nReversed\nSkipped"
+  },
+  {
+   "fieldname": "payment_initiated_on",
+   "fieldtype": "Datetime",
+   "label": "Payment Initiated On"
+  },
+  {
+   "fieldname": "paid_on",
+   "fieldtype": "Datetime",
+   "label": "Paid On"
+  },
+  {
+   "default": "0",
+   "fieldname": "retry_count",
+   "fieldtype": "Int",
+   "label": "Retry Count"
+  },
+  {
+   "fieldname": "failure_reason",
+   "fieldtype": "Code",
+   "label": "Failure Reason"
+  },
+  {
+   "fieldname": "transaction_id",
+   "fieldtype": "Data",
+   "label": "Transaction ID"
+  },
+  {
+   "fieldname": "payment_status_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Status"
+  },
+  {
+   "fieldname": "agent_code",
+   "fieldtype": "Data",
+   "label": "Agent Code"
+  },
+  {
+   "fieldname": "agent_operative_account",
+   "fieldtype": "Data",
+   "label": "Agent Operative Account",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "agent_saving_account",
+   "fieldtype": "Data",
+   "label": "Agent Saving Account",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "section_break_commission_records",
+   "fieldtype": "Section Break",
+   "label": "Linked Commission Records"
+  },
+  {
+   "fieldname": "commission_records_html",
+   "fieldtype": "HTML",
+   "label": "Commission Records"
+  },
+  {
+   "fieldname": "commission_report_tab",
+   "fieldtype": "Tab Break",
+   "label": "Commission Report"
+  },
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-13 16:16:30.206262",
+ "modified_by": "Administrator",
+ "module": "Banking Api",
+ "name": "Commission Payment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

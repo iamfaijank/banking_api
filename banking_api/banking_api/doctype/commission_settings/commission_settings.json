@@ -1,0 +1,371 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-09-10 12:46:35.428535",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "details_tab",
+  "enable_commission_payment",
+  "finacle_api_url",
+  "debit_account_number",
+  "debit_particulars",
+  "credit_particulars",
+  "last_payment_run",
+  "commission_calculation",
+  "enable_commission_calculation_section",
+  "calculate_commission",
+  "round_off_settings",
+  "round_calculated_amounts",
+  "tds_settings",
+  "enable_tds",
+  "tds_operation",
+  "tds_percentage",
+  "tds_percentage_without_valid_pan",
+  "tds_fixed_amount",
+  "tds_base",
+  "tds_maximum_amount",
+  "security_deposit_settings",
+  "enable_security_deposit",
+  "security_deposit_operation",
+  "security_deposit_percentage",
+  "security_deposit_fixed_amount",
+  "security_deposit_base",
+  "security_deposit_maximum_amount",
+  "net_pay_settings",
+  "net_pay_operation",
+  "net_pay_fixed_adjustment",
+  "net_pay_minimum_amount",
+  "net_pay_maximum_amount",
+  "agent_deduction_settings",
+  "enable_agent_deduction",
+  "agent_deduction_type",
+  "agent_deduction_limit",
+  "agent_deduction_amount",
+  "agent_deduction_percentage",
+  "agent_deduction_maximum",
+  "agent_deduction_operation",
+  "eligible_amount_scheme_groups_settings",
+  "eligible_amount_scheme_groups",
+  "demand_multiplier_settings",
+  "demand_multiplier",
+  "demand_multiplier_scheme_codes",
+  "eligible_amount_settings",
+  "eligible_amount_setting"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "fieldname": "enable_commission_payment",
+   "fieldtype": "Check",
+   "label": "Enable Commission Payment"
+  },
+  {
+   "fieldname": "finacle_api_url",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Finacle API URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "debit_account_number",
+   "fieldtype": "Data",
+   "label": "Debit Account Number",
+   "reqd": 1
+  },
+  {
+   "default": "Commission Payment Debited",
+   "fieldname": "debit_particulars",
+   "fieldtype": "Data",
+   "label": "Debit Account Particulars"
+  },
+  {
+   "default": "Agent Commission Credited",
+   "fieldname": "credit_particulars",
+   "fieldtype": "Data",
+   "label": "Credit Account Particulars"
+  },
+  {
+   "fieldname": "last_payment_run",
+   "fieldtype": "Datetime",
+   "label": "Last Payment Run",
+   "read_only": 1
+  },
+  {
+   "fieldname": "commission_calculation",
+   "fieldtype": "Tab Break",
+   "label": "Commission Calculation"
+  },
+  {
+   "default": "0",
+   "fieldname": "round_calculated_amounts",
+   "fieldtype": "Check",
+   "label": "Round Calculated Amounts"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "round_off_settings",
+   "fieldtype": "Section Break",
+   "label": "Round Off Settings"
+  },
+  {
+   "default": "2",
+   "fieldname": "tds_percentage",
+   "fieldtype": "Percent",
+   "label": "TDS Percentage"
+  },
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "default": "0",
+   "fieldname": "tds_fixed_amount",
+   "fieldtype": "Currency",
+   "label": "TDS Fixed Amount"
+  },
+  {
+   "default": "Percentage",
+   "fieldname": "tds_operation",
+   "fieldtype": "Select",
+   "label": "TDS Operation",
+   "options": "Percentage\nFixed Amount\nPercentage Plus Security Deposit\nPercentage Minus Security Deposit"
+  },
+  {
+   "default": "Commission Amount",
+   "fieldname": "tds_base",
+   "fieldtype": "Select",
+   "label": "TDS Base",
+   "options": "Commission Amount\nNet Pay Before TDS\nEligible Amount"
+  },
+  {
+   "default": "10",
+   "fieldname": "security_deposit_percentage",
+   "fieldtype": "Percent",
+   "label": "Security Deposit Percentage"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "tds_settings",
+   "fieldtype": "Section Break",
+   "label": "TDS Settings"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "security_deposit_settings",
+   "fieldtype": "Section Break",
+   "label": "Security Deposit Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "security_deposit_fixed_amount",
+   "fieldtype": "Currency",
+   "label": "Security Deposit Fixed Amount"
+  },
+  {
+   "default": "Percentage",
+   "fieldname": "security_deposit_operation",
+   "fieldtype": "Select",
+   "label": "Security Deposit Operation",
+   "options": "Percentage\nFixed Amount\nPercentage Plus TDS\nPercentage Minus TDS"
+  },
+  {
+   "default": "Commission Amount",
+   "fieldname": "security_deposit_base",
+   "fieldtype": "Select",
+   "label": "Security Deposit Base",
+   "options": "Commission Amount\nNet Pay Before Security Deposit\nEligible Amount"
+  },
+  {
+   "fieldname": "security_deposit_maximum_amount",
+   "fieldtype": "Currency",
+   "label": "Security Deposit Maximum Amount"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_security_deposit",
+   "fieldtype": "Check",
+   "label": "Enable Security Deposit"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "net_pay_settings",
+   "fieldtype": "Section Break",
+   "label": "Net Pay Settings"
+  },
+  {
+   "default": "Commission Amount - TDS - Security Deposit",
+   "fieldname": "net_pay_operation",
+   "fieldtype": "Select",
+   "label": "Net Pay Operation",
+   "options": "Commission Amount - TDS - Security Deposit\nCommission Amount - TDS\nCommission Amount - Security Deposit\nCommission Amount + TDS - Security Deposit\nCommission Amount - TDS + Security Deposit\nCommission Amount + TDS + Security Deposit\nCommission Amount + Security Deposit\nCommission Amount\nCustom Fixed Adjustment"
+  },
+  {
+   "default": "0",
+   "fieldname": "net_pay_fixed_adjustment",
+   "fieldtype": "Currency",
+   "label": "Net Pay Fixed Adjustment"
+  },
+  {
+   "fieldname": "net_pay_minimum_amount",
+   "fieldtype": "Currency",
+   "label": "Net Pay Minimum Amount"
+  },
+  {
+   "fieldname": "net_pay_maximum_amount",
+   "fieldtype": "Currency",
+   "label": "Net Pay Maximum Amount"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "agent_deduction_settings",
+   "fieldtype": "Section Break",
+   "label": "Agent Deduction Settings"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_agent_deduction",
+   "fieldtype": "Check",
+   "label": "Enable Agent Deduction"
+  },
+  {
+   "default": "Amount Above Limit",
+   "fieldname": "agent_deduction_type",
+   "fieldtype": "Select",
+   "label": "Deduction Type",
+   "options": "Amount Above Limit\nPercentage Above Limit\nFixed Amount\nPercentage Of Total"
+  },
+  {
+   "default": "150",
+   "fieldname": "agent_deduction_amount",
+   "fieldtype": "Currency",
+   "label": "Deduction Amount"
+  },
+  {
+   "default": "0",
+   "fieldname": "agent_deduction_percentage",
+   "fieldtype": "Percent",
+   "label": "Deduction Percentage"
+  },
+  {
+   "default": "1000",
+   "fieldname": "agent_deduction_limit",
+   "fieldtype": "Currency",
+   "label": "Deduction Limit"
+  },
+  {
+   "fieldname": "agent_deduction_maximum",
+   "fieldtype": "Currency",
+   "label": "Deduction Maximum"
+  },
+  {
+   "default": "Subtract",
+   "fieldname": "agent_deduction_operation",
+   "fieldtype": "Select",
+   "label": "Deduction Operation",
+   "options": "Subtract\nAdd"
+  },
+  {
+   "fieldname": "tds_maximum_amount",
+   "fieldtype": "Currency",
+   "label": "TDS Maximum Amount"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_tds",
+   "fieldtype": "Check",
+   "label": "Enable TDS"
+  },
+  {
+   "default": "20",
+   "fieldname": "tds_percentage_without_valid_pan",
+   "fieldtype": "Percent",
+   "label": "TDS Percentage Without Valid PAN"
+  },
+  {
+   "default": "\"\"",
+   "description": "One group per line. Separate scheme codes with commas. Example: 2015,2016,2017,2018",
+   "fieldname": "eligible_amount_scheme_groups",
+   "fieldtype": "Small Text",
+   "label": "Eligible Amount Scheme Groups"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "eligible_amount_scheme_groups_settings",
+   "fieldtype": "Section Break",
+   "label": "Eligible Amount Scheme Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "calculate_commission",
+   "fieldtype": "Check",
+   "label": "Calculate Commission"
+  },
+  {
+   "fieldname": "enable_commission_calculation_section",
+   "fieldtype": "Section Break",
+   "label": "Enable Commission Calculation"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "demand_multiplier_settings",
+   "fieldtype": "Section Break",
+   "label": "Demand Multiplier Settings"
+  },
+  {
+   "default": "3",
+   "description": "Demand multiplier factor for selected schemes (e.g. 3)",
+   "fieldname": "demand_multiplier",
+   "fieldtype": "Float",
+   "label": "Demand Multiplier"
+  },
+  {
+   "default": "",
+   "description": "Scheme codes separated by comma or new line. Example: 2005, 2006, 2010",
+   "fieldname": "demand_multiplier_scheme_codes",
+   "fieldtype": "Small Text",
+   "label": "Selected Scheme Codes for Multiplier"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "eligible_amount_settings",
+   "fieldtype": "Section Break",
+   "label": "Eligible Amount Settings"
+  },
+  {
+   "default": "Whichever is minimum demand or collection",
+   "description": "Select whether eligible amount should be minimum or maximum of demand and collection",
+   "fieldname": "eligible_amount_setting",
+   "fieldtype": "Select",
+   "label": "Eligible Amount Setting",
+   "options": "Whichever is minimum demand or collection\nWhichever is maximum demand or collection"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-05 13:45:18.993412",
+ "modified_by": "Administrator",
+ "module": "Banking Api",
+ "name": "Commission Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,209 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "DBI-.##",
+ "creation": "2026-08-20 17:36:55.768144",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "source_database",
+  "source_query",
+  "column_break_tkwh",
+  "destination_database",
+  "destination_query",
+  "sync_details_section",
+  "is_active",
+  "sync_frequency",
+  "filter_settings_section",
+  "enable_date_filter",
+  "date_filter_column",
+  "date_filter_mode",
+  "last_n_days",
+  "column_break_filter",
+  "sync_from",
+  "sync_to",
+  "last_sync_section",
+  "last_sync_on",
+  "last_sync_status",
+  "records_processed",
+  "column_break_meta",
+  "last_sync_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "source_database",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Source Database",
+   "options": "Database Configuration",
+   "reqd": 1
+  },
+  {
+   "fieldname": "destination_database",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Destination Database",
+   "options": "Database Configuration",
+   "reqd": 1
+  },
+  {
+   "description": "Write a SELECT query to fetch data. Column names (or AS aliases) serve as placeholders in Destination Query. Supports dynamic Jinja templating (e.g. {{ days_ago(3) }}, {{ today }}, {{ add_days(today, -7) }}). Example: SELECT cust_id AS orgkey, new_pan_no AS pan FROM netwin_accounts WHERE created_on >= '{{ days_ago(3) }}';",
+   "fieldname": "source_query",
+   "fieldtype": "Code",
+   "label": "Source Query",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_tkwh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Write an UPDATE/INSERT query using %(column_name)s placeholders matching Source Query column names or aliases. Example: UPDATE crmuser.accounts SET pan = %(pan)s WHERE orgkey = %(orgkey)s AND entity_cre_flag = 'Y';",
+   "fieldname": "destination_query",
+   "fieldtype": "Code",
+   "label": "Destination Query",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sync_details_section",
+   "fieldtype": "Section Break",
+   "label": "Sync Details"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active"
+  },
+  {
+   "default": "Manual",
+   "fieldname": "sync_frequency",
+   "fieldtype": "Select",
+   "label": "Sync Frequency",
+   "options": "\nManual\nDaily\nHourly"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "filter_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Date & Time Filter Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_date_filter",
+   "fieldtype": "Check",
+   "label": "Enable Date Filter"
+  },
+  {
+   "depends_on": "eval:doc.enable_date_filter == 1",
+   "description": "Source DB column to apply date filter on (e.g. created_date, updated_at, date)",
+   "fieldname": "date_filter_column",
+   "fieldtype": "Data",
+   "label": "Filter Date Column"
+  },
+  {
+   "default": "Last N Days",
+   "depends_on": "eval:doc.enable_date_filter == 1",
+   "fieldname": "date_filter_mode",
+   "fieldtype": "Select",
+   "label": "Date Filter Mode",
+   "options": "\nLast N Days\nToday Only\nIncremental (Sync From)"
+  },
+  {
+   "default": "3",
+   "depends_on": "eval:doc.enable_date_filter == 1 && doc.date_filter_mode == 'Last N Days'",
+   "description": "Number of days back from today (e.g. 3 for past 3 days)",
+   "fieldname": "last_n_days",
+   "fieldtype": "Int",
+   "label": "Days (N)"
+  },
+  {
+   "fieldname": "column_break_filter",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.enable_date_filter == 1 && doc.date_filter_mode == 'Incremental (Sync From)'",
+   "description": "Starting pointer for incremental sync. Auto-advances after every successful sync.",
+   "fieldname": "sync_from",
+   "fieldtype": "Data",
+   "label": "Sync From"
+  },
+  {
+   "depends_on": "eval:doc.enable_date_filter == 1",
+   "fieldname": "sync_to",
+   "fieldtype": "Data",
+   "label": "Sync To (Last Processed)",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "last_sync_section",
+   "fieldtype": "Section Break",
+   "label": "Last Execution Metadata & Log"
+  },
+  {
+   "fieldname": "last_sync_on",
+   "fieldtype": "Datetime",
+   "label": "Last Sync On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_status",
+   "fieldtype": "Select",
+   "label": "Last Sync Status",
+   "options": "\nSuccess\nFailed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "records_processed",
+   "fieldtype": "Int",
+   "label": "Records Processed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_meta",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_sync_log",
+   "fieldtype": "Small Text",
+   "label": "Sync Log / Result",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "group": "Database Request",
+   "link_doctype": "Database Request",
+   "link_fieldname": "database_integration"
+  }
+ ],
+ "modified": "2026-08-20 19:42:30.000000",
+ "modified_by": "Administrator",
+ "module": "Banking Api",
+ "name": "Database Integration",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

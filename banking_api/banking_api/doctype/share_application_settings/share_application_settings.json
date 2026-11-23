@@ -1,0 +1,224 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-25 11:55:59.698822",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "share_application_sync_settings_section",
+  "enable_sync",
+  "sync_timing",
+  "sync_interval",
+  "sync_back_days",
+  "last_sync_run",
+  "column_break_vaex",
+  "sync_query",
+  "fund_transfer_settings_section",
+  "enable_fund_transfer",
+  "finacle_api_url",
+  "transfer_interval_in_minutes",
+  "transfer_batch_size",
+  "last_transfer_run",
+  "column_break_lwvi",
+  "fund_transfer_api",
+  "fund_transfer_configuration_section",
+  "share_account_gl",
+  "share_account_credit_amount",
+  "column_break_fyni",
+  "share_member_fee_gl",
+  "member_fee_credit_amount",
+  "column_break_vlie",
+  "total_debit_amount",
+  "share_certificate_configuration",
+  "share_certificate_image",
+  "proceeding_form_configuration",
+  "chairman_signature",
+  "column_break_xhzx",
+  "ceo_signature"
+ ],
+ "fields": [
+  {
+   "fieldname": "fund_transfer_api",
+   "fieldtype": "Code",
+   "in_list_view": 1,
+   "label": "Fund Transfer API"
+  },
+  {
+   "fieldname": "finacle_api_url",
+   "fieldtype": "Data",
+   "label": "Finacle API URL"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "fund_transfer_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Fund Transfer Settings"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "share_application_sync_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Share Application Sync Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_sync",
+   "fieldtype": "Check",
+   "label": "Enable Sync"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_fund_transfer",
+   "fieldtype": "Check",
+   "label": "Enable Fund Transfer"
+  },
+  {
+   "fieldname": "sync_query",
+   "fieldtype": "Code",
+   "label": "Sync Query"
+  },
+  {
+   "fieldname": "sync_interval",
+   "fieldtype": "Int",
+   "label": "Sync Interval (Hourly / Daily)"
+  },
+  {
+   "fieldname": "sync_back_days",
+   "fieldtype": "Int",
+   "label": "Sync Back Days"
+  },
+  {
+   "fieldname": "last_sync_run",
+   "fieldtype": "Datetime",
+   "label": "Last Sync Run",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transfer_interval_in_minutes",
+   "fieldtype": "Int",
+   "label": "Transfer Interval In Minutes"
+  },
+  {
+   "fieldname": "transfer_batch_size",
+   "fieldtype": "Int",
+   "label": "Transfer Batch Size"
+  },
+  {
+   "fieldname": "last_transfer_run",
+   "fieldtype": "Datetime",
+   "label": "Last Transfer Run",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "fund_transfer_configuration_section",
+   "fieldtype": "Section Break",
+   "label": "Fund Transfer Configuration"
+  },
+  {
+   "fieldname": "share_account_gl",
+   "fieldtype": "Int",
+   "label": "Share Account GL",
+   "length": 16
+  },
+  {
+   "fieldname": "share_member_fee_gl",
+   "fieldtype": "Int",
+   "label": "Share Member Fee GL",
+   "length": 16
+  },
+  {
+   "fieldname": "share_account_credit_amount",
+   "fieldtype": "Int",
+   "label": "Share Account Credit Amount"
+  },
+  {
+   "fieldname": "column_break_fyni",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "member_fee_credit_amount",
+   "fieldtype": "Int",
+   "label": "Member Fee Credit Amount"
+  },
+  {
+   "fieldname": "column_break_vlie",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_debit_amount",
+   "fieldtype": "Int",
+   "label": "Total Debit Amount"
+  },
+  {
+   "fieldname": "column_break_vaex",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_lwvi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sync_timing",
+   "fieldtype": "Select",
+   "label": "Sync Timing",
+   "options": "Hourly\nDaily"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "share_certificate_configuration",
+   "fieldtype": "Section Break",
+   "label": "Share Certificate Configuration"
+  },
+  {
+   "fieldname": "share_certificate_image",
+   "fieldtype": "Attach Image",
+   "label": "Share Certificate Image"
+  },
+  {
+   "fieldname": "proceeding_form_configuration",
+   "fieldtype": "Section Break",
+   "label": "Proceeding Form Configuration"
+  },
+  {
+   "fieldname": "chairman_signature",
+   "fieldtype": "Attach Image",
+   "label": "Chairman Signature"
+  },
+  {
+   "fieldname": "ceo_signature",
+   "fieldtype": "Attach Image",
+   "label": "CEO Signature"
+  },
+  {
+   "fieldname": "column_break_xhzx",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-08-28 17:48:09.166235",
+ "modified_by": "Administrator",
+ "module": "Banking Api",
+ "name": "Share Application Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

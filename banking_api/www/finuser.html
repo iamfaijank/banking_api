@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Finacle User Directory - Sahayog Branches</title>
+<style>
+:root{--bg:#f8faf9;--surf:#ffffff;--ink:#0f172a;--mute:#64748b;--line:#e2e8f0;--acc:#0f766e;--accbg:#ccfbf1;
+--role-bg:#f1f5f9;--role-text:#334155;--ok:#10b981;--inactive:#94a3b8;--danger:#ef4444;--danger-bg:#fee2e2;--warn:#f59e0b;--warn-bg:#fef3c7;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.3 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surf);display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)}
+h1{font-size:17px;margin:0;font-weight:700;letter-spacing:-.2px}
+#cnt{color:var(--mute);font-size:12px}
+#q{flex:1;min-width:160px;max-width:320px;margin-left:auto;padding:8px 12px;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;outline:none}
+#q:focus,.cap:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;padding:12px 14px 20px}
+#users-view{display:none;align-items:flex-start}
+.tbl-wrap{background:var(--surf);border:1px solid var(--line);border-radius:12px;overflow:clip;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.fin-table{width:100%;border-collapse:separate;border-spacing:0}
+.fin-table th{position:sticky;top:var(--hdr-h,51px);z-index:4;background:#f8fafc;color:#475569;font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;padding:11px 16px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;box-shadow:0 1px 0 var(--line)}
+.fin-table td{padding:10px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink);vertical-align:middle}
+.fin-table tr:last-child td{border-bottom:none}
+.fin-table tbody tr.user-row{cursor:pointer;transition:background .1s}
+.fin-table tbody tr.user-row:hover td{background:#e2e8f0}
+.tbl-uid{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:700;background:var(--accbg);color:var(--acc);padding:2px 8px;border-radius:6px;display:inline-block;letter-spacing:.2px}
+.tbl-name{font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:8px}
+.tbl-name .av{width:26px;height:26px;font-size:10.5px}
+.tbl-sol{font-weight:700;color:var(--acc);font-variant-numeric:tabular-nums}
+.tbl-role{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--role-bg);color:var(--role-text);display:inline-block;white-space:nowrap}
+.tbl-zone{color:var(--mute);font-size:12px}
+.user-row.hide{display:none}
+
+.view-toggle{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:2px}
+.view-btn{border:none;background:transparent;color:var(--mute);padding:5px 12px;border-radius:99px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.view-btn.on{background:var(--surf);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.cap{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:99px;border:1px solid var(--line);background:var(--surf);color:var(--ink);font:inherit;cursor:pointer;text-align:left;min-width:0;transition:border-color .12s,background .12s}
+.cap:hover{border-color:var(--acc);background:var(--accbg)}
+.cap b{flex:none;background:var(--accbg);color:var(--acc);border-radius:99px;padding:3px 8px;font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.cap span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;flex:1}
+.cap .badge-cnt{font-size:11px;font-weight:600;color:var(--mute);background:var(--bg);padding:2px 6px;border-radius:99px;flex:none}
+.cap.hide{display:none}
+#empty{display:none;padding:40px;text-align:center;color:var(--mute)}
+
+/* Drawers */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:440px;z-index:20;transform:translateX(100%);transition:transform .18s ease-out;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--surf)}
+.drawer.on{transform:none}
+.pop{height:100%;display:flex;flex-direction:column;border-left:1px solid var(--line);box-shadow:-10px 0 30px rgba(0,0,0,.08)}
+.drawer-list{flex:1;min-height:0;overflow:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:6px}
+body.dr main, body.dr #users-view{margin-right:440px}
+.cap.sel{border-color:var(--acc);background:var(--accbg)}
+
+#sum{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px 0}
+.st{padding:4px 11px;border-radius:99px;background:var(--surf);border:1px solid var(--line)}
+.sp{flex:1}
+.f{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:99px;padding:4px 11px;font:inherit;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.f.on{background:var(--ink);color:var(--surf);border-color:var(--ink)}
+.f.resigned-btn{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.f.resigned-btn:hover{background:var(--danger);color:#fff}
+.f.missing-btn{background:#eff6ff;color:#1d4ed8;border-color:#3b82f6}
+.f.missing-btn:hover{background:#2563eb;color:#fff}
+
+@media(max-width:760px){
+  .drawer{width:100%;top:auto;height:75%;transform:translateY(100%)}
+  .pop{border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0}
+  body.dr main{margin-right:0;padding-bottom:75vh}
+  .sp{display:none}
+}
+@media(prefers-reduced-motion:reduce){ .drawer{transition:none}}
+.ph{padding:14px 16px 10px;display:flex;gap:10px;align-items:flex-start}
+.ph h2{margin:0;font-size:16px}
+.ph p{margin:2px 0 0;color:var(--mute);font-size:12px}
+.ph button{margin-left:auto;border:0;background:var(--bg);color:var(--ink);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer}
+.tabs{display:flex;gap:6px;padding:0 16px 10px;flex-wrap:wrap;max-height:85px;overflow-y:auto}
+.tab{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:99px;padding:4px 10px;font:inherit;font-size:11.5px;font-weight:600;cursor:pointer}
+.tab.on{background:var(--ink);color:var(--surf);border-color:var(--ink)}
+
+.u{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px}
+.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11.5px;flex:none;background:var(--accbg);color:var(--acc)}
+.av.danger{background:var(--danger-bg);color:var(--danger)}
+.u .n{font-weight:600;font-size:13px}.u .m{color:var(--mute);font-size:11.5px}
+
+/* Resigned Action Card UI/UX */
+.rcard{background:var(--surf);border:1px solid #fecaca;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(239,68,68,.05);transition:border-color .15s ease,box-shadow .15s ease}
+.rcard:hover{border-color:#f87171;box-shadow:0 4px 12px rgba(239,68,68,.1)}
+.rcard-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rcard-user-id{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;padding:3px 8px;border-radius:6px;border:1px solid #fca5a5;display:inline-flex;align-items:center;gap:5px}
+.rcard-role{font-size:11px;font-weight:600;background:var(--role-bg);color:var(--role-text);padding:2px 7px;border-radius:99px}
+.rcard-name{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-.1px}
+.rcard-body{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;background:#fef2f2;border:1px solid #fee2e2;padding:8px 10px;border-radius:8px;font-size:11.5px}
+.rcard-row{display:flex;flex-direction:column}
+.rcard-lbl{color:var(--mute);font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+.rcard-val{color:var(--ink);font-weight:600;margin-top:1px}
+.rcard-val.alert{color:#b91c1c;font-weight:700}
+.btn-disable{background:#dc2626;color:#ffffff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .15s ease}
+.btn-disable:hover{background:#b91c1c}
+.btn-disable:disabled{background:#fca5a5;cursor:not-allowed}
+.rcard-foot{display:flex;justify-content:flex-end;margin-top:2px}
+
+/* Confirmation Modal */
+#confirm-modal{position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:99;display:none;align-items:center;justify-content:center;padding:16px}
+#confirm-modal.on{display:flex}
+.modal-box{background:var(--surf);width:min(400px,100%);border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,.2);overflow:hidden;border:1px solid var(--line)}
+.modal-head{padding:16px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.modal-head h3{margin:0;font-size:16px;font-weight:700;color:var(--ink)}
+.modal-body{padding:16px 18px;font-size:13px;line-height:1.5;color:var(--ink)}
+.modal-foot{padding:12px 18px;background:var(--bg);border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.btn-cancel{background:var(--surf);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer}
+.btn-confirm{background:#dc2626;border:none;color:#fff;border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer}
+.btn-confirm:hover{background:#b91c1c}
+.rl{margin-left:auto;border-radius:99px;padding:3px 9px;font-size:11px;font-weight:700;white-space:nowrap;background:var(--role-bg);color:var(--role-text)}
+.rl.danger{background:var(--danger);color:#fff}
+.rl.warn{background:var(--warn-bg);color:var(--warn)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:4px}
+.dot.off{background:var(--inactive)}
+.dot.red{background:var(--danger)}
+.none{padding:24px;text-align:center;color:var(--mute)}
+#srt,#uq,#rq{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surf);color:var(--ink);font:inherit;outline:none}
+#uq,#rq{display:block;margin:0 16px 10px;width:calc(100% - 32px)}
+.zh{grid-column:1/-1;font-weight:700;font-size:13px;padding:8px 2px 0;color:var(--mute)}
+.zh.hide{display:none}
+@media(max-width:520px){ #grid{grid-template-columns:repeat(2,1fr)}}
+/* Users view sidebar */
+.ut-sidebar{width:196px;flex-shrink:0;position:sticky;top:var(--hdr-h,51px);max-height:calc(100vh - var(--hdr-h,51px));overflow-y:auto;border-right:1px solid var(--line);background:var(--surf);padding:8px 0;scrollbar-width:thin}
+.ut-sb-head{padding:6px 10px 6px;display:flex;gap:4px;border-bottom:1px solid var(--line);background:var(--bg)}
+.ut-sb-tab{flex:1;border:none;background:transparent;color:var(--mute);padding:4px 6px;border-radius:6px;font:inherit;font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .12s}
+.ut-sb-tab.on{background:var(--surf);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ut-sb-item{display:flex;align-items:center;gap:8px;width:100%;padding:7px 14px;border:none;background:transparent;color:var(--ink);font:inherit;cursor:pointer;text-align:left;transition:background .1s}
+.ut-sb-item:hover{background:var(--bg)}
+.ut-sb-item.on{background:var(--accbg);color:var(--acc)}
+.ut-sb-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600}
+.ut-sb-item.on .ut-sb-label{font-weight:700}
+.ut-sb-count{font-size:11px;font-weight:700;background:var(--bg);color:var(--mute);padding:1px 6px;border-radius:99px;flex-shrink:0}
+.ut-sb-item.on .ut-sb-count{background:var(--acc);color:#fff}
+/* Users view main area */
+.ut-main{flex:1;min-width:0;height:calc(100vh - var(--hdr-h,51px));overflow:auto;padding-bottom:20px}
+.ut-bar{position:sticky;top:0;z-index:3;display:flex;gap:8px;align-items:center;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--surf)}
+.ut-main .fin-table th{top:var(--utbar-h,45px)}
+.ut-bar-label{font-size:12px;font-weight:600;color:var(--mute)}
+.ut-select{padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:12px;font-weight:600;outline:none;cursor:pointer}
+@media(max-width:760px){.ut-sidebar{width:100%;max-height:160px;position:relative;top:0;border-right:none;border-bottom:1px solid var(--line)}
+#users-view{flex-direction:column}}
+/* User detail modal */
+#user-modal{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);z-index:99;display:none;align-items:center;justify-content:center;padding:16px}
+#user-modal.on{display:flex}
+.um-box{background:var(--surf);width:min(460px,100%);border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,.18);border:1px solid var(--line);overflow:hidden}
+.um-head{padding:16px 18px 14px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
+.um-av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:17px;flex:none;background:var(--accbg);color:var(--acc)}
+.um-title{font-size:16px;font-weight:700;color:var(--ink);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.um-uid-tag{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:700;color:var(--acc);background:var(--accbg);padding:2px 8px;border-radius:6px;display:inline-block;margin-top:4px}
+.um-close{margin-left:auto;border:0;background:var(--bg);color:var(--ink);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;flex-shrink:0}
+.um-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.um-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.um-field{display:flex;flex-direction:column;gap:2px}
+.um-flabel{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mute)}
+.um-fval{font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.um-section{display:flex;flex-direction:column;gap:6px}
+.um-slabel{font-size:12px;font-weight:700;color:var(--ink)}
+.um-role-sel{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13px;outline:none;cursor:pointer;transition:border-color .15s}
+.um-role-sel:focus{border-color:var(--acc)}
+.um-foot{padding:12px 18px;background:var(--bg);border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.btn-update{background:var(--acc);border:none;color:#fff;border-radius:8px;padding:7px 18px;font-weight:700;font-size:13px;cursor:pointer;transition:background .15s}
+.btn-update:hover{background:#0d6560}
+.btn-update:disabled{background:var(--inactive);cursor:not-allowed}
+</style>
+</head>
+<body>
+<header>
+<h1>Finacle Users</h1><span id="cnt"></span>
+<div class="view-toggle">
+  <button id="tab-branches" class="view-btn on">Branches</button>
+  <button id="tab-users" class="view-btn">Users</button>
+</div>
+<input id="q" type="search" placeholder="Search by SOL ID, branch name or user..." aria-label="Search" autocomplete="off">
+<select id="srt" aria-label="Sort"><option value="code">Sort: SOL ID</option><option value="name">Sort: Branch name</option><option value="few">Sort: Fewest active users</option></select>
+<button id="grp" class="f on">Group by zone</button>
+{% if can_manage_resigned %}
+<button id="btn-missing" class="f missing-btn">
+  <span class="dot" style="background:#2563eb;"></span>HEFM <span id="missing-cnt" class="badge-cnt" style="background:#dbeafe;color:#1d4ed8;margin-left:4px;">0</span>
+</button>
+<button id="btn-resigned" class="f resigned-btn">
+  <span class="dot red"></span>Resigned Employees <span id="resigned-cnt" class="badge-cnt" style="background:#fee2e2;color:#b91c1c;margin-left:4px;">0</span>
+</button>
+{% endif %}
+<button id="exp" class="f">Export</button>
+</header>
+<main id="grid"></main>
+<div id="users-view"></div>
+<div id="empty">No records found. Try a different search term.</div>
+
+<!-- Branch Users Drawer -->
+<div id="ov" class="drawer" role="complementary" aria-label="Branch users"><div class="pop">
+<div class="ph"><div><h2 id="pt"></h2><p id="ps"></p></div><button id="x" aria-label="Close">✕</button></div>
+<div class="tabs" id="tabs"></div>
+<input id="uq" type="search" placeholder="Search by User ID, Name or Role" aria-label="Search user" autocomplete="off">
+<div id="list" class="drawer-list"></div>
+</div></div>
+
+<!-- Resigned Employees Drawer -->
+{% if can_manage_resigned %}
+<div id="ov-missing" class="drawer" role="complementary" aria-label="Missing in Finacle"><div class="pop">
+<div class="ph">
+  <div style="flex:1;min-width:0;">
+    <h2 style="color:#1d4ed8;"><span class="dot" style="background:#2563eb;"></span>Employees Missing in Finacle</h2>
+    <p id="missing-sub">Active in MySahayog/ZingHR but not present in Finacle</p>
+  </div>
+  <button id="exp-missing" class="f" style="padding:4px 10px;font-size:12px;margin-left:auto;margin-right:6px;" title="Export Missing List to CSV">Export</button>
+  <button id="x-missing" aria-label="Close">✕</button>
+</div>
+<input id="mq" type="search" placeholder="Search by Employee ID, Name or SOL ID" aria-label="Search missing" autocomplete="off" style="margin-top:12px;">
+<div id="missing-list" class="drawer-list"></div>
+</div></div>
+
+<div id="ov-resigned" class="drawer" role="complementary" aria-label="Resigned employees"><div class="pop">
+<div class="ph">
+  <div style="flex:1;min-width:0;">
+    <h2 style="color:var(--danger);"><span class="dot red"></span>Action Required: Resigned Employees</h2>
+    <p id="resigned-sub">Left in ERPNext but still ACTIVE in Finacle Production DR</p>
+  </div>
+  <button id="exp-resigned" class="f" style="padding:4px 10px;font-size:12px;margin-left:auto;margin-right:6px;" title="Export Resigned List to CSV">Export</button>
+  <button id="x-resigned" aria-label="Close">✕</button>
+</div>
+<input id="rq" type="search" placeholder="Search by Employee ID, Name or Finacle ID" aria-label="Search resigned" autocomplete="off" style="margin-top:12px;">
+<div id="resigned-list" class="drawer-list"></div>
+</div></div>
+
+<!-- Custom Confirmation Dialog -->
+<div id="confirm-modal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="dot red" style="width:10px;height:10px;"></span>
+      <h3 id="modal-title">Confirm Action</h3>
+    </div>
+    <div class="modal-body" id="modal-body">
+      Are you sure you want to disable this user in Finacle?
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="btn-modal-cancel">Cancel</button>
+      <button class="btn-confirm" id="btn-modal-confirm">Confirm Disable</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- User Detail / Role Change Modal -->
+<div id="user-modal" role="dialog" aria-modal="true">
+  <div class="um-box">
+    <div class="um-head">
+      <div class="um-av" id="um-av"></div>
+      <div style="flex:1;min-width:0;">
+        <div class="um-title" id="um-name"></div>
+        <span class="um-uid-tag" id="um-uid"></span>
+      </div>
+      <button class="um-close" id="um-close" aria-label="Close">✕</button>
+    </div>
+    <div class="um-body">
+      <div class="um-grid">
+        <div class="um-field"><span class="um-flabel">SOL ID</span><span class="um-fval" id="um-sol"></span></div>
+        <div class="um-field"><span class="um-flabel">Branch</span><span class="um-fval" id="um-branch"></span></div>
+        <div class="um-field"><span class="um-flabel">Designation</span><span class="um-fval" id="um-desig"></span></div>
+        <div class="um-field"><span class="um-flabel">Work Class</span><span class="um-fval" id="um-workclass"></span></div>
+        <div class="um-field"><span class="um-flabel">Zone</span><span class="um-fval" id="um-zone-val"></span></div>
+        <div class="um-field"><span class="um-flabel">Current Role</span><span class="um-fval" id="um-cur-role"></span></div>
+      </div>
+      {% if can_update_role %}
+      <div class="um-section">
+        <span class="um-slabel">Change Role</span>
+        <select id="um-role-sel" class="um-role-sel"></select>
+      </div>
+      {% endif %}
+    </div>
+    <div class="um-foot">
+      <button class="btn-cancel" id="um-cancel">Close</button>
+      {% if can_update_role %}
+      <button class="btn-update" id="um-update">Update Role</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+const BRANCHES = {{ (branches or []) | tojson }};
+const ALL_USERS = {{ (all_users or []) | tojson }};
+const TOTAL_RECORDS = {{ total_query_records or 1054 }};
+const CAN_DISABLE_USER = {{ (can_disable_user or false) | tojson }};
+const USERS_CACHE = {};
+let RESIGNED_CACHE = null;
+let currentTab = "branches"; // 'branches' | 'users'
+const A = {};
+
+BRANCHES.forEach(b => {
+  A[b.code] = {
+    active_total: Number(b.active_total || 0)
+  };
+});
+
+const $ = id => document.getElementById(id);
+const grid = $("grid"), usersView = $("users-view"), ov = $("ov"), ovResigned = $("ov-resigned"), ovMissing = $("ov-missing");
+let cur = null, role = "ALL";
+let sortK = "code", grouped = true;
+let utRole = "ALL", utWorkClass = "ALL", utZone = "ALL", utSidebarTab = "roles";
+const act = c => A[c] ? A[c].active_total : 0;
+
+function renderSidebarItems() {
+  const container = $("ut-sb-items");
+  if (!container) return;
+  const total = ALL_USERS.length;
+
+  if (utSidebarTab === "roles") {
+    const roleCounts = {};
+    ALL_USERS.forEach(u => {
+      const r = u.role_id || "Unknown";
+      roleCounts[r] = (roleCounts[r] || 0) + 1;
+    });
+    const roles = Object.entries(roleCounts).sort((a, b) => b[1] - a[1]);
+    container.innerHTML = [
+      `<button class="ut-sb-item${utRole === 'ALL' ? ' on' : ''}" data-val="ALL"><span class="ut-sb-label">All Roles</span><span class="ut-sb-count">${total}</span></button>`,
+      ...roles.map(([r, c]) =>
+        `<button class="ut-sb-item${utRole === r ? ' on' : ''}" data-val="${escapeHtml(r)}"><span class="ut-sb-label">${escapeHtml(r)}</span><span class="ut-sb-count">${c}</span></button>`
+      )
+    ].join("");
+  } else {
+    const wcCounts = {};
+    ALL_USERS.forEach(u => {
+      const w = u.work_class || "N/A";
+      wcCounts[w] = (wcCounts[w] || 0) + 1;
+    });
+    const wcs = Object.entries(wcCounts).sort((a, b) => b[1] - a[1]);
+    container.innerHTML = [
+      `<button class="ut-sb-item${utWorkClass === 'ALL' ? ' on' : ''}" data-val="ALL"><span class="ut-sb-label">All Work Classes</span><span class="ut-sb-count">${total}</span></button>`,
+      ...wcs.map(([w, c]) =>
+        `<button class="ut-sb-item${utWorkClass === w ? ' on' : ''}" data-val="${escapeHtml(w)}"><span class="ut-sb-label">${escapeHtml(w)}</span><span class="ut-sb-count">${c}</span></button>`
+      )
+    ].join("");
+  }
+}
+
+function buildUsers() {
+  const zoneSet = new Set();
+  ALL_USERS.forEach(u => {
+    if (u.zone) zoneSet.add(u.zone);
+  });
+  const zones = Array.from(zoneSet).sort();
+
+  const zoneOpts = ["ALL", ...zones].map(z =>
+    `<option value="${escapeHtml(z)}">${z === "ALL" ? "All Zones" : escapeHtml(z)}</option>`
+  ).join("");
+
+  usersView.innerHTML = `
+    <div class="ut-sidebar" id="ut-sidebar">
+      <div class="ut-sb-head">
+        <button id="sb-tab-roles" class="ut-sb-tab on">Roles</button>
+        <button id="sb-tab-workclass" class="ut-sb-tab">Work Class</button>
+      </div>
+      <div id="ut-sb-items"></div>
+    </div>
+    <div class="ut-main">
+      <div class="ut-bar">
+        <span class="ut-bar-label">Zone</span>
+        <select id="ut-zone" class="ut-select">${zoneOpts}</select>
+      </div>
+      <div class="tbl-wrap">
+        <table class="fin-table">
+          <thead>
+            <tr>
+              <th style="width:140px;">Finacle User ID</th>
+              <th>Employee Name</th>
+              <th>Designation</th>
+              <th>Work Class</th>
+              <th style="width:90px;">SOL ID</th>
+              <th>Branch Name</th>
+              <th>Zone</th>
+              <th>Finacle Role</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  renderSidebarItems();
+
+  $("sb-tab-roles").addEventListener("click", () => {
+    if (utSidebarTab === "roles") return;
+    utSidebarTab = "roles";
+    $("sb-tab-roles").classList.add("on");
+    $("sb-tab-workclass").classList.remove("on");
+    renderSidebarItems();
+    apply();
+  });
+
+  $("sb-tab-workclass").addEventListener("click", () => {
+    if (utSidebarTab === "workclass") return;
+    utSidebarTab = "workclass";
+    $("sb-tab-workclass").classList.add("on");
+    $("sb-tab-roles").classList.remove("on");
+    renderSidebarItems();
+    apply();
+  });
+
+  $("ut-sb-items").addEventListener("click", e => {
+    const item = e.target.closest(".ut-sb-item");
+    if (!item) return;
+    if (utSidebarTab === "roles") {
+      utRole = item.dataset.val;
+    } else {
+      utWorkClass = item.dataset.val;
+    }
+    $("ut-sb-items").querySelectorAll(".ut-sb-item").forEach(i => i.classList.toggle("on", i.dataset.val === item.dataset.val));
+    apply();
+  });
+
+  $("ut-zone").addEventListener("change", e => {
+    utZone = e.target.value;
+    apply();
+  });
+
+  const tbody = $("tbl-body");
+  const f = document.createDocumentFragment();
+
+  ALL_USERS.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.className = "user-row";
+    tr.dataset.s = (String(u.user_id||"")+" "+String(u.name||"")+" "+String(u.designation||"")+" "+String(u.work_class||"")+" "+String(u.sol_id||"")+" "+String(u.branch_name||"")+" "+String(u.role_id||"")).toLowerCase();
+    tr.dataset.uid = u.user_id || "";
+    tr.dataset.role = u.role_id || "";
+    tr.dataset.workclass = u.work_class || "N/A";
+    tr.dataset.zone = u.zone || "";
+
+    const initials = escapeHtml((u.name || u.user_id || "U").split(" ").map(w => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase());
+    tr.innerHTML = `
+      <td><span class="tbl-uid">${escapeHtml(u.user_id)}</span></td>
+      <td><span class="tbl-name"><span class="av">${initials}</span>${escapeHtml(u.name)}</span></td>
+      <td>${escapeHtml(u.designation||'N/A')}</td>
+      <td>${escapeHtml(u.work_class||'N/A')}</td>
+      <td><span class="tbl-sol">${escapeHtml(u.sol_id||'N/A')}</span></td>
+      <td>${escapeHtml(u.branch_name||'N/A')}</td>
+      <td><span class="tbl-zone">${escapeHtml(u.zone||'N/A')}</span></td>
+      <td><span class="tbl-role">${escapeHtml(u.role_id||'Finacle User')}</span></td>
+    `;
+    f.appendChild(tr);
+  });
+  tbody.appendChild(f);
+}
+
+function build() {
+  const f = document.createDocumentFragment();
+  const list = BRANCHES.slice();
+  if (sortK === "few") list.sort((a,b) => act(a.code) - act(b.code) || String(a.code).localeCompare(String(b.code)));
+  else if (sortK === "name") list.sort((a,b) => (a.name || "").localeCompare(b.name || ""));
+  else list.sort((a,b) => (Number(a.code) || 0) - (Number(b.code) || 0) || String(a.code).localeCompare(String(b.code)));
+  
+  if (grouped) list.sort((a,b) => (a.zone || "").localeCompare(b.zone || ""));
+  let lz = null; grid.textContent = "";
+  
+  list.forEach(b => {
+    if (grouped && b.zone !== lz) {
+      lz = b.zone;
+      const h = document.createElement("div");
+      h.className = "zh";
+      h.textContent = lz || "Other";
+      f.appendChild(h);
+    }
+    const e = document.createElement("button");
+    e.className = "cap";
+    e.dataset.c = b.code;
+    e.dataset.s = (String(b.code || "") + " " + String(b.name || "") + " " + String(b.district || "")).toLowerCase();
+    
+    const c = document.createElement("b");
+    c.textContent = b.code;
+    
+    const n = document.createElement("span");
+    n.textContent = b.name;
+    n.title = b.name;
+
+    const uCount = A[b.code] ? A[b.code].active_total : 0;
+    const badge = document.createElement("div");
+    badge.className = "badge-cnt";
+    badge.textContent = uCount;
+    badge.title = uCount + " active users";
+    
+    e.append(c, n, badge);
+    f.appendChild(e);
+  });
+  grid.appendChild(f);
+  const s = cur && ov.classList.contains("on") && grid.querySelector('[data-c="' + cur + '"]');
+  if (s) s.classList.add("sel");
+}
+
+grid.addEventListener("click", e => {
+  const b = e.target.closest(".cap");
+  if (b) open(b.dataset.c);
+});
+
+let t;
+function apply() {
+  const v = $("q").value.trim().toLowerCase();
+  
+  if (currentTab === "branches") {
+    let n = 0, zh = null, zc = 0;
+    for (const el of grid.children) {
+      if (el.classList.contains("zh")) {
+        if (zh) zh.classList.toggle("hide", !zc);
+        zh = el; zc = 0; continue;
+      }
+      const m = !v || el.dataset.s.includes(v);
+      el.classList.toggle("hide", !m);
+      if (m) { n++; zc++; }
+    }
+    if (zh) zh.classList.toggle("hide", !zc);
+    $("cnt").textContent = n + " branches";
+    $("empty").style.display = n ? "none" : "block";
+  } else {
+    let n = 0;
+    const tally = {};
+    const rows = $("tbl-body") ? $("tbl-body").children : [];
+    for (const el of rows) {
+      const matchText = !v || el.dataset.s.includes(v);
+      const matchRole = utRole === "ALL" || el.dataset.role === utRole;
+      const matchWorkClass = utWorkClass === "ALL" || el.dataset.workclass === utWorkClass;
+      const matchZone = utZone === "ALL" || el.dataset.zone === utZone;
+      const m = matchText && matchRole && matchWorkClass && matchZone;
+      el.classList.toggle("hide", !m);
+      if (m) { n++; }
+      // Tally for active sidebar tab
+      if (matchText && matchZone) {
+        if (utSidebarTab === "roles") {
+          if (matchWorkClass) {
+            const key = el.dataset.role || "Unknown";
+            tally[key] = (tally[key] || 0) + 1;
+          }
+        } else {
+          if (matchRole) {
+            const key = el.dataset.workclass || "N/A";
+            tally[key] = (tally[key] || 0) + 1;
+          }
+        }
+      }
+    }
+    // Update sidebar counts
+    const sidebar = $("ut-sb-items");
+    if (sidebar) {
+      const totalFiltered = Object.values(tally).reduce((a, b) => a + b, 0);
+      sidebar.querySelectorAll(".ut-sb-item").forEach(item => {
+        const val = item.dataset.val;
+        const cnt = val === "ALL" ? totalFiltered : (tally[val] || 0);
+        const countEl = item.querySelector(".ut-sb-count");
+        if (countEl) countEl.textContent = cnt;
+      });
+    }
+    $("cnt").textContent = n + " users";
+    $("empty").style.display = n ? "none" : "block";
+  }
+}
+
+function switchView(tab) {
+  currentTab = tab;
+  if (tab === "branches") {
+    $("tab-branches").classList.add("on");
+    $("tab-users").classList.remove("on");
+    grid.style.display = "grid";
+    usersView.style.display = "none";
+    $("srt").style.display = "inline-block";
+    $("grp").style.display = "inline-flex";
+    $("q").placeholder = "Search by SOL ID or branch name...";
+  } else {
+    $("tab-branches").classList.remove("on");
+    $("tab-users").classList.add("on");
+    grid.style.display = "none";
+    usersView.style.display = "flex";
+    $("srt").style.display = "none";
+    $("grp").style.display = "none";
+    $("q").placeholder = "Search by Finacle User ID, Name, SOL ID or Branch...";
+  }
+  apply();
+}
+
+$("tab-branches").onclick = () => switchView("branches");
+$("tab-users").onclick = () => switchView("users");
+
+$("q").addEventListener("input", () => {
+  clearTimeout(t);
+  t = setTimeout(apply, 60);
+});
+
+build();
+buildUsers();
+apply();
+
+(function() {
+  const hdr = document.querySelector("header");
+  if (hdr) document.documentElement.style.setProperty("--hdr-h", hdr.offsetHeight + "px");
+  const utBar = document.querySelector(".ut-bar");
+  if (utBar) document.documentElement.style.setProperty("--utbar-h", utBar.offsetHeight + "px");
+})();
+
+$("srt").onchange = e => { sortK = e.target.value; build(); apply(); };
+$("grp").onclick = e => { grouped = !grouped; e.target.classList.toggle("on", grouped); build(); apply(); };
+
+const csvCell = x => {
+  x = String(x || "");
+  return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x;
+};
+
+function downloadCsv(rows, filename) {
+  const csv = rows.map(r => r.map(csvCell).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+$("exp").onclick = () => {
+  if (currentTab === "users") {
+    const rows = [["Employee ID", "Employee Name", "Designation", "Work Class", "Finacle User ID", "Role", "SOL ID", "Branch Name"]];
+    const tbody = $("tbl-body");
+    if (tbody) {
+      for (const tr of tbody.children) {
+        if (tr.classList.contains("hide")) continue;
+        const u = ALL_USERS.find(x => x.user_id === tr.dataset.uid && x.role_id === tr.dataset.role) || {};
+        rows.push([u.emp_id || "", u.name || "", u.designation || "", u.work_class || "", u.user_id || "", u.role_id || "", u.sol_id || "", u.branch_name || ""]);
+      }
+    }
+    downloadCsv(rows, "finacle-users.csv");
+  } else {
+    const rows = [["Zone", "SOL ID", "Branch Name", "Active Finacle Users"]];
+    for (const el of grid.children) {
+      if (el.classList.contains("zh") || el.classList.contains("hide")) continue;
+      const b = BRANCHES.find(x => String(x.code) === String(el.dataset.c));
+      if (b) {
+        const a = A[b.code] || {};
+        rows.push([b.zone || "", b.code, b.name, a.active_total || 0]);
+      }
+    }
+    downloadCsv(rows, "finacle-branches.csv");
+  }
+};
+
+$("uq").addEventListener("input", () => render());
+
+async function open(code) {
+  closeResignedDrawer();
+  cur = code;
+  role = "ALL";
+  $("uq").value = "";
+  const b = BRANCHES.find(x => String(x.code) === String(code)) || { code: code, name: "Branch" };
+  
+  $("pt").textContent = b.code + " · " + b.name;
+  $("ps").innerHTML = '<span class="dot"></span>Loading active Finacle users...';
+  
+  ov.classList.add("on");
+  document.body.classList.add("dr");
+  grid.querySelectorAll(".sel").forEach(e => e.classList.remove("sel"));
+  const c = grid.querySelector('[data-c="' + code + '"]');
+  if (c) c.classList.add("sel");
+
+  if (USERS_CACHE[code]) {
+    render();
+  } else {
+    try {
+      const res = await fetch(`/api/method/banking_api.www.finuser.get_branch_users?sol_id=${encodeURIComponent(code)}`);
+      const data = await res.json();
+      USERS_CACHE[code] = data.message || { users: [], roles: [], counts: {} };
+      render();
+    } catch(err) {
+      $("list").innerHTML = '<div class="none">Failed to load Finacle users.</div>';
+    }
+  }
+}
+
+function render() {
+  const cache = USERS_CACHE[cur] || { users: [], roles: [], counts: {} };
+  const us = cache.users || [];
+  $("ps").innerHTML = '<span class="dot"></span>' + us.length + " active users in this branch";
+  
+  const roles = cache.roles || [];
+  const counts = cache.counts || {};
+  
+  const tabList = ["ALL", ...roles];
+  $("tabs").innerHTML = tabList.map(r => {
+    const label = r === "ALL" ? "All" : r;
+    const cnt = counts[r] || us.length;
+    return `<button class="tab${r === role ? " on" : ""}" data-r="${r}">${label} (${cnt})</button>`;
+  }).join("");
+  
+  const q = $("uq").value.trim().toLowerCase();
+  const rows = us.filter(u => {
+    const matchRole = (role === "ALL") || (u.role_id === role);
+    const matchSearch = (!q || u.name.toLowerCase().includes(q) || u.user_id.toLowerCase().includes(q) || u.role_id.toLowerCase().includes(q));
+    return matchRole && matchSearch;
+  });
+  
+  $("list").innerHTML = rows.length ? rows.map(u => {
+    const initials = (u.name || u.user_id || "").split(" ").map(w => w[0]).filter(Boolean).slice(0, 2).join("");
+    return `
+      <div class="u">
+        <div class="av">${initials}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="n">${escapeHtml(u.name)} <span style="font-weight:400;color:var(--mute);font-size:12px;">(${escapeHtml(u.user_id)})</span></div>
+          <div class="m">${escapeHtml(u.designation || 'N/A')}</div>
+          <div class="m" style="font-size:11px;color:var(--mute);">Work Class: <b>${escapeHtml(u.work_class || 'N/A')}</b></div>
+        </div>
+        <span class="rl">${escapeHtml(u.role_id || 'USER')}</span>
+      </div>
+    `;
+  }).join("") : '<div class="none">No active Finacle users found matching criteria.</div>';
+}
+
+/* ===== MISSING IN FINACLE DRAWER LOGIC ===== */
+let MISSING_CACHE = null;
+
+function updateMissingBadge(count) {
+  const badge = $("missing-cnt");
+  if (badge) {
+    badge.textContent = count != null ? count : 0;
+    badge.style.display = "inline-block";
+  }
+}
+
+async function fetchMissingCache() {
+  if (MISSING_CACHE) return MISSING_CACHE;
+  try {
+    const res = await fetch(`/api/method/banking_api.www.finuser.get_missing_in_finacle_employees`);
+    const data = await res.json();
+    MISSING_CACHE = data.message || { employees: [], total: 0 };
+    updateMissingBadge((MISSING_CACHE.employees || []).length);
+    return MISSING_CACHE;
+  } catch(err) {
+    return null;
+  }
+}
+
+function renderMissingList() {
+  if (!MISSING_CACHE || !$("missing-list")) return;
+  const emps = MISSING_CACHE.employees || [];
+  const q = $("mq") ? $("mq").value.trim().toLowerCase() : "";
+
+  const filtered = emps.filter(e => {
+    if (!q) return true;
+    return (e.emp_id && e.emp_id.toLowerCase().includes(q)) ||
+           (e.expected_fin_id && e.expected_fin_id.toLowerCase().includes(q)) ||
+           (e.emp_name && e.emp_name.toLowerCase().includes(q)) ||
+           (e.sol_id && e.sol_id.toLowerCase().includes(q)) ||
+           (e.branch_name && e.branch_name.toLowerCase().includes(q));
+  });
+
+  if ($("missing-sub")) {
+    if (q) {
+      $("missing-sub").innerHTML = `Showing <b style="color:#1d4ed8;">${filtered.length} of ${emps.length} users</b> for "${$("mq").value.trim()}"`;
+    } else {
+      $("missing-sub").innerHTML = `<b style="color:#1d4ed8;">${emps.length} users</b> active in ZingHR/MySahayog but MISSING in Finacle`;
+    }
+  }
+
+  if (!filtered.length) {
+    $("missing-list").innerHTML = '<div class="none">No missing employee records found.</div>';
+    return;
+  }
+
+  $("missing-list").innerHTML = filtered.map(e => {
+    const initials = (e.emp_name || e.emp_id || "").split(" ").map(w => w[0]).filter(Boolean).slice(0, 2).join("");
+    return `
+      <div class="u" style="flex-direction:column;align-items:stretch;gap:8px;padding:12px;background:var(--surf);border:1px solid var(--line);border-radius:10px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="av" style="background:#dbeafe;color:#1d4ed8;">${initials}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="n" style="font-size:13px;font-weight:700;">
+              ${escapeHtml(e.emp_name)}
+              <span style="font-weight:500;color:var(--mute);font-size:11px;">(ID: ${escapeHtml(e.emp_id)})</span>
+            </div>
+            <div class="m" style="color:var(--mute);font-size:11px;">Expected Finacle ID: <b style="color:#1d4ed8;">${escapeHtml(e.expected_fin_id)}</b></div>
+            <div class="m" style="color:var(--mute);font-size:11px;">${escapeHtml(e.designation || 'N/A')} &bull; SOL: <b>${escapeHtml(e.sol_id || 'N/A')}</b> ${e.branch_name ? '(' + escapeHtml(e.branch_name) + ')' : ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px;margin-top:2px;">
+          <span>DOJ: <b>${escapeHtml(e.date_of_joining || 'N/A')}</b></span>
+          <span>Contact: <b>${escapeHtml(e.cell_number || 'N/A')}</b></span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+if ($("btn-missing")) {
+  fetchMissingCache();
+
+  $("btn-missing").onclick = async () => {
+    closeBranchDrawer();
+    closeResignedDrawer();
+    if ($("mq")) $("mq").value = "";
+    ovMissing.classList.add("on");
+    document.body.classList.add("dr");
+
+    if (!MISSING_CACHE) {
+      $("missing-list").innerHTML = '<div class="none">Loading missing employees...</div>';
+      await fetchMissingCache();
+    }
+    const emps = (MISSING_CACHE && MISSING_CACHE.employees) || [];
+    $("missing-sub").innerHTML = `<b style="color:#1d4ed8;">${emps.length} users</b> active in ZingHR/MySahayog but MISSING in Finacle`;
+    renderMissingList();
+  };
+}
+
+const closeMissingDrawer = () => {
+  if ($("mq")) $("mq").value = "";
+  if (ovMissing) ovMissing.classList.remove("on");
+  if ((!ov || !ov.classList.contains("on")) && (!ovResigned || !ovResigned.classList.contains("on"))) {
+    document.body.classList.remove("dr");
+  }
+};
+
+if ($("x-missing")) $("x-missing").onclick = closeMissingDrawer;
+if ($("mq")) $("mq").addEventListener("input", () => renderMissingList());
+
+if ($("exp-missing")) {
+  $("exp-missing").onclick = () => {
+    const emps = (MISSING_CACHE && MISSING_CACHE.employees) || [];
+    if (!emps.length) {
+      alert("No missing employee data to export.");
+      return;
+    }
+    const q = $("mq") ? $("mq").value.trim().toLowerCase() : "";
+    const filtered = emps.filter(e => {
+      if (!q) return true;
+      return (e.emp_id && e.emp_id.toLowerCase().includes(q)) ||
+             (e.expected_fin_id && e.expected_fin_id.toLowerCase().includes(q)) ||
+             (e.emp_name && e.emp_name.toLowerCase().includes(q)) ||
+             (e.sol_id && e.sol_id.toLowerCase().includes(q));
+    });
+
+    const rows = [
+      ["Employee ID", "Expected Finacle ID", "Employee Name", "Designation", "SOL ID", "Branch Name", "Date of Joining", "Contact Number"],
+      ...filtered.map(e => [
+        e.emp_id,
+        e.expected_fin_id,
+        e.emp_name,
+        e.designation,
+        e.sol_id,
+        e.branch_name,
+        e.date_of_joining,
+        e.cell_number
+      ])
+    ];
+    downloadCsv(rows, "missing-in-finacle-employees.csv");
+  };
+}
+
+/* ===== RESIGNED EMPLOYEES DRAWER LOGIC ===== */
+function updateResignedBadge(count) {
+  const badge = $("resigned-cnt");
+  if (badge) {
+    badge.textContent = count != null ? count : 0;
+    badge.style.display = "inline-block";
+  }
+}
+
+async function fetchResignedCache() {
+  if (RESIGNED_CACHE) return RESIGNED_CACHE;
+  try {
+    const res = await fetch(`/api/method/banking_api.www.finuser.get_resigned_employees`);
+    const data = await res.json();
+    RESIGNED_CACHE = data.message || { employees: [], total: 0, active_in_finacle_count: 0 };
+    updateResignedBadge((RESIGNED_CACHE.employees || []).length);
+    return RESIGNED_CACHE;
+  } catch(err) {
+    return null;
+  }
+}
+
+if ($("btn-resigned")) {
+  // Pre-fetch count in background
+  fetchResignedCache();
+
+  $("btn-resigned").onclick = async () => {
+    closeBranchDrawer();
+    if (typeof closeMissingDrawer === "function") closeMissingDrawer();
+    if ($("rq")) $("rq").value = "";
+    ovResigned.classList.add("on");
+    document.body.classList.add("dr");
+    $("rq").value = "";
+
+    if (!RESIGNED_CACHE) {
+      $("resigned-list").innerHTML = '<div class="none">Loading resigned employees...</div>';
+      await fetchResignedCache();
+    }
+    const emps = (RESIGNED_CACHE && RESIGNED_CACHE.employees) || [];
+    $("resigned-sub").innerHTML = `<b style="color:var(--danger);">${emps.length} users</b> left organization but STILL ACTIVE in Finacle`;
+    renderResignedList();
+  };
+}
+
+function renderResignedList() {
+  if (!RESIGNED_CACHE) return;
+  const emps = RESIGNED_CACHE.employees || [];
+  const q = $("rq").value.trim().toLowerCase();
+
+  const filtered = emps.filter(e => {
+    return (!q || 
+      e.name.toLowerCase().includes(q) || 
+      String(e.emp_id).toLowerCase().includes(q) || 
+      (e.finacle_user_id && e.finacle_user_id.toLowerCase().includes(q)) ||
+      (e.sol_id && String(e.sol_id).toLowerCase().includes(q))
+    );
+  });
+
+  if (!filtered.length) {
+    $("resigned-list").innerHTML = '<div class="none">No pending action required resigned employees found.</div>';
+    return;
+  }
+
+  $("resigned-list").innerHTML = filtered.map(e => {
+    return `
+      <div class="rcard">
+        <div class="rcard-head">
+          <span class="rcard-user-id">
+            <span class="dot red" style="margin:0;"></span>
+            ${escapeHtml(e.finacle_user_id)}
+          </span>
+          <span class="rcard-role">${escapeHtml(e.finacle_roles || 'USER')}</span>
+        </div>
+        <div class="rcard-name">${escapeHtml(e.name)}</div>
+        <div class="rcard-body">
+          <div class="rcard-row">
+            <span class="rcard-lbl">SOL ID</span>
+            <span class="rcard-val">${escapeHtml(e.sol_id || 'N/A')}</span>
+          </div>
+          <div class="rcard-row">
+            <span class="rcard-lbl">Branch Name</span>
+            <span class="rcard-val" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(e.branch_name)}">${escapeHtml(e.branch_name || 'N/A')}</span>
+          </div>
+          <div class="rcard-row">
+            <span class="rcard-lbl">Left Date</span>
+            <span class="rcard-val alert">${formatDate(e.relieving_date)}</span>
+          </div>
+          <div class="rcard-row">
+            <span class="rcard-lbl">Designation</span>
+            <span class="rcard-val" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(e.designation)}">${escapeHtml(e.designation || 'Staff')}</span>
+          </div>
+        </div>
+        ${CAN_DISABLE_USER ? `
+        <div class="rcard-foot">
+          <button class="btn-disable" data-uid="${escapeHtml(e.finacle_user_id)}" data-emp="${escapeHtml(e.emp_id)}" data-name="${escapeHtml(e.name)}">
+            Disable User
+          </button>
+        </div>` : ''}
+      </div>
+    `;
+  }).join("");
+}
+
+function formatDate(dStr) {
+  if (!dStr) return "N/A";
+  const d = new Date(dStr);
+  if (isNaN(d.getTime())) return dStr;
+  const day = String(d.getDate()).padStart(2, '0');
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const mmm = months[d.getMonth()];
+  const yyyy = d.getFullYear();
+  return `${day}-${mmm}-${yyyy}`;
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+$("tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab");
+  if (b) {
+    role = b.dataset.r;
+    render();
+  }
+});
+
+const closeBranchDrawer = () => {
+  ov.classList.remove("on");
+  if (!ovResigned || !ovResigned.classList.contains("on")) {
+    document.body.classList.remove("dr");
+  }
+  grid.querySelectorAll(".sel").forEach(e => e.classList.remove("sel"));
+};
+
+const closeResignedDrawer = () => {
+  if ($("rq")) $("rq").value = "";
+  if (ovResigned) ovResigned.classList.remove("on");
+  if (!ov || !ov.classList.contains("on")) {
+    document.body.classList.remove("dr");
+  }
+};
+
+$("x").onclick = closeBranchDrawer;
+if ($("x-resigned")) $("x-resigned").onclick = closeResignedDrawer;
+
+// Close branch drawer when clicking outside
+document.addEventListener("pointerdown", e => {
+  if (ov && ov.classList.contains("on")) {
+    const isInsideDrawer = e.composedPath ? e.composedPath().includes(ov) : ov.contains(e.target);
+    const isBranchBtn = e.target.closest && e.target.closest(".cap");
+    if (!isInsideDrawer && !isBranchBtn) {
+      closeBranchDrawer();
+    }
+  }
+});
+
+if ($("rq")) $("rq").addEventListener("input", () => renderResignedList());
+
+if ($("exp-resigned")) {
+  $("exp-resigned").onclick = () => {
+    const emps = (RESIGNED_CACHE && RESIGNED_CACHE.employees) || [];
+    if (!emps.length) {
+      alert("No resigned employee data to export.");
+      return;
+    }
+    const q = $("rq") ? $("rq").value.trim().toLowerCase() : "";
+    const listToExport = q
+      ? emps.filter(e =>
+          e.name.toLowerCase().includes(q) ||
+          String(e.emp_id).toLowerCase().includes(q) ||
+          (e.finacle_user_id && e.finacle_user_id.toLowerCase().includes(q)) ||
+          (e.sol_id && String(e.sol_id).toLowerCase().includes(q))
+        )
+      : emps;
+
+    const rows = [["Employee ID", "Employee Name", "Designation", "SOL ID", "Branch Name", "Relieving Date", "Finacle User ID", "Finacle Roles"]];
+    listToExport.forEach(e => {
+      rows.push([
+        e.emp_id || "",
+        e.name || "",
+        e.designation || "",
+        e.sol_id || "",
+        e.branch_name || "",
+        e.relieving_date || "",
+        e.finacle_user_id || "",
+        e.finacle_roles || ""
+      ]);
+    });
+    downloadCsv(rows, "resigned-active-finacle-users.csv");
+  };
+}
+
+/* Modal & Disable action handlers */
+let pendingDisableUser = null;
+const confirmModal = $("confirm-modal");
+
+if ($("resigned-list")) {
+  $("resigned-list").addEventListener("click", e => {
+    const btn = e.target.closest(".btn-disable");
+    if (!btn) return;
+
+    const uid = btn.dataset.uid;
+    const emp = btn.dataset.emp;
+    const name = btn.dataset.name;
+
+    pendingDisableUser = { uid, emp, name, btn };
+
+    if (window.frappe && frappe.confirm) {
+      frappe.confirm(
+        `Are you sure you want to disable Finacle user <b>${escapeHtml(uid)}</b> for employee <b>${escapeHtml(name)}</b> (${escapeHtml(emp)})?`,
+        () => executeDisable(pendingDisableUser)
+      );
+    } else {
+      $("modal-title").textContent = "Disable Finacle User";
+      $("modal-body").innerHTML = `Are you sure you want to disable Finacle user <b>${escapeHtml(uid)}</b> for employee <b>${escapeHtml(name)}</b> (Emp: ${escapeHtml(emp)})?`;
+      confirmModal.classList.add("on");
+    }
+  });
+}
+
+if ($("btn-modal-cancel")) {
+  $("btn-modal-cancel").onclick = () => {
+    confirmModal.classList.remove("on");
+    pendingDisableUser = null;
+  };
+}
+
+if ($("btn-modal-confirm")) {
+  $("btn-modal-confirm").onclick = () => {
+    confirmModal.classList.remove("on");
+    if (pendingDisableUser) {
+      executeDisable(pendingDisableUser);
+    }
+  };
+}
+
+async function executeDisable(item) {
+  const { uid, emp, btn } = item;
+  if (!uid) return;
+  
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Disabling...";
+  }
+
+  const csrfToken = (window.frappe && window.frappe.csrf_token) || "";
+  try {
+    const res = await fetch(`/api/method/banking_api.www.finuser.disable_finacle_user`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Frappe-CSRF-Token": csrfToken
+      },
+      body: JSON.stringify({ user_id: uid, emp_id: emp })
+    });
+    const data = await res.json();
+    const result = data.message || {};
+
+    if (result.status === "success") {
+      if (window.frappe && frappe.show_alert) {
+        frappe.show_alert({ message: result.message || "User disabled successfully", indicator: "green" });
+      } else {
+        alert(result.message || "User disabled successfully");
+      }
+      // Remove from cached list
+      if (RESIGNED_CACHE && RESIGNED_CACHE.employees) {
+        RESIGNED_CACHE.employees = RESIGNED_CACHE.employees.filter(e => e.finacle_user_id !== uid);
+        updateResignedBadge(RESIGNED_CACHE.employees.length);
+        renderResignedList();
+        $("resigned-sub").innerHTML = `<b style="color:var(--danger);">${RESIGNED_CACHE.employees.length} users</b> left organization but STILL ACTIVE in Finacle`;
+      }
+    } else {
+      if (window.frappe && frappe.msgprint) {
+        frappe.msgprint({ title: "Notice", indicator: "orange", message: result.message || "Could not disable user." });
+      } else {
+        alert(result.message || "Notice: " + (result.message || "Read-only replica"));
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Disable User";
+      }
+    }
+  } catch (err) {
+    alert("Request failed: " + err.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Disable User";
+    }
+  }
+}
+
+/* ===== USER DETAIL / ROLE CHANGE MODAL ===== */
+const userModal = $("user-modal");
+let activeUser = null;
+
+const allRoles = [...new Set(ALL_USERS.map(u => u.role_id).filter(Boolean))].sort();
+
+function openUserModal(uid, roleId, tr) {
+  const u = ALL_USERS.find(x => x.user_id === uid && x.role_id === roleId) || ALL_USERS.find(x => x.user_id === uid);
+  if (!u) return;
+  activeUser = { ...u, _tr: tr };
+
+  const initials = (u.name || u.user_id || "U").split(" ").map(w => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+  $("um-av").textContent = initials;
+  $("um-name").textContent = u.name || u.user_id;
+  $("um-uid").textContent = u.user_id;
+  $("um-sol").textContent = u.sol_id || "N/A";
+  $("um-branch").textContent = u.branch_name || "N/A";
+  if ($("um-desig")) $("um-desig").textContent = u.designation || "N/A";
+  if ($("um-workclass")) $("um-workclass").textContent = u.work_class || "N/A";
+  $("um-zone-val").textContent = u.zone || "N/A";
+  $("um-cur-role").textContent = u.role_id || "N/A";
+
+  if ($("um-role-sel")) {
+    $("um-role-sel").innerHTML = allRoles.map(r =>
+      `<option value="${escapeHtml(r)}"${r === u.role_id ? " selected" : ""}>${escapeHtml(r)}</option>`
+    ).join("");
+  }
+
+  const btn = $("um-update");
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "Update Role";
+  }
+  userModal.classList.add("on");
+}
+
+function closeUserModal() {
+  userModal.classList.remove("on");
+  activeUser = null;
+}
+
+$("um-close").onclick = closeUserModal;
+$("um-cancel").onclick = closeUserModal;
+userModal.addEventListener("click", e => { if (e.target === userModal) closeUserModal(); });
+
+if ($("um-update")) {
+  $("um-update").onclick = async () => {
+    if (!activeUser || !$("um-role-sel")) return;
+    const newRole = $("um-role-sel").value;
+    if (newRole === activeUser.role_id) { closeUserModal(); return; }
+
+    const btn = $("um-update");
+    btn.disabled = true;
+    btn.textContent = "Updating...";
+
+    try {
+      const csrfToken = (window.frappe && window.frappe.csrf_token) || "";
+      const res = await fetch("/api/method/banking_api.www.finuser.update_user_role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": csrfToken },
+        body: JSON.stringify({ user_id: activeUser.user_id, old_role: activeUser.role_id, new_role: newRole })
+      });
+      const data = await res.json();
+      const result = data.message || {};
+
+      if (result.status === "success") {
+        // Update ALL_USERS in memory
+        const idx = ALL_USERS.findIndex(x => x.user_id === activeUser.user_id && x.role_id === activeUser.role_id);
+        if (idx !== -1) ALL_USERS[idx].role_id = newRole;
+        // Update the DOM row
+        const tr = activeUser._tr;
+        if (tr) {
+          tr.dataset.role = newRole;
+          tr.dataset.s = (activeUser.user_id + " " + activeUser.name + " " + activeUser.sol_id + " " + activeUser.branch_name + " " + newRole).toLowerCase();
+          const roleEl = tr.querySelector(".tbl-role");
+          if (roleEl) roleEl.textContent = newRole;
+        }
+        if (window.frappe && frappe.show_alert) frappe.show_alert({ message: result.message || "Role updated", indicator: "green" });
+        closeUserModal();
+      } else {
+        if (window.frappe && frappe.msgprint) frappe.msgprint({ title: "Error", indicator: "red", message: result.message || "Update failed" });
+        else alert(result.message || "Update failed");
+        btn.disabled = false;
+        btn.textContent = "Update Role";
+      }
+    } catch (err) {
+      alert("Request failed: " + err.message);
+      btn.disabled = false;
+      btn.textContent = "Update Role";
+    }
+  };
+}
+
+// Row click → open modal
+usersView.addEventListener("click", e => {
+  const tr = e.target.closest("tr.user-row");
+  if (!tr) return;
+  openUserModal(tr.dataset.uid, tr.dataset.role, tr);
+});
+
+addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    closeBranchDrawer();
+    closeResignedDrawer();
+    closeUserModal();
+    confirmModal.classList.remove("on");
+  }
+});
+</script>
+</body>
+</html>
