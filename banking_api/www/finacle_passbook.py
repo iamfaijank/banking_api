@@ -517,8 +517,13 @@ def _apply_penalty_recovery_split(data):
 				out.append(row)
 				continue
 
+			acct_no = str(row.get("ACCOUNT NUMBER") or "").strip()
+			if acct_no.startswith('="') and acct_no.endswith('"'):
+				acct_no = acct_no[2:-1]
+			acct_no = acct_no.strip()
+
 			deduction_row = dict(row)
-			deduction_row["PARTICULARS"] = f"CLS Amt incl ex Int{deducted:.2f}"
+			deduction_row["PARTICULARS"] = f"{acct_no} : Closure Proceeds"
 			deduction_row["INSTRUMENT NUMBER"] = ""
 			deduction_row["PENALTY RECOVERED"] = 0
 			deduction_row["BALANCE"] = 0
