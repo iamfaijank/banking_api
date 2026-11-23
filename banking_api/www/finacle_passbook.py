@@ -505,11 +505,11 @@ def _apply_penalty_recovery_split(data):
 			if dr > 0:
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = 0
-				penalty_row["BALANCE"] = bal + dr
+				penalty_row["BALANCE"] = dr - penalty
 			elif cr > 0:
 				penalty_row["TRANSACTION CREDIT AMOUNT"] = penalty
 				penalty_row["TRANSACTION DEBIT AMOUNT"] = 0
-				penalty_row["BALANCE"] = abs(bal - cr)
+				penalty_row["BALANCE"] = cr - penalty
 			else:
 				out.append(row)
 				continue
