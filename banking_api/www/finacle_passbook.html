@@ -212,6 +212,14 @@
 		white-space: nowrap;
 	}
 	.logo-finacle span { color: #e53935; font-size: 12px; vertical-align: super; font-weight: normal; }
+	.home-icon {
+		color: #003399;
+		display: inline-flex;
+		align-items: center;
+		text-decoration: none;
+		padding-left: 4px;
+	}
+	.home-icon:hover { color: #4a90c8; }
 	.star-icon { color: #808080; font-size: 16px; padding-left: 4px; }
 	.star-icon.connected { color: #1b5e20; }
 	.star-icon.disconnected { color: #808080; }
@@ -502,6 +510,9 @@
 				<span class="sicon" id="keyword-search" title="Search">&#128269;</span>
 			</div>
 			<div class="logo-finacle">Finacle</div>
+			<a href="/app/sahayog-home" class="home-icon" title="Home" aria-label="Home">
+				<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+			</a>
 			<div class="star-icon disconnected" id="db-star">&#9734;</div>
 		</div>
 	</div>
