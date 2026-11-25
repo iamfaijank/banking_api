@@ -711,6 +711,9 @@
 		function handleResponse(res) {
 			res = res || {};
 			setTableLoading(false);
+			if (res.query_used) {
+				console.log('Finacle passbook query executed:', res.query_used);
+			}
 			if (res.status === 'success') {
 				ledgerData = res;
 				renderLedgerData(accountId);
