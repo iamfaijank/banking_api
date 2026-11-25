@@ -5,8 +5,6 @@ from frappe.utils.pdf import get_pdf
 
 ACCOUNT_LEDGER_QUERY = """WITH params AS (
     SELECT
-        DATE '2025-11-11' AS start_date,   -- 👈 [CHANGE 1]: Statement Start Date
-        DATE '2026-11-12' AS end_date,     -- 👈 [CHANGE 2]: Statement End Date
         g.acid,
         g.foracid,
         g.acct_name,
@@ -99,8 +97,7 @@ all_txns AS (
         h.acct_balance
     FROM tbaadm.htd h
     JOIN params p ON h.acid = p.acid
-    WHERE h.tran_date BETWEEN p.start_date AND p.end_date
-      AND h.pstd_flg = 'Y'
+    WHERE h.pstd_flg = 'Y'
       AND h.del_flg = 'N'
     UNION ALL
     -- 2. Today's Live Transactions (DTD - Aaj Ke Live Transactions)
@@ -122,8 +119,7 @@ all_txns AS (
         d.acct_balance
     FROM tbaadm.dtd d
     JOIN params p ON d.acid = p.acid
-    WHERE d.tran_date BETWEEN p.start_date AND p.end_date
-      AND d.pstd_flg = 'Y'
+    WHERE d.pstd_flg = 'Y'
       AND d.del_flg = 'N'
 )
 SELECT
@@ -312,65 +308,6 @@ WHERE g.foracid = %s
 LIMIT 1
 """
 
-OPENING_BALANCE_QUERY = """
-WITH params AS (
-	SELECT
-		DATE '2025-11-11' AS start_date,
-		g.acid
-	FROM tbaadm.gam g
-	WHERE g.foracid = %s
-	  AND g.entity_cre_flg = 'Y'
-),
-all_txns AS (
-	SELECT
-		h.acid,
-		h.tran_date,
-		h.tran_id,
-		h.part_tran_srl_num,
-		h.part_tran_type,
-		h.tran_amt,
-		h.rcre_time,
-		h.acct_balance
-	FROM tbaadm.htd h
-	JOIN params p ON h.acid = p.acid
-	WHERE h.tran_date < p.start_date
-	  AND h.pstd_flg = 'Y'
-	  AND h.del_flg = 'N'
-	UNION ALL
-	SELECT
-		d.acid,
-		d.tran_date,
-		d.tran_id,
-		d.part_tran_srl_num,
-		d.part_tran_type,
-		d.tran_amt,
-		d.rcre_time,
-		d.acct_balance
-	FROM tbaadm.dtd d
-	JOIN params p ON d.acid = p.acid
-	WHERE d.tran_date < p.start_date
-	  AND d.pstd_flg = 'Y'
-	  AND d.del_flg = 'N'
-)
-SELECT
-	ABS(
-		h.acct_balance +
-		CASE
-			WHEN h.part_tran_type = 'C' THEN h.tran_amt
-			WHEN h.part_tran_type = 'D' THEN -h.tran_amt
-			ELSE 0
-		END
-	) AS opening_balance
-FROM all_txns h
-ORDER BY
-	h.tran_date DESC,
-	h.rcre_time DESC,
-	h.tran_id DESC,
-	h.part_tran_srl_num DESC
-LIMIT 1
-"""
-
-
 def _format_date_display(val):
 	if not val:
 		return ""
@@ -507,15 +444,8 @@ def _fetch_account_summary(cursor, account_id, ledger_data):
 	summary["available_amt"] = _format_money(available, ccy, "CR" if available >= 0 else "DR")
 	summary["effective_available_amt"] = _format_money(eff_available, ccy, "CR" if eff_available >= 0 else "DR")
 
-	# Opening balance: balance before statement start date, else 0
+	# Opening balance: no date window filter, show all statements
 	opening = 0.0
-	try:
-		cursor.execute(OPENING_BALANCE_QUERY, (account_id,))
-		ob = cursor.fetchone()
-		if ob and ob[0] is not None:
-			opening = float(ob[0])
-	except Exception:
-		opening = 0.0
 	summary["opening_bal"] = _format_money(opening, ccy, "CR")
 
 	# Closing balance: latest txn balance in fetched period, else current clear balance
