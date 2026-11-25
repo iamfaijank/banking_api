@@ -430,6 +430,22 @@
 		margin-left: 0;
 		margin-top: 4px;
 	}
+	.table-footer {
+		padding: 6px 10px;
+		background: #fff;
+		border-top: 1px solid #ddd;
+	}
+	.clear-btn {
+		font-size: 11px;
+		font-family: Arial, Tahoma, sans-serif;
+		color: #000;
+		background: #f5f5f5;
+		border: 1px solid #888;
+		padding: 1px 12px;
+		border-radius: 0;
+		line-height: 1.4;
+		cursor: pointer;
+	}
 	.download-btn {
 		font-size: 11px;
 		font-family: Arial, Tahoma, sans-serif;
@@ -533,6 +549,9 @@
 					</thead>
 					<tbody></tbody>
 				</table>
+			</div>
+			<div class="table-footer">
+				<button type="button" class="clear-btn" id="clear-btn">Clear</button>
 			</div>
 		</div>
 	</div>
@@ -1138,10 +1157,21 @@
 			});
 	}
 
+	function clearLedger() {
+		var input = document.getElementById('keyword-input');
+		if (input) input.value = '';
+		ledgerData = null;
+		document.querySelectorAll('.acct-grid .acct-value').forEach(function (el) { el.textContent = ''; });
+		setStatusMessage('', '');
+		setLoadingBar(false);
+		renderNoData();
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
 		var input = document.getElementById('keyword-input');
 		var searchBtn = document.getElementById('keyword-search');
 		var downloadBtn = document.getElementById('download-btn');
+		var clearBtn = document.getElementById('clear-btn');
 		var tbody = document.querySelector('.ledger-table tbody');
 
 		if (tbody) {
@@ -1160,6 +1190,9 @@
 		}
 		if (downloadBtn) {
 			downloadBtn.addEventListener('click', downloadLedger);
+		}
+		if (clearBtn) {
+			clearBtn.addEventListener('click', clearLedger);
 		}
 
 		testDbConnection();
