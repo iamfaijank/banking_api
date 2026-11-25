@@ -215,6 +215,25 @@ ACCOUNT_LEDGER_QUERY_FALLBACK = ACCOUNT_LEDGER_QUERY_FALLBACK.replace(
 """,
     "",
 )
+ACCOUNT_LEDGER_QUERY_FALLBACK = ACCOUNT_LEDGER_QUERY_FALLBACK.replace(
+    """        d.rm_id                                                     AS agent_code,
+        get_agt.emp_name                                            AS agent_name,""",
+    """        NULL                                                        AS agent_code,
+        NULL                                                        AS agent_name,""",
+)
+ACCOUNT_LEDGER_QUERY_FALLBACK = ACCOUNT_LEDGER_QUERY_FALLBACK.replace(
+    """    -- 5. Agent Code (Safely getting latest mapped agent)
+    LEFT JOIN (
+        SELECT account_number, rm_id, ROW_NUMBER() OVER (PARTITION BY account_number ORDER BY rm_start_date DESC) AS rn
+        FROM custom.dsamap
+        WHERE COALESCE(del_flg, 'N') != 'Y'
+    ) d ON g.foracid = d.account_number AND d.rn = 1
+    -- 6. Agent Name from Employee Master
+    LEFT JOIN tbaadm.get get_agt
+        ON d.rm_id = get_agt.emp_id
+""",
+    "",
+)
 
 
 def _get_finacle_migration_config_name():
@@ -599,6 +618,7 @@ def _fetch_account_ledger_data(account_id):
 	try:
 		conn = doc.get_connection(retries=1, timeout=10)
 		cursor = conn.cursor()
+		query_used = "main"
 		try:
 			cursor.execute(ACCOUNT_LEDGER_QUERY, (account_id,))
 		except Exception as e:
@@ -610,6 +630,7 @@ def _fetch_account_ledger_data(account_id):
 				except Exception:
 					pass
 				cursor.execute(ACCOUNT_LEDGER_QUERY_FALLBACK, (account_id,))
+				query_used = "fallback"
 			else:
 				raise
 		columns = [desc[0] for desc in cursor.description] if cursor.description else []
@@ -630,6 +651,7 @@ def _fetch_account_ledger_data(account_id):
 			"columns": columns,
 			"data": data,
 			"account_summary": account_summary,
+			"query_used": query_used,
 		}
 	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "Finacle Passbook: Get Account Ledger Failed")
