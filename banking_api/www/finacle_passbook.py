@@ -176,6 +176,46 @@ ORDER BY
     h.tran_id DESC,
     h.part_tran_srl_num DESC"""
 
+ACCOUNT_LEDGER_QUERY_FALLBACK = ACCOUNT_LEDGER_QUERY
+ACCOUNT_LEDGER_QUERY_FALLBACK = ACCOUNT_LEDGER_QUERY_FALLBACK.replace(
+    """        -- Joint Account Flag
+        CASE
+            WHEN rp.acct_poa_as_rec_type = 'J' THEN 'Y'
+            ELSE 'N'
+        END                                                         AS joint_account,
+        rp.acct_poa_as_rec_type                                     AS joint_rec_type,""",
+    """        -- Joint Account Flag
+        'N'                                                         AS joint_account,
+        NULL                                                        AS joint_rec_type,""",
+)
+ACCOUNT_LEDGER_QUERY_FALLBACK = ACCOUNT_LEDGER_QUERY_FALLBACK.replace(
+    """        cp.phoneno                                                  AS mobile_no,
+        TRIM(CONCAT_WS(' ', a_cust.address_line1, a_cust.address_line2, a_cust.address_line3, a_cust.city, a_cust.state, a_cust.zip)) AS customer_address""",
+    """        NULL                                                        AS mobile_no,
+        NULL                                                        AS customer_address""",
+)
+ACCOUNT_LEDGER_QUERY_FALLBACK = ACCOUNT_LEDGER_QUERY_FALLBACK.replace(
+    """    -- 7. Mobile Number from CRM
+    LEFT JOIN (
+        SELECT phone_b2kid, phoneno, ROW_NUMBER() OVER (PARTITION BY phone_b2kid ORDER BY CASE WHEN preferredflag = 'Y' THEN 1 ELSE 2 END) AS rn
+        FROM crmuser.cphone
+    ) cp ON g.cif_id = cp.phone_b2kid AND cp.rn = 1
+    -- 8. Customer Address from CRM
+    LEFT JOIN (
+        SELECT orgkey, address_line1, address_line2, address_line3, city, state, zip,
+               ROW_NUMBER() OVER (PARTITION BY orgkey ORDER BY CASE WHEN preferredaddress = 'Y' THEN 1 ELSE 2 END) AS rn
+        FROM crmuser.address
+    ) a_cust ON g.cif_id = a_cust.orgkey AND a_cust.rn = 1
+    -- 9. Joint Account Flag from crm_related_parties (rp)
+    LEFT JOIN (
+        SELECT foracid, acct_poa_as_rec_type,
+               ROW_NUMBER() OVER (PARTITION BY foracid ORDER BY CASE WHEN acct_poa_as_rec_type = 'J' THEN 1 ELSE 2 END) AS rn
+        FROM tbaadm.crm_related_parties
+    ) rp ON g.foracid = rp.foracid AND rp.rn = 1
+""",
+    "",
+)
+
 
 def _get_finacle_migration_config_name():
 	return frappe.db.get_single_value("Banking API Settings", "finacle_migration")
@@ -559,7 +599,19 @@ def _fetch_account_ledger_data(account_id):
 	try:
 		conn = doc.get_connection(retries=1, timeout=10)
 		cursor = conn.cursor()
-		cursor.execute(ACCOUNT_LEDGER_QUERY, (account_id,))
+		try:
+			cursor.execute(ACCOUNT_LEDGER_QUERY, (account_id,))
+		except Exception as e:
+			err = str(e).lower()
+			if "permission denied" in err:
+				frappe.log_error(frappe.get_traceback(), "Finacle Passbook: Ledger Query Permission Fallback")
+				try:
+					conn.rollback()
+				except Exception:
+					pass
+				cursor.execute(ACCOUNT_LEDGER_QUERY_FALLBACK, (account_id,))
+			else:
+				raise
 		columns = [desc[0] for desc in cursor.description] if cursor.description else []
 		rows = cursor.fetchall() or []
 		data = [dict(zip(columns, row)) for row in rows]
