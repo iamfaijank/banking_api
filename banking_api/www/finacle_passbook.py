@@ -232,6 +232,25 @@ ACCOUNT_LEDGER_QUERY_FALLBACK = ACCOUNT_LEDGER_QUERY_FALLBACK.replace(
 )
 
 
+def _has_passbook_access(user=None):
+	user = user or frappe.session.user
+	if user == "Administrator":
+		return True
+	return "Finacle Passbook" in frappe.get_roles(user)
+
+
+def _ensure_passbook_access():
+	if not _has_passbook_access():
+		frappe.throw(_("Mail on apptech@sahayogmultistate.com for the access"), frappe.PermissionError)
+
+
+def get_context(context):
+	context.no_cache = 1
+	context.has_passbook_access = _has_passbook_access()
+	if not context.has_passbook_access:
+		context.access_denied_message = _("Mail on apptech@sahayogmultistate.com for the access")
+
+
 def _get_finacle_migration_config_name():
 	return frappe.db.get_single_value("Banking API Settings", "finacle_migration")
 
@@ -251,6 +270,7 @@ def _get_finacle_migration_config_doc():
 @frappe.whitelist(allow_guest=False)
 def check_finacle_migration_connection():
 	"""Check connection for the Database Configuration set as Finacle Migration."""
+	_ensure_passbook_access()
 	config_name = _get_finacle_migration_config_name()
 
 	if not config_name:
@@ -599,6 +619,7 @@ def _fetch_account_ledger_data(account_id):
 
 @frappe.whitelist(allow_guest=False)
 def get_account_ledger(account_id):
+	_ensure_passbook_access()
 	"""Fetch account ledger data from Finacle Migration DB using the provided account ID."""
 	return _fetch_account_ledger_data(account_id)
 
@@ -789,6 +810,7 @@ def _safe_fetchall_dicts(cursor, query, params):
 
 @frappe.whitelist(allow_guest=False)
 def get_statement_download_data(account_id):
+	_ensure_passbook_access()
 	"""Return enriched account details for statement PDF front page (download only)."""
 	account_id = (account_id or "").strip()
 	if not account_id:
