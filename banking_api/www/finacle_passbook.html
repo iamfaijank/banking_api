@@ -496,6 +496,11 @@
 {% endblock %}
 
 {% block page_content %}
+{% if not has_passbook_access %}
+<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;font-family:Arial,Tahoma,sans-serif;font-size:14px;color:#333;">
+	<div>{{ access_denied_message }}</div>
+</div>
+{% else %}
 <div id="ledger-screen">
 <div class="finacle-screen">
 	<!-- SAHAYOG application header -->
@@ -1209,4 +1214,5 @@
 		testDbConnection();
 	});
 </script>
+{% endif %}
 {% endblock %}
